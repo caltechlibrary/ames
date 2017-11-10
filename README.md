@@ -8,13 +8,16 @@ Requires: Python 3, Requests, [Dataset](https://github.com/caltechlibrary/datase
 
 ## Harvesters
 
-- datacite_refs - Harvest references to datacite DOIs from crossref event data
+- datacite_refs - Harvest references in datacite metadata from crossref event data
+- crossref_refs - Harvest references in datacite metadata from crossref event data
 
-## Alerters
+## Matchers
 
-- email - Send an email about updated metadata
+- caltechdata - Match content in CaltechDATA
 
 ## Examples
+
+python run.py
 
 ## Setup 
 

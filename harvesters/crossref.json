@@ -1,0 +1,13 @@
+{"obj_id":{
+    "object_path":".obj_id",
+    "analyzer": "keyword"
+    },
+ "key":{
+    "object_path":".id",
+    "analyzer": "keyword"
+    },
+"subj_id":{
+    "object_path":".subj_id",
+    "analyzer": "keyword"
+    }
+}
