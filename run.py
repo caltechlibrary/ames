@@ -36,7 +36,7 @@ def send_simple_message(token,matched):
                       alt="CaltechDATA Logo" width="498" height="139"> </center> \
                       <p> Dear '+name+', </p>\
                       <p>Your CaltechDATA work "'+title+'" has been cited\
-                      in :</p><p>'+citation+'</p><p>This\
+                      in:</p><p>'+citation+'</p><p>This\
                       link has been added to your CaltechDATA record at \
                       <a href="https://doi.org/'+doi+'">'+doi+'</a>.</p>\
                       <p> Is this incorrect?  Let us know at\
@@ -46,13 +46,13 @@ def send_simple_message(token,matched):
                       1200 East California Blvd., MC 1-43, Pasadena, CA 91125, USA </p> </html>'})
 
 
-matches = [["https://doi.org/10.3390/rs8050414",'285']]
+            #matches = [["https://doi.org/10.3390/rs8050414",'285']]
 
 #"https://caltechdata.tind.io/tindfiles/serve/5df8a197-3fa2-4760-b555-e185d95c52dd/"\
         #                      alt="CaltechDATA Logo" width="400" height="200"> </center> \
 
-#get_crossref_refs(False)
-#matches = match_cd_refs()
+get_crossref_refs(False)
+matches = match_cd_refs()
 
 token = os.environ['MAILTOK']
 for m in matches:

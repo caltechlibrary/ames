@@ -1,8 +1,10 @@
 import os,subprocess,json,re
+from caltechdata_write import Caltechdata_edit
 
 def match_cd_refs():
     
     os.environ['AWS_SDK_LOAD_CONFIG']="1"
+    token = os.environ['TINDTOK']
 
     matches = []
 
@@ -27,5 +29,21 @@ def match_cd_refs():
             if new == True:
                 print(h['fields']['subj_id'])
                 print(h['fields']['obj_id'])
-                matches.append([h['fields']['subj_id'],k])
+                inputv = input("Do you approve this link?  Type Y or N: ")
+                if inputv == 'Y':
+                    matches.append([h['fields']['subj_id'],k])
+                    new_id = {"relatedIdentifier":h['fields']['subj_id'],\
+                    "relatedIdentifierType":"DOI",\
+                    "relationType":"IsCitedBy"}
+                    ids = []
+                    if 'relatedIdentifiers' in metadata:
+                        for m in metadata['relatedIdentifiers']:
+                            ids.append({"relatedIdentifier":m['relatedIdentifier'],\
+                                "relatedIdentifierType":m['relatedIdentifierScheme'],\
+                                "relationType":m["relatedIdentifierRelation"]})
+                    ids.append(new_id)
+                    newmetadata =\
+                    {"relatedIdentifiers":ids}
+                    key=333
+                    Caltechdata_edit(token,key,newmetadata,{},{},False)
     return matches
