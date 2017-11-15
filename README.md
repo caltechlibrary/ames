@@ -2,9 +2,10 @@
 
 Automated Metadata Service
 
-In development. 
+In development- Basic citation alerter implemented. 
 
 Requires: Python 3, Requests, [Dataset](https://github.com/caltechlibrary/dataset). 
+CaltechDATA integration requires [caltechdata_write](https://github.com/caltechlibrary/caltechdata_write)
 
 ## Harvesters
 
@@ -17,12 +18,12 @@ Requires: Python 3, Requests, [Dataset](https://github.com/caltechlibrary/datase
 
 ## Examples
 
-python run.py
+Collect citation event data, match with CaltechDATA, send email alerts
+'python run.py'
 
 ## Setup 
-
-
-## Usage
-
-## TODO
+You need to set your environmental variables with your token to access
+CaltechDATA (TINDTOK) and Mailgun (MAILTOK).  Access to data on S3 is
+restricted to Caltech Library staff and S3 configuration needs to be set up
+following the dataset instructions. 
 
