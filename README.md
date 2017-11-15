@@ -18,7 +18,7 @@ CaltechDATA integration requires [caltechdata_write](https://github.com/caltechl
 
 ## Examples
 
-Collect citation event data, match with CaltechDATA, send email alerts
+Collect citation event data, match with CaltechDATA, send email alerts:
 'python run.py'
 
 ## Setup 
