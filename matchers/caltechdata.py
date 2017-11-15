@@ -44,6 +44,5 @@ def match_cd_refs():
                     ids.append(new_id)
                     newmetadata =\
                     {"relatedIdentifiers":ids}
-                    key=333
-                    Caltechdata_edit(token,key,newmetadata,{},{},False)
+                    Caltechdata_edit(token,k,newmetadata,{},{},True)
     return matches
