@@ -27,12 +27,14 @@ def match_cd_refs():
                     #print(re.match(m['relatedIdentifier'],h['fields']['subj_id']))
                     #print(m['relatedIdentifier'])
             if new == True:
-                print(h['fields']['subj_id'])
+                match = h['fields']['subj_id']
+                print(match)
                 print(h['fields']['obj_id'])
                 inputv = input("Do you approve this link?  Type Y or N: ")
                 if inputv == 'Y':
-                    matches.append([h['fields']['subj_id'],k])
-                    new_id = {"relatedIdentifier":h['fields']['subj_id'],\
+                    matches.append([match,k])
+                    split = match.split('doi.org/')
+                    new_id = {"relatedIdentifier":split[1],\
                     "relatedIdentifierType":"DOI",\
                     "relationType":"IsCitedBy"}
                     ids = []
