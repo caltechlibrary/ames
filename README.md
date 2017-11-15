@@ -1,5 +1,7 @@
 # ames
 
+[![DOI](https://data.caltech.edu/badge/110025475.svg)](https://data.caltech.edu/badge/latestdoi/110025475)
+
 Automated Metadata Service
 
 In development- Basic citation alerter implemented. 
