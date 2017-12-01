@@ -7,7 +7,7 @@ Automated Metadata Service
 In development- Basic citation alerter implemented. 
 
 Requires: Python 3, Requests, [Dataset](https://github.com/caltechlibrary/dataset). 
-CaltechDATA integration requires [caltechdata_write](https://github.com/caltechlibrary/caltechdata_write)
+CaltechDATA integration requires [caltechdata_api](https://github.com/caltechlibrary/caltechdata_api)
 
 ## Harvesters
 
