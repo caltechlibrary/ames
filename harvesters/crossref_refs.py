@@ -2,7 +2,7 @@ import os,shutil,json,subprocess, datetime
 import requests
 
 def get_crossref_refs(new=True):
-    #New will download everything from scratch and delete any existing records
+    #New=True will download everything from scratch and delete any existing records
 
     collection = 'crossref_refs'
 
@@ -31,16 +31,20 @@ def get_crossref_refs(new=True):
 
         for rec in records['message']['events']:
             #Save results in dataset
-            event = json.dumps(rec)
+            if rec['message_action'] != 'create':
+                print("Deleted record",rec['id'])
+                subprocess.run(['dataset','delete',rec['id']])
+            else:
+                event = json.dumps(rec)
 
-            print(count)
-            count = count + 1 #Just for prettyness
-            subprocess.run(['dataset','create',\
-                    str(rec['id'])+'.json'],input=event,universal_newlines=True)
+                print(count,rec['id'])
+                count = count + 1 #Just for prettyness
+                subprocess.run(['dataset','-i','-','create',\
+                    str(rec['id'])],input=event,universal_newlines=True)
         cursor = records['message']['next-cursor']
+    
     date = datetime.date.today().isoformat()
-    subprocess.run(['dataset','create','captured.json'],input=date,universal_newlines=True)
-    #Shoudl also check 'fron-updated-date', but doesn't really impact datacite links
+    subprocess.run(['dataset','-i','-','create','captured'],input=date,universal_newlines=True)
 
-    subprocess.run(['dsindexer','-update','harvesters/crossref.json',collection+'.bleve'],input=date,universal_newlines=True)
+    subprocess.run(['dsindexer','-update','harvesters/crossref_refs.json',collection+'.bleve'])
 
