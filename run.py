@@ -49,6 +49,6 @@ def send_simple_message(token,matched):
 get_crossref_refs(False)
 matches = match_cd_refs()
 
-token = os.environ['MAILTOK']
 for m in matches:
+    token = os.environ['MAILTOK']
     send_simple_message(token,m)
