@@ -4,7 +4,7 @@
 
 Automated Metadata Service
 
-In development- Basic citation alerter implemented. 
+This package will update the metadata in our repositories from external sources.  This package is currently in development and will have additional sources and matchers added over time.
 
 Requires: 
 
@@ -21,14 +21,13 @@ CaltechDATA integration requires [caltechdata_api](https://github.com/caltechlib
 
 - caltechdata - Match content in CaltechDATA
 
-## Examples
+### How to run CaltechDATA Citation Alerts
 
-Collect citation event data, match with CaltechDATA, send email alerts:
-'python run.py'
+#### Setup
+Type 'python setup.py install' to install.  You need to set environmental variables with your token to access
+CaltechDATA (TINDTOK) and Mailgun (MAILTOK).  Access to data on S3 is currently
+restricted to Caltech Library staff and your S3 configuration needs to be set up
+following the instructions in dataset.
 
-## Setup 
-You need to set your environmental variables with your token to access
-CaltechDATA (TINDTOK) and Mailgun (MAILTOK).  Access to data on S3 is
-restricted to Caltech Library staff and S3 configuration needs to be set up
-following the dataset instructions. 
-
+#### Usage
+You will automatically generate citation alerts for all DOIs in the CaltechDATA repository.  This script collects citation data from the Crossref Event Data API, matches DOIs with those in CaltechDATA, updates the metadata in CaltechDATA, and sends an email alert to the contact person for the data record.  To run this process type 'python run.py'.  You'll be prompted if any citations are found.  
