@@ -48,3 +48,13 @@ def match_cd_refs():
                     response = caltechdata_edit(token,k,newmetadata,{},{},True)
                     print(response)
     return matches
+
+def match_codemeta():
+    keys =\
+    subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
+    for k in keys:
+        file_names =\
+        [subprocess.check_output(["dataset","attachments",k],universal_newlines=True)]
+        os.system("dataset "+" attached "+k)
+        for f in file_names:
+            print(f)
