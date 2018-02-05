@@ -16,18 +16,33 @@ CaltechDATA integration requires [caltechdata_api](https://github.com/caltechlib
 
 - datacite_refs - Harvest references in datacite metadata from crossref event data
 - crossref_refs - Harvest references in datacite metadata from crossref event data
+- cd_github - Harvest GitHub repos from CaltechDATA
 
 ## Matchers
 
 - caltechdata - Match content in CaltechDATA
 
-### How to run CaltechDATA Citation Alerts
+## CodeMeta Updating
 
 #### Setup
-Type 'python setup.py install' to install.  You need to set environmental variables with your token to access
+You need to set environmental variables with your token to access
+CaltechDATA (TINDTOK)
+
+#### Usage
+Type `python run_codemeta.py`.  This will harvest all the repos present in
+CaltechDATA, search them for codemeta.json files, and update the metadata
+in CaltechDATA.  There are more fields that could be mapped in the future.
+
+## CaltechDATA Citation Alerts
+
+#### Setup
+You need to set environmental variables with your token to access
 CaltechDATA (TINDTOK) and Mailgun (MAILTOK).  Access to data on S3 is currently
 restricted to Caltech Library staff and your S3 configuration needs to be set up
 following the instructions in dataset.
 
 #### Usage
-You will automatically generate citation alerts for all DOIs in the CaltechDATA repository.  This script collects citation data from the Crossref Event Data API, matches DOIs with those in CaltechDATA, updates the metadata in CaltechDATA, and sends an email alert to the contact person for the data record.  To run this process type 'python run.py'.  You'll be prompted if any citations are found.  
+You will automatically generate citation alerts for all DOIs in the CaltechDATA repository.  
+This script collects citation data from the Crossref Event Data API, matches DOIs with those 
+in CaltechDATA, updates the metadata in CaltechDATA, and sends an email alert to the contact 
+person for the data record.  To run this process type 'python run_event_data.py'.  You'll be prompted if any citations are found.  

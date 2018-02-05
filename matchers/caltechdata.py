@@ -76,6 +76,11 @@ def codemeta_to_datacite(metadata):
         uri = metadata['license']
         name = uri.split('/')[-1]
         datacite['rightsList'] = [{'rights':name,'rightsURI':uri}]
+    if 'keywords' in metadata:
+        sub = []
+        for k in metadata['keywords']:
+            sub.append({"subject":k})
+        datacite['subjects']=sub
     return datacite
 
 def match_codemeta():
@@ -87,6 +92,7 @@ def match_codemeta():
         os.system("dataset "+" attached "+k)
         codemeta=False
         for f in file_names:
+            f = f.rstrip()
             if f.split('.')[-1] == 'zip':
                 files =\
                 subprocess.check_output(['unzip','-l',f.rstrip()],universal_newlines=True).splitlines()
@@ -112,7 +118,7 @@ def match_codemeta():
             infile = open('codemeta.json','r')
             meta = json.load(infile)
             standardized = codemeta_to_datacite(meta)
-            response = caltechdata_edit(token,k,standardized,{},{},False)
+            response = caltechdata_edit(token,k,standardized,{},{},True)
             print(response)
 
 
