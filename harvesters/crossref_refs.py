@@ -28,7 +28,9 @@ def get_crossref_refs(new=True):
             url = base_url + '&cursor='+cursor
         r = requests.get(url)
         records = r.json()
-
+        if records['status'] == 'failed':
+            print(records)
+            break
         for rec in records['message']['events']:
             #Save results in dataset
             if rec['message_action'] != 'create':
@@ -42,7 +44,7 @@ def get_crossref_refs(new=True):
                 subprocess.run(['dataset','-i','-','create',\
                     str(rec['id'])],input=event,universal_newlines=True)
         cursor = records['message']['next-cursor']
-    
+
     date = datetime.date.today().isoformat()
     subprocess.run(['dataset','-i','-','create','captured'],input=date,universal_newlines=True)
 
