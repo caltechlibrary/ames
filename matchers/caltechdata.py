@@ -11,6 +11,7 @@ def match_cd_refs():
     keys =\
     subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","keys"],universal_newlines=True).splitlines()
     for k in keys:
+        print(k)
         metadata =\
         subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","read",k],universal_newlines=True)
         metadata = json.loads(metadata)['metadata']
@@ -49,6 +50,34 @@ def match_cd_refs():
                     print(response)
     return matches
 
+def codemeta_to_datacite(metadata):
+    datacite = {}
+    if 'author' in metadata:
+        creators = []
+        for a in metadata['author']:
+            cre = {}
+            cre['creatorName'] = a['familyName']+','+a['givenName']
+            cre['familyName'] = a['familyName']
+            cre['givenName'] = a['givenName']
+            if '@id' in a:
+                idv = a['@id']
+                split = idv.split('/')
+                idn = split[-1]
+                cre['nameIdentifiers']=[{\
+                        'nameIdentifier':idn,'nameIdentifierScheme':'ORCID','schemeURI':'http://orcid.org'}]
+                #Should check for type and remove hard code URI
+            if 'affiliation' in a:
+                cre['affiliations'] = [a['affiliation']]
+                #Should check if can support multiple affiliations
+            creators.append(cre)
+        datacite['creators'] = creators
+    if 'license' in metadata:
+        #Assuming uri to name conversion, not optimal
+        uri = metadata['license']
+        name = uri.split('/')[-1]
+        datacite['rightsList'] = [{'rights':name,'rightsURI':uri}]
+    return datacite
+
 def match_codemeta():
     keys =\
     subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
@@ -56,5 +85,34 @@ def match_codemeta():
         file_names =\
         [subprocess.check_output(["dataset","attachments",k],universal_newlines=True)]
         os.system("dataset "+" attached "+k)
+        codemeta=False
         for f in file_names:
-            print(f)
+            if f.split('.')[-1] == 'zip':
+                files =\
+                subprocess.check_output(['unzip','-l',f.rstrip()],universal_newlines=True).splitlines()
+                i = 4 #Ignore header
+                line = files[i]
+                while line[0] != '-':
+                    split = line.split('/')
+                    fname = split[-1]
+                    if fname == 'codemeta.json':
+                        path = ''
+                        sp = line.split('   ')[-1]
+                        os.system('unzip -j '+f.rstrip()+' '+sp+' -d .')
+                        codemeta = True
+                    i = i+1
+                    line = files[i]
+                    #Does not sensibly handle repos with multiple codemeta
+                    #files
+            os.system('rm '+f)
+        
+        if codemeta == True:
+            token = os.environ['TINDTOK']
+
+            infile = open('codemeta.json','r')
+            meta = json.load(infile)
+            standardized = codemeta_to_datacite(meta)
+            response = caltechdata_edit(token,k,standardized,{},{},False)
+            print(response)
+
+

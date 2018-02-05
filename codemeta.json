@@ -1,0 +1,28 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "description": "AMES automates updating repository metadata.",
+  "name": "AMES: Automated Metadata Service",
+  "codeRepository": "https://github.com/caltechlibrary/ames",
+  "issueTracker": "https://github.com/caltechlibrary/ames/issues",
+  "license": "https://data.caltech.edu/license",
+  "version": "0.0.3",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Thomas E",
+      "familyName": "Morrell",
+      "affiliation": "Caltech Library",
+      "email": "tmorrell@caltech.edu",
+      "@id": "https://orcid.org/0000-0001-9266-5146"
+    }],
+  "developmentStatus": "active",
+  "downloadUrl": "https://github.com/caltechlibrary/ames/archive/0.0.3.zip",
+  "keywords": [
+    "GitHub",
+    "metadata",
+    "software"
+  ],
+  "maintainer": "https://orcid.org/0000-0001-9266-5146",
+  "programmingLanguage": "Python"
+}
