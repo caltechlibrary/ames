@@ -87,12 +87,12 @@ def match_codemeta():
     keys =\
     subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
     for k in keys:
-        file_names =\
-        [subprocess.check_output(["dataset","attachments",k],universal_newlines=True)]
+        file_names\
+        =subprocess.check_output(["dataset","attachments",k],universal_newlines=True).splitlines()
         os.system("dataset "+" attached "+k)
         codemeta=False
         for f in file_names:
-            f = f.rstrip()
+            f = f.split(' ')[0] #Ignoring other file metadata
             if f.split('.')[-1] == 'zip':
                 files =\
                 subprocess.check_output(['unzip','-l',f.rstrip()],universal_newlines=True).splitlines()
