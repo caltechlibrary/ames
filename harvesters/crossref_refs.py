@@ -10,6 +10,8 @@ def get_crossref_refs(new=True):
         if os.path.exists(collection)==True:
             shutil.rmtree(collection)
         os.system("dataset init "+collection)
+        date = datetime.date.today().isoformat()
+        subprocess.run(['dataset','-i','-','create','captured'],input='{"captured":"'+date+'"}',universal_newlines=True)
         
     os.environ['DATASET']=collection
     
@@ -21,11 +23,14 @@ def get_crossref_refs(new=True):
         collected = subprocess.check_output(["dataset","haskey","captured"],universal_newlines=True)
         if collected == 'true\n':
             date = subprocess.check_output(["dataset","read","captured"],universal_newlines=True)
-            #strip newline
-            date = date[:-1]
+            date = json.loads(date)
+            date = date['captured']
+            print(date)
+            print("HELLO")
             url = base_url + ',from-collected-date:' +date+ '&cursor='+cursor
         else:
             url = base_url + '&cursor='+cursor
+        #print(url)
         r = requests.get(url)
         records = r.json()
         if records['status'] == 'failed':
@@ -43,10 +48,13 @@ def get_crossref_refs(new=True):
                 count = count + 1 #Just for prettyness
                 subprocess.run(['dataset','-i','-','create',\
                     str(rec['id'])],input=event,universal_newlines=True)
+        if cursor == records['message']['next-cursor']: #If we have the event
+        # data bug where we get the same curser back at end of results
+            break
         cursor = records['message']['next-cursor']
 
     date = datetime.date.today().isoformat()
-    subprocess.run(['dataset','-i','-','create','captured'],input=date,universal_newlines=True)
+    subprocess.run(['dataset','-i','-','update','captured'],input='{"captured":"'+date+'"}',universal_newlines=True)
 
     subprocess.run(['dsindexer','-update','harvesters/crossref_refs.json',collection+'.bleve'])
 
