@@ -1,5 +1,6 @@
 import os,subprocess,json,re
 from caltechdata_api import caltechdata_edit
+import dataset
 
 def match_cd_refs():
     
@@ -84,8 +85,10 @@ def codemeta_to_datacite(metadata):
     return datacite
 
 def match_codemeta():
-    keys =\
-    subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
+    collection = 'github_records'
+    keys = dataset.keys(collection)
+    #keys =\
+            #subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
     for k in keys:
         #Check whether we have looked at this repo
 

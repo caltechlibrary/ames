@@ -3,6 +3,6 @@ from matchers import match_codemeta
 import os,subprocess,json
 import requests
 
-get_cd_github(False)
+get_cd_github(True)
 matches = match_codemeta()
 

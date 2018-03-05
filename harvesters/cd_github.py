@@ -2,6 +2,7 @@ import os,json,subprocess
 import requests
 from clint.textui import progress
 from caltechdata_api import decustomize_schema
+import dataset
 
 def download_file(erecord,rid):
     r = requests.get(erecord["uniform_resource_identifier"],stream=True)
@@ -20,36 +21,43 @@ progress.bar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) +
 
 def get_cd_github(new=True):
 
-    dataset = 'github_records'
+    collection = 'github_records'
 
     if new==True:
-        os.system('rm '+dataset)
-        os.system("dataset init "+dataset)
+        os.system('rm -rf '+collection)
+        ok = dataset.init_collection(collection)
+        if ok == False:
+            print("Dataset failed to init collection")
+            exit()
 
     url = 'https://data.caltech.edu/api/records'
 
     response = requests.get(url+'/?size=1000&q=subjects:GitHub')
     hits = response.json()
 
-    os.environ["DATASET"] = dataset
+    os.environ["DATASET"] = collection
 
     for h in hits['hits']['hits']:
+        print('checking',h)
         rid = str(h['id'])
         record = h['metadata']
     
-        result =\
-        subprocess.check_output(['dataset','haskey',rid],universal_newlines=True).rstrip()
+        result = dataset.has_key(collection,rid)
+        #result =\
+                #subprocess.check_output(['dataset','haskey',rid],universal_newlines=True).rstrip()
 
         if result == 'false':
         
+            dataset.create_record(collection,rid, record)
+
             #Save results in dataset
-            outstr = json.dumps(record)
+            #outstr = json.dumps(record)
 
             #Replace single quotes with complicated escape
-            outstr = outstr.replace("'","'\\''")
-            print("Saving record " + str(rid))
+            #outstr = outstr.replace("'","'\\''")
+            #print("Saving record " + str(rid))
 
-            os.system("dataset create "+rid+'.json'+" '"+outstr+"'")
+            #os.system("dataset create "+rid+'.json'+" '"+outstr+"'")
 
             fstring = ''
 
