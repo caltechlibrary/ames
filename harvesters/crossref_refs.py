@@ -26,11 +26,10 @@ def get_crossref_refs(new=True):
             date = json.loads(date)
             date = date['captured']
             print(date)
-            print("HELLO")
             url = base_url + ',from-collected-date:' +date+ '&cursor='+cursor
         else:
             url = base_url + '&cursor='+cursor
-        #print(url)
+        print(url)
         r = requests.get(url)
         records = r.json()
         if records['status'] == 'failed':
