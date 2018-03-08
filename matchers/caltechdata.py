@@ -90,13 +90,13 @@ def match_codemeta():
     #keys =\
             #subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
     for k in keys:
-        #Check whether we have looked at this repo
-
         file_names\
         =subprocess.check_output(["dataset","attachments",k],universal_newlines=True).splitlines()
-        os.system("dataset "+" detach "+k)
+        #os.system("dataset "+" detach "+k)
         codemeta=False
         for f in file_names:
+            os.system("dataset "+" prune "+k+" "+f) 
+            #This is the only time we look at this file
             f = f.split(' ')[0] #Ignoring other file metadata
             if f.split('.')[-1] == 'zip':
                 files =\
