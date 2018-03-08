@@ -26,6 +26,7 @@ def get_cd_github(new=True):
     if new==True:
         os.system('rm -rf '+collection)
         ok = dataset.init_collection(collection)
+        print(ok,"HERE")        
         if ok == False:
             print("Dataset failed to init collection")
             exit()
@@ -38,15 +39,16 @@ def get_cd_github(new=True):
     os.environ["DATASET"] = collection
 
     for h in hits['hits']['hits']:
-        print('checking',h)
+        #print('checking',h)
         rid = str(h['id'])
         record = h['metadata']
     
         result = dataset.has_key(collection,rid)
-        #result =\
+        print(result)
+	#result =\
                 #subprocess.check_output(['dataset','haskey',rid],universal_newlines=True).rstrip()
 
-        if result == 'false':
+        if result == False:
         
             dataset.create_record(collection,rid, record)
 
