@@ -55,6 +55,6 @@ def get_crossref_refs(new=True):
 
     date = datetime.date.today().isoformat()
     subprocess.run(['dataset','-i','-','update','captured'],input='{"captured":"'+date+'"}',universal_newlines=True)
-
-    subprocess.run(['dsindexer','-update','harvesters/crossref_refs.json',collection+'.bleve'])
+    subprocess.run(['rm','-rf',collection+'.bleve'])
+    subprocess.run(['dataset','indexer','harvesters/crossref_refs.json',collection+'.bleve'])
 
