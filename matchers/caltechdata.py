@@ -17,7 +17,7 @@ def match_cd_refs():
         subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","read",k],universal_newlines=True)
         metadata = json.loads(metadata)['metadata']
         results =\
-                subprocess.check_output(["dsfind","-json","crossref_refs.bleve","+obj_id:*"+metadata['doi']],universal_newlines=True)
+                subprocess.check_output(["dataset","-json","find","crossref_refs.bleve","+obj_id:*"+metadata['doi']],universal_newlines=True)
         results = json.loads(results)
         for h in results['hits']:
             new = True
@@ -85,45 +85,24 @@ def codemeta_to_datacite(metadata):
     return datacite
 
 def match_codemeta():
-    collection = 'github_records'
+    collection = 'github_records.ds'
     keys = dataset.keys(collection)
-    #keys =\
-            #subprocess.check_output(["dataset","-c","github_records","keys"],universal_newlines=True).splitlines()
     for k in keys:
-        file_names\
-        =subprocess.check_output(["dataset","attachments",k],universal_newlines=True).splitlines()
-        #os.system("dataset "+" detach "+k)
-        codemeta=False
-        for f in file_names:
-            os.system("dataset "+" prune "+k+" "+f) 
-            #This is the only time we look at this file
-            f = f.split(' ')[0] #Ignoring other file metadata
-            if f.split('.')[-1] == 'zip':
-                files =\
-                subprocess.check_output(['unzip','-l',f.rstrip()],universal_newlines=True).splitlines()
-                i = 4 #Ignore header
-                line = files[i]
-                while line[0] != '-':
-                    split = line.split('/')
-                    fname = split[-1]
-                    if fname == 'codemeta.json':
-                        path = ''
-                        sp = line.split('   ')[-1]
-                        os.system('unzip -j '+f.rstrip()+' '+sp+' -d .')
-                        codemeta = True
-                    i = i+1
-                    line = files[i]
-                    #Does not sensibly handle repos with multiple codemeta
-                    #files
-            os.system('rm '+f)
-        
-        if codemeta == True:
-            token = os.environ['TINDTOK']
+        existing = dataset.read(collection,k)
+        if 'completed' not in existing:
+            print('HERE')
+            if dataset.attachments(collection,k) != '':
+                dataset.detach(collection,k)
 
-            infile = open('codemeta.json','r')
-            meta = json.load(infile)
-            standardized = codemeta_to_datacite(meta)
-            response = caltechdata_edit(token,k,standardized,{},{},True)
-            print(response)
+                #Update CaltechDATA
+                token = os.environ['TINDTOK']
 
+                infile = open('codemeta.json','r')
+                meta = json.load(infile)
+                standardized = codemeta_to_datacite(meta)
+                response = caltechdata_edit(token,k,standardized,{},{},True)
+                print(response)
+
+            existing['completed'] = 'True'
+            dataset.update(collection,k,existing)
 
