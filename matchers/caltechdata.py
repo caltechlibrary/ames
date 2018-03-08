@@ -90,7 +90,7 @@ def match_codemeta():
     for k in keys:
         existing = dataset.read(collection,k)
         if 'completed' not in existing:
-            print('HERE')
+            print('Processing new record')
             if dataset.attachments(collection,k) != '':
                 dataset.detach(collection,k)
 
@@ -102,6 +102,7 @@ def match_codemeta():
                 standardized = codemeta_to_datacite(meta)
                 response = caltechdata_edit(token,k,standardized,{},{},True)
                 print(response)
+                os.system('rm codemeta.json')
 
             existing['completed'] = 'True'
             dataset.update(collection,k,existing)

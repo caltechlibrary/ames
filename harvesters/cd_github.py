@@ -22,6 +22,9 @@ progress.bar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) +
 def get_cd_github(new=True):
 
     collection = 'github_records.ds'
+    if os.path.isdir('data') == False:
+        os.mkdir('data')
+    os.chdir('data')
 
     if new==True:
         os.system('rm -rf '+collection)
@@ -84,5 +87,6 @@ def get_cd_github(new=True):
                 print(collection,rid)
                 response = dataset.attach(collection,rid,['codemeta.json'])
                 print("Attachment ",response)
-                #os.system('rm codemeta.json')
+                os.system('rm codemeta.json')
+                print("Trash codemeta.json")
 
