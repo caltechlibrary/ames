@@ -3,3 +3,7 @@ crossref_refs/
 datacite_refs/
 matchers/__pycache__/
 harvesters/__pycache__/
+__pycache__/
+data/
+CaltechDATA_Logo.png
+CaltechDATA_Logo_cropped.png
