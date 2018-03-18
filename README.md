@@ -8,7 +8,7 @@ This package will update the metadata in our repositories from external sources.
 
 Requires: 
 
-Python 3 (Recommended via [Anaconda](https://www.anaconda.com/download)) with reqests library and [Dataset](https://github.com/caltechlibrary/dataset).
+Python 3 (Recommended via [Anaconda](https://www.anaconda.com/download)) with requests library and [Dataset](https://github.com/caltechlibrary/dataset).
 
 CaltechDATA integration requires [caltechdata_api](https://github.com/caltechlibrary/caltechdata_api)
 
