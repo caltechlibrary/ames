@@ -20,19 +20,15 @@ def get_crossref_refs(new=True):
             print("Dataset failed to init collection")
             exit()
 
-    #os.environ['DATASET']=collection
-    
     base_url = 'https://api.eventdata.crossref.org/v1/events?mailto=data@caltech.edu&source=crossref'
+
+    collected = dataset.has_key(collection,"captured")
 
     cursor = ''
     count = 0
     while cursor != None:
-        #collected = subprocess.check_output(["dataset","haskey","captured"],universal_newlines=True)
-        collected = dataset.has_key(collection,"captured")
         if collected == True:
-            #date = subprocess.check_output(["dataset","read","captured"],universal_newlines=True)
             date = dataset.read(collection,"captured")
-            #date = json.loads(date)
             date = date['captured']
             print(date)
             url = base_url + '&from-collected-date=' +date+ '&cursor='+cursor
@@ -46,20 +42,43 @@ def get_crossref_refs(new=True):
             break
         for rec in records['message']['events']:
             #Save results in dataset
-            #event = json.dumps(rec)
             print(count,rec['id'])
             count = count + 1 #Just for prettyness
             dataset.create(collection,rec['id'],rec)
-            #subprocess.run(['dataset','-i','-','create',\
-                    #        str(rec['id'])],input=event,universal_newlines=True)
 
         if cursor == records['message']['next-cursor']: 
         # Catches bug where we get the same curser back at end of results
             break
         cursor = records['message']['next-cursor']
 
+    if collected == True:
+    
+        date = dataset.read(collection,"captured")
+        date = date['captured']
+
         #Check Deleted
+        cursor = ''
+        while cursor != None:
+            del_url = 'https://api.eventdata.crossref.org/v1/events/deleted?mailto=data@caltech.edu&source=crossref'
+            full = del_url + '&from-collected-date=' +date+ '&cursor='+cursor
+            r = requests.get(full)
+            for rec in records['message']['events']:
+                #Delete results in dataset
+                print("Deleted: ",rec['id'])
+                dataset.delete(collection,rec['id'],rec)
+            cursor = records['message']['next-cursor']
+
         #Check Edited
+        cursor = ''
+        while cursor != None:
+            del_url = 'https://api.eventdata.crossref.org/v1/events/edited?mailto=data@caltech.edu&source=crossref'
+            full = del_url + '&from-collected-date=' +date+ '&cursor='+cursor
+            r = requests.get(full)
+            for rec in records['message']['events']:
+                #Delete results in dataset
+                print("Update: ",rec['id'])
+                dataset.update(collection,rec['id'],rec)
+            cursor = records['message']['next-cursor']
 
     date = datetime.date.today().isoformat()
     record = {"captured":date}
@@ -67,8 +86,5 @@ def get_crossref_refs(new=True):
         dataset.update(collection,'captured',record)
     else:
         dataset.create(collection,'captured',record)
-    #subprocess.run(['dataset','-i','-','update','captured'],input='{"captured":"'+date+'"}',universal_newlines=True)
-    #subprocess.run(['rm','-rf',collection+'.bleve'])
     dataset.indexer(collection,collection+'.bleve','../harvesters/crossref_refs.json')
-    #subprocess.run(['dataset','indexer','harvesters/crossref_refs.json',collection+'.bleve'])
 

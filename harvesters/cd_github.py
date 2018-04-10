@@ -40,10 +40,7 @@ def get_cd_github(new=True):
     response = requests.get(url+'/?size=1000&q=subjects:GitHub')
     hits = response.json()
 
-    #os.environ["DATASET"] = collection
-    
     for h in hits['hits']['hits']:
-        #print('checking',h)
         rid = str(h['id'])
         record = h['metadata']
     
