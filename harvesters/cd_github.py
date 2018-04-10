@@ -30,7 +30,7 @@ def get_cd_github(new=True):
         os.system('rm -rf '+collection)
 
     if os.path.isdir(collection) == False:
-        ok = dataset.init_collection(collection)
+        ok = dataset.init(collection)
         if ok == False:
             print("Dataset failed to init collection")
             exit()

@@ -1,16 +1,17 @@
 from harvesters import get_crossref_refs
-from harvesters import get_datacite_refs
 from matchers import match_cd_refs
 import os,subprocess,json
 import requests
+import dataset
+
+#Environment variable AWS_SDK_LOAD_CONFIG=1 must be set before running
 
 def send_simple_message(token,matched):
     matched_doi = matched[0]
     matched_key = matched[1]
-    os.environ['AWS_SDK_LOAD_CONFIG']="1"
-    metadata =\
-        subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","read",matched_key],universal_newlines=True)
-    metadata = json.loads(metadata)['metadata']
+    metadata = dataset.read("s3://dataset.library.caltech.edu/CaltechDATA",matched_key)['metadata']
+        #subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","read",matched_key],universal_newlines=True)
+    #metadata = json.loads(metadata)['metadata']
     title = metadata['title']
     doi = metadata['doi']
     headers = {'Accept':'text/bibliography; style=american-medical-association'}

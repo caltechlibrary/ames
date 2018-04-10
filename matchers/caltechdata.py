@@ -4,23 +4,22 @@ import dataset
 
 def match_cd_refs():
     
-    os.environ['AWS_SDK_LOAD_CONFIG']="1"
     token = os.environ['TINDTOK']
 
     matches = []
-
-    keys =\
-    subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","keys"],universal_newlines=True).splitlines()
+    collection = "s3://dataset.library.caltech.edu/CaltechDATA"
+    keys = dataset.keys(collection)
     for k in keys:
         print(k)
-        metadata =\
-        subprocess.check_output(["dataset","-c","s3://dataset.library.caltech.edu/CaltechDATA","read",k],universal_newlines=True)
-        metadata = json.loads(metadata)['metadata']
+        metadata = dataset.read(collection,k)['metadata']
+        #results = dataset.find("crossref_refs.ds.bleve","+obj_id:*"+metadata['doi'])
         results =\
-                subprocess.check_output(["dataset","-json","find","crossref_refs.bleve","+obj_id:*"+metadata['doi']],universal_newlines=True)
+                        subprocess.check_output(["dataset","-json","find","crossref_refs.ds.bleve","+obj_id:*"+metadata['doi']],universal_newlines=True)
         results = json.loads(results)
+        #print(results)
         for h in results['hits']:
             new = True
+            print(h)
             if 'relatedIdentifiers' in metadata:
                 for m in metadata['relatedIdentifiers']:
                     if m['relatedIdentifier'] in h['fields']['subj_id']:
