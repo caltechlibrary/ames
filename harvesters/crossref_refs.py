@@ -29,7 +29,7 @@ def get_crossref_refs(new=True):
     while cursor != None:
         if collected == True:
             date = dataset.read(collection,"captured")
-            date = date['captured']
+            date = date[0]['captured']
             print(date)
             url = base_url + '&from-collected-date=' +date+ '&cursor='+cursor
         else:
@@ -54,7 +54,7 @@ def get_crossref_refs(new=True):
     if collected == True:
     
         date = dataset.read(collection,"captured")
-        date = date['captured']
+        date = date[0]['captured']
 
         #Check Deleted
         cursor = ''
