@@ -65,7 +65,9 @@ def get_crossref_refs(new=True):
             for rec in records['message']['events']:
                 #Delete results in dataset
                 print("Deleted: ",rec['id'])
-                dataset.delete(collection,rec['id'],rec)
+                err = dataset.delete(collection,rec['id'],rec)
+                if err !="":
+                    print(f"Unexpected error on read: {err}")
             cursor = records['message']['next-cursor']
 
         #Check Edited
@@ -83,8 +85,14 @@ def get_crossref_refs(new=True):
     date = datetime.date.today().isoformat()
     record = {"captured":date}
     if dataset.has_key(collection,"captured"):
-        dataset.update(collection,'captured',record)
+        err = dataset.update(collection,'captured',record)
+        if err !="":
+            print(f"Unexpected error on update: {err}")
     else:
-        dataset.create(collection,'captured',record)
-    dataset.indexer(collection,collection+'.bleve','../harvesters/crossref_refs.json')
+        err = dataset.create(collection,'captured',record)
+        if err !="":
+            print(f"Unexpected error on create: {err}")
+    err = dataset.indexer(collection,collection+'.bleve','../harvesters/crossref_refs.json')
+    if err !="":
+            print(f"Unexpected error on index: {err}")
 

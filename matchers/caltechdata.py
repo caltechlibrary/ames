@@ -11,8 +11,13 @@ def match_cd_refs():
     keys = dataset.keys(collection)
     for k in keys:
         print(k)
-        metadata = dataset.read(collection,k)[0]['metadata']
-        results = dataset.find("crossref_refs.ds.bleve","+obj_id:*"+metadata['doi'])
+        metadata,err = dataset.read(collection,k)
+        if err !="":
+            print(f"Unexpected error on read: {err}")
+        metadata = metadata['metadata']
+        results,err = dataset.find("crossref_refs.ds.bleve","+obj_id:*"+metadata['doi'])
+        if err !="":
+            print(f"Unexpected error on find: {err}")
         for h in results['hits']:
             new = True
             print(h)
@@ -83,7 +88,9 @@ def match_codemeta():
     collection = 'github_records.ds'
     keys = dataset.keys(collection)
     for k in keys:
-        existing = dataset.read(collection,k)[0]
+        existing,err = dataset.read(collection,k)
+        if err !="":
+            print(f"Unexpected error on read: {err}")
         if 'completed' not in existing:
             print('Processing new record')
             if dataset.attachments(collection,k) != '':
@@ -100,5 +107,7 @@ def match_codemeta():
                 os.system('rm codemeta.json')
 
             existing['completed'] = 'True'
-            dataset.update(collection,k,existing)
+            err = dataset.update(collection,k,existing)
+            if err !="":
+                print(f"Unexpected error on read: {err}")
 
