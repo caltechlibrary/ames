@@ -14,8 +14,8 @@ def match_cd_refs():
         metadata,err = dataset.read(collection,k)
         if err !="":
             print(f"Unexpected error on read: {err}")
-        metadata = metadata['metadata']
-        results,err = dataset.find("crossref_refs.ds.bleve","+obj_id:*"+metadata['doi'])
+        results,err =\
+        dataset.find("crossref_refs.ds.bleve","+obj_id:*"+metadata['identifier']['identifier'])
         if err !="":
             print(f"Unexpected error on find: {err}")
         for h in results['hits']:
