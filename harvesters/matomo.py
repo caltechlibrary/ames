@@ -24,7 +24,8 @@ def get_downloads(new=True):
 
     url = 'https://data.caltech.edu/api/records'
 
-    matomo = 'https://piwik.tind.io/?module=API&method=Actions.getDownload&format=json&idSite=1161&period=range&date=2016-05-28,2018-05-28&&period=range'
+    matomo =\
+    'https://piwik.tind.io/?module=API&method=Actions.getDownload&format=json&idSite=1161&period=range&date=2018-05-01,2018-05-30&&period=range'
     matomo = matomo + '&token_auth='+token
 
 
@@ -42,7 +43,13 @@ def get_downloads(new=True):
             for filev in record['electronic_location_and_access']:
                 data = requests.get(matomo +\
                     '&downloadUrl='+filev['uniform_resource_identifier'])
-                downloads.append(data.json())
+                data = data.json()
+                if data == []:
+                    data = {'file_name':filev['electronic_name'][0]}
+                else:
+                    data = data[0]
+                    data['file_name']=filev['electronic_name'][0]
+                downloads.append(data)
 
             result = dataset.has_key(collection,rid)
             if result == False:
