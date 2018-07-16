@@ -10,6 +10,8 @@ def match_cd_refs():
     collection = "s3://dataset.library.caltech.edu/CaltechDATA"
     keys = dataset.keys(collection)
     for k in keys:
+        #Collect matched new links for the record
+        record_matches = []
         print(k)
         metadata,err = dataset.read(collection,k)
         if err !="":
@@ -19,6 +21,7 @@ def match_cd_refs():
         if err !="":
             print(f"Unexpected error on find: {err}")
         for h in results['hits']:
+            #Trigger for whether we already have this link
             new = True
             print(h)
             if 'relatedIdentifiers' in metadata:
@@ -33,20 +36,24 @@ def match_cd_refs():
                 print(h['fields']['obj_id'])
                 inputv = input("Do you approve this link?  Type Y or N: ")
                 if inputv == 'Y':
-                    matches.append([match,k])
-                    split = match.split('doi.org/')
-                    new_id = {"relatedIdentifier":split[1],\
+                    record_matches.append(match)
+        #If we have to update record
+        if len(record_matches) > 0:
+            ids = []
+            if 'relatedIdentifiers' in metadata:
+                for m in metadata['relatedIdentifiers']:
+                    ids.append(m)
+            #Now collect identifiers for record
+            for match in record_matches:            
+                matches.append([match,k])
+                split = match.split('doi.org/')
+                new_id = {"relatedIdentifier":split[1],\
                     "relatedIdentifierType":"DOI",\
                     "relationType":"IsCitedBy"}
-                    ids = []
-                    if 'relatedIdentifiers' in metadata:
-                        for m in metadata['relatedIdentifiers']:
-                            ids.append(m)
-                    ids.append(new_id)
-                    newmetadata =\
-                    {"relatedIdentifiers":ids}
-                    response = caltechdata_edit(token,k,newmetadata,{},{},True)
-                    print(response)
+                ids.append(new_id)
+            newmetadata ={"relatedIdentifiers":ids}
+            response = caltechdata_edit(token,k,newmetadata,{},{},True)
+            print(response)
     return matches
 
 def codemeta_to_datacite(metadata):

@@ -9,18 +9,31 @@ import dataset
 def send_simple_message(token,matched):
     matched_doi = matched[0]
     matched_key = matched[1]
-    metadata = dataset.read("s3://dataset.library.caltech.edu/CaltechDATA",matched_key)['metadata']
-    title = metadata['title']
-    doi = metadata['doi']
-    headers = {'Accept':'text/bibliography; style=american-medical-association'}
-    citation  = requests.get(matched_doi,headers=headers)
-    citation = citation.text
+    #Use raw api call to get email
+    api_url = "https://data.caltech.edu/api/record/"
+    r = requests.get(api_url+matched_key)
+    r_data = r.json()
+    if 'message' in r_data:
+        raise AssertionError('id '+idv+' expected http status 200, got '+r_data.status+r_data.message)
+    if not 'metadata' in r_data:
+        raise AssertionError('expected as metadata property in response, got '+r_data)
+    metadata = r_data['metadata']
     email = ''
     name = ''
     for c in metadata['contributors']:
         if c['contributorType']=='ContactPerson':
             email = c['contributorEmail']
             name = c['contributorName']
+    #Use dataset version to get datacite metadata
+    metadata,err = dataset.read("s3://dataset.library.caltech.edu/CaltechDATA",matched_key)
+    if err !="":
+        print(f"Unexpected error on read: {err}")
+    title = metadata['titles'][0]['title']
+    doi = metadata['identifier']['identifier']
+    headers = {'Accept':'text/bibliography; style=american-medical-association'}
+    citation  = requests.get(matched_doi,headers=headers)
+    citation = citation.text
+    #Send email
     if email == '':
         print("No email listed, Nothing sent")
     else:
