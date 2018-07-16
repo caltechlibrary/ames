@@ -41,9 +41,7 @@ def match_cd_refs():
                     ids = []
                     if 'relatedIdentifiers' in metadata:
                         for m in metadata['relatedIdentifiers']:
-                            ids.append({"relatedIdentifier":m['relatedIdentifier'],\
-                                "relatedIdentifierType":m['relatedIdentifierScheme'],\
-                                "relationType":m["relatedIdentifierRelation"]})
+                            ids.append(m)
                     ids.append(new_id)
                     newmetadata =\
                     {"relatedIdentifiers":ids}
