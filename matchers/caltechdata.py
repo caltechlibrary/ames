@@ -62,7 +62,7 @@ def codemeta_to_datacite(metadata):
         creators = []
         for a in metadata['author']:
             cre = {}
-            cre['creatorName'] = a['familyName']+','+a['givenName']
+            cre['creatorName'] = a['familyName']+', '+a['givenName']
             cre['familyName'] = a['familyName']
             cre['givenName'] = a['givenName']
             if '@id' in a:
