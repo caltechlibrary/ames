@@ -43,9 +43,10 @@ def match_cd_refs():
             if 'relatedIdentifiers' in metadata:
                 for m in metadata['relatedIdentifiers']:
                     ids.append(m)
+            matches.append([k,record_matches])
             #Now collect identifiers for record
             for match in record_matches:            
-                matches.append([match,k])
+                #matches.append([match,k])
                 split = match.split('doi.org/')
                 new_id = {"relatedIdentifier":split[1],\
                     "relatedIdentifierType":"DOI",\

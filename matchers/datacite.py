@@ -19,6 +19,7 @@ def update_datacite_media(username,password):
                     data =\
                     'application/x-netcdf='+file_met['uniform_resource_identifier']
                     headers = {'Content-Type':'application/txt;charset=UTF-8'}
+                    print(data)
                     r = requests.post(url, data = data.encode('utf-8'),\
                             auth=(username,password),headers=headers)  
                     print(r)

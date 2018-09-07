@@ -1,5 +1,6 @@
 from harvesters import get_crossref_refs
 from matchers import match_cd_refs
+from xml.sax import saxutils as su
 import os,subprocess,json
 import requests
 import dataset
@@ -7,8 +8,8 @@ import dataset
 #Environment variable AWS_SDK_LOAD_CONFIG=1 must be set before running
 
 def send_simple_message(token,matched):
-    matched_doi = matched[0]
-    matched_key = matched[1]
+    matched_key = matched[0]
+    matched_dois = matched[1]
     #Use raw api call to get email
     api_url = "https://data.caltech.edu/api/record/"
     r = requests.get(api_url+matched_key)
@@ -30,9 +31,14 @@ def send_simple_message(token,matched):
         print(f"Unexpected error on read: {err}")
     title = metadata['titles'][0]['title']
     doi = metadata['identifier']['identifier']
-    headers = {'Accept':'text/bibliography; style=american-medical-association'}
-    citation  = requests.get(matched_doi,headers=headers)
-    citation = citation.text
+    headers = {'Accept':'text/bibliography;style=apa'}
+    citation_block = ''
+    for matched in matched_dois:
+        citation  = requests.get(matched,headers=headers)
+        citation.encoding = 'utf-8'
+        citation = citation.text
+        citation = su.unescape(citation)
+        citation_block = citation_block + '<p>'+citation+'</p>'
     #Send email
     if email == '':
         print("No email listed, Nothing sent")
@@ -42,25 +48,29 @@ def send_simple_message(token,matched):
             auth=("api", token),
             files=[("inline", open("CaltechDATA_Logo_cropped.png",'rb'))],
             data={"from": "CaltechDATA Notices <mail@notices.caltechlibrary.org>",
-              "to": name+" <"+email+">, Tom Morrell <tmorrell@caltech.edu>",
-              "subject": "Your CaltechDATA Work has a New Citation!",
+              "to":name+" <"+email+">, Tom Morrell <tmorrell@caltech.edu>",
+              "subject": "Your CaltechDATA Work has been cited!",
               "html": '<html> <center> <img src="cid:CaltechDATA_Logo_cropped.png"\
                       alt="CaltechDATA Logo" width="498" height="139"> </center> \
                       <p> Dear '+name+', </p>\
                       <p>Your CaltechDATA work "'+title+'" has been cited\
-                      in:</p><p>'+citation+'</p><p>This\
-                      link has been added to your CaltechDATA record at \
+                      in:</p>'+citation_block+'<p>The\
+                      citation(s) are now listed in your CaltechDATA record at \
                       <a href="https://doi.org/'+doi+'">'+doi+'</a>.</p>\
                       <p> Best, </p><p>CaltechDATA Alerting Service</p><hr>\
                       <p> Is this incorrect?  Let us know at\
                       <a href="mailto:data@caltech.edu?Subject=Issue%20with%20citation%20link%20between%20'\
-                      +doi+'%20and%20'+matched_doi+'">data@caltech.edu</a></p>\
+                      +doi+'%20and%20'+','.join(matched_dois)+'">data@caltech.edu</a></p>\
                       <P> This email was sent by the Caltech Library, \
                       1200 East California Blvd., MC 1-43, Pasadena, CA 91125, USA </p> </html>'})
 
-get_crossref_refs(False)
-matches = match_cd_refs()
+if __name__ == "__main__":
+    if os.path.isdir('data') == False:
+        os.mkdir('data')
+    os.chdir('data')
+    get_crossref_refs(False)
+    matches = match_cd_refs()
 
-for m in matches:
-    token = os.environ['MAILTOK']
-    send_simple_message(token,m)
+    for m in matches:
+        token = os.environ['MAILTOK']
+        send_simple_message(token,m)

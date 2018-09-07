@@ -6,9 +6,6 @@ def get_crossref_refs(new=True):
     #New=True will download everything from scratch and delete any existing records
 
     collection = 'crossref_refs.ds'
-    if os.path.isdir('data') == False:
-        os.mkdir('data')
-    os.chdir('data')
 
     if new==True:
         if os.path.exists(collection)==True:
@@ -44,7 +41,9 @@ def get_crossref_refs(new=True):
             #Save results in dataset
             print(count,rec['id'])
             count = count + 1 #Just for prettyness
-            dataset.create(collection,rec['id'],rec)
+            err = dataset.create(collection,rec['id'],rec)
+            if err != '':
+                print("Error in saving record: "+err)
 
         if cursor == records['message']['next-cursor']: 
         # Catches bug where we get the same curser back at end of results
