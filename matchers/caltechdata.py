@@ -9,6 +9,7 @@ def match_cd_refs():
     matches = []
     collection = "s3://dataset.library.caltech.edu/CaltechDATA"
     keys = dataset.keys(collection)
+    k, err = dataset.read(collection,'407')
     for k in keys:
         #Collect matched new links for the record
         record_matches = []
@@ -88,6 +89,43 @@ def codemeta_to_datacite(metadata):
         for k in metadata['keywords']:
             sub.append({"subject":k})
         datacite['subjects']=sub
+    if 'funder' in metadata:
+        #Kind of brittle due to limitations in codemeta
+        fund_list = []
+        grant_info = ''
+        if 'funding' in metadata:
+            grant_info = metadata['funding'].split(',')
+        if isinstance(metadata['funder'],list):
+            count = 0
+            for f in metadata['funder']:
+                entry = {'funderName':funder['name']}
+                if '@id' in funder:
+                    element = {}
+                    element['funderIdentifier']=funder['@id']
+                    element['funderIdentifierType']='Crossref Funder ID'
+                    entry['funderIdentifier']=element
+                if grant_info != '':
+                    split = grant_info[count].split(';')
+                    entry['awardNumber']={'awardNumber':split[0]}
+                    if len(split) > 1:
+                        entry['awardTitle'] = split[1]
+                count = count + 1
+        else:
+            funder = metadata['funder']
+            entry = {'funderName':funder['name']}
+            if '@id' in funder:
+                element = {}
+                element['funderIdentifier']=funder['@id']
+                element['funderIdentifierType']='Crossref Funder ID'
+                entry['funderIdentifier']=element
+            if grant_info != '':
+                split = grant_info[0].split(';')
+                entry['awardNumber']={'awardNumber':split[0]}
+                if len(split) > 1:
+                    entry['awardTitle'] = split[1]
+            fund_list.append(entry)
+            
+        datacite['fundingReferences'] = fund_list
     return datacite
 
 def match_codemeta():

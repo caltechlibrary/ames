@@ -1,0 +1,36 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "description": "A Shiny app that plots an up-to-date version of the total number of annotated proteins in genomes submitted to GenBank as a function of genome size (based on data provided by NCBI genome reports). The app stays up-to-date by retrieving data from the NCBI FTP server upon loading. Image on Wikipedia is a frozen version of one created by this app (using the Download SVG button).",
+  "name": "genome_size_vs_protein_count",
+  "codeRepository": "https://github.com/smsaladi/genome_size_vs_protein_count",
+  "issueTracker": "https://github.com/smsaladi/genome_size_vs_protein_count/issues",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "version": "1.0",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Shyam M.",
+      "familyName": "Saladi",
+      "affiliation": "Caltech",
+      "email": "tmorrell@caltech.edu",
+      "@id": "https://orcid.org/0000-0001-9701-3059"
+    }],
+  "developmentStatus": "active",
+  "downloadUrl":
+  "https://github.com/smsaladi/genome_size_vs_protein_count/archive/1.0.zip",
+  "keywords": [
+    "GitHub",
+    "ncbi",
+    "genomes",
+    "genome-size"
+  ],
+  "maintainer": "https://orcid.org/0000-0001-9701-3059",
+  "programmingLanguage": "Python",
+  "funder": { 
+          "@id": "https://doi.org/10.13039/100000001",
+          "@type": "Organization",
+          "name": "National Science Foundation"
+   },
+  "funding": "1144469"
+}
