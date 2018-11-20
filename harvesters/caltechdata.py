@@ -4,9 +4,9 @@ from clint.textui import progress
 from caltechdata_api import decustomize_schema
 import dataset
 
-def get_cd_media(new=True):
+def get_caltechdata(new=True):
 
-    collection = 'media_records.ds'
+    collection = 'caltechdata.ds'
     if os.path.isdir('data') == False:
         os.mkdir('data')
     os.chdir('data')
@@ -22,16 +22,21 @@ def get_cd_media(new=True):
 
     url = 'https://data.caltech.edu/api/records'
 
-    response = requests.get(url+'/?size=1000&q=subjects:TCCON')
+    response = requests.get(url+'/?size=1000')
     hits = response.json()
 
+    print("Saving Records")
     for h in hits['hits']['hits']:
         rid = str(h['id'])
-        record = h['metadata']
-    
+        print(rid)
+        metadata = decustomize_schema(h['metadata'])
+        metadata['updated'] = h['updated']
+
         result = dataset.has_key(collection,rid)
 
         if result == False:
+            dataset.create(collection,rid, metadata)
+        else:
+            #Could check update data, but probably not worth it
+            dataset.update(collection,rid, metadata)
         
-            dataset.create(collection,rid, record)
-
