@@ -1,4 +1,5 @@
 from harvesters import get_crossref_refs
+from harvesters import get_caltechdata
 from matchers import match_cd_refs
 from xml.sax import saxutils as su
 import os,subprocess,json
@@ -26,7 +27,7 @@ def send_simple_message(token,matched):
             email = c['contributorEmail']
             name = c['contributorName']
     #Use dataset version to get datacite metadata
-    metadata,err = dataset.read("s3://dataset.library.caltech.edu/CaltechDATA",matched_key)
+    metadata,err = dataset.read("caltechdata.ds",matched_key)
     if err !="":
         print(f"Unexpected error on read: {err}")
     title = metadata['titles'][0]['title']
@@ -69,6 +70,7 @@ if __name__ == "__main__":
         os.mkdir('data')
     os.chdir('data')
     get_crossref_refs(False)
+    get_caltechdata('caltechdata.ds')
     matches = match_cd_refs()
 
     for m in matches:

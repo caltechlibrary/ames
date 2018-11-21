@@ -7,9 +7,8 @@ def match_cd_refs():
     token = os.environ['TINDTOK']
 
     matches = []
-    collection = "s3://dataset.library.caltech.edu/CaltechDATA"
+    collection = "caltechdata.ds"
     keys = dataset.keys(collection)
-    k, err = dataset.read(collection,'407')
     for k in keys:
         #Collect matched new links for the record
         record_matches = []
