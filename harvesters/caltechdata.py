@@ -4,15 +4,7 @@ from clint.textui import progress
 from caltechdata_api import decustomize_schema
 import dataset
 
-def get_caltechdata(new=True):
-
-    collection = 'caltechdata.ds'
-    if os.path.isdir('data') == False:
-        os.mkdir('data')
-    os.chdir('data')
-
-    if new==True:
-        os.system('rm -rf '+collection)
+def get_caltechdata(collection):
 
     if os.path.isdir(collection) == False:
         ok = dataset.init(collection)
@@ -40,3 +32,20 @@ def get_caltechdata(new=True):
             #Could check update data, but probably not worth it
             dataset.update(collection,rid, metadata)
         
+def get_multiple_links(input_collection,output_collection):
+    keys = dataset.keys(input_collection)
+    for k in keys:
+        record,err = dataset.read(input_collection,k)
+        if err != '':
+            print(err)
+            exit()
+        if 'relatedIdentifiers' in record:
+            idvs = []
+            for idv in record['relatedIdentifiers']:
+                idvs.append(idv['relatedIdentifier'])
+            for idv in record['relatedIdentifiers']:
+                count = idvs.count(idv['relatedIdentifier'])
+                if count > 1:
+                    print("DUPE")
+                    print(k)
+                    print(idv['relatedIdentifier'])

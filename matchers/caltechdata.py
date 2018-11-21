@@ -155,3 +155,49 @@ def match_codemeta():
             if err !="":
                 print(f"Unexpected error on read: {err}")
 
+def fix_multiple_links(input_collection,token):
+    keys = dataset.keys(input_collection)
+    for k in keys:
+        record,err = dataset.read(input_collection,k)
+        if err != '':
+            print(err)
+            exit()
+        if 'relatedIdentifiers' in record:
+            idvs = []
+            new = []
+            dupes = []
+            replace = False
+            record_doi = record['identifier']['identifier']
+            for idv in record['relatedIdentifiers']:
+                idvs.append(idv['relatedIdentifier'])
+            for idv in record['relatedIdentifiers']:
+                identifier = idv['relatedIdentifier']
+                if identifier == record_doi:
+                    #Having a related identifier that is the same as the record
+                    #doi doesn't make any sense
+                    replace = True
+                    dupes.append(identifier)
+                else:
+                    count = idvs.count(identifier)
+                    if count > 1:
+                        replace = True
+                        if identifier not in dupes:
+                            #We need to save the first duplicate
+                            new.append(idv)
+                            #Add to list of those already saved
+                            dupes.append(identifier)
+                        else:
+                            #This will be deleted
+                            dupes.append(identifier)
+                    else:
+                        #Save all unique ids
+                        new.append(idv)
+            if replace == True:
+                print("Duplicate links found in record ",k)
+                print("Will delete these links",dupes)
+                response = input("Do you approve this change? Y or N")
+                new_metadata = {'relatedIdentifiers':new}
+                if response == 'Y':
+                    response = caltechdata_edit(token,k,new_metadata,{},{},True)
+                    print(response)
+

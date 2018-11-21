@@ -1,6 +1,13 @@
 import os
 from harvesters import get_caltechdata
-from matchers import update_datacite_media
+from matchers import fix_multiple_links
 
-get_caltechdata(False)
+collection = 'caltechdata.ds'
+if os.path.isdir('data') == False:
+    os.mkdir('data')
+os.chdir('data')
 
+token = os.environ['TINDTOK']
+
+get_caltechdata(collection)
+fix_multiple_links(collection,token)
