@@ -21,7 +21,7 @@ def get_caltechdata(collection):
     for h in hits['hits']['hits']:
         rid = str(h['id'])
         print(rid)
-        metadata = decustomize_schema(h['metadata'])
+        metadata = decustomize_schema(h['metadata'],True,True)
         metadata['updated'] = h['updated']
 
         result = dataset.has_key(collection,rid)
