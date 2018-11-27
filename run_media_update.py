@@ -7,7 +7,8 @@ password = os.environ['DATACITE']
 os.chdir('data')
 
 collection = 'caltechdata.ds'
+prefix = '10.14291'
 
 get_caltechdata(collection)
-update_datacite_media('CALTECH.LIBRARY',password,collection)
+update_datacite_media('CALTECH.LIBRARY',password,collection,prefix)
 
