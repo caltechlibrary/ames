@@ -9,6 +9,7 @@ def match_cd_refs():
     matches = []
     collection = "caltechdata.ds"
     keys = dataset.keys(collection)
+    keys.remove('mediaupdate')
     for k in keys:
         #Collect matched new links for the record
         record_matches = []
