@@ -1,7 +1,5 @@
-import os,subprocess,json,re
-from caltechdata_api import caltechdata_edit
+import json
 from datacite import schema40
-import dataset
 from ames import codemeta_to_datacite
 
 infile = open('codemeta.json','r')
