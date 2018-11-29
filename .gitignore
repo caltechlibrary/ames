@@ -7,3 +7,6 @@ __pycache__/
 data/
 CaltechDATA_Logo.png
 CaltechDATA_Logo_cropped.png
+build/
+dist/
+ames.egg-info/
