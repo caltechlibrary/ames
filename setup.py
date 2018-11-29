@@ -18,7 +18,7 @@ URL = 'https://github.com/caltechlibrary/ames'
 EMAIL = 'tmorrell@caltech.edu'
 AUTHOR = 'Tom Morrell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = 'v0.1.0'
+VERSION = '0.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
