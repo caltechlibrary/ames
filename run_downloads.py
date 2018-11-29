@@ -1,7 +1,7 @@
 import requests
 import dataset
 import os, csv
-from harvesters import get_downloads
+from ames.harvesters import get_downloads
 
 #Pull download statistics from pimwik/matomo
 get_downloads(True)

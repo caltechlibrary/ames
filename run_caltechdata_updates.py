@@ -1,6 +1,6 @@
 import os
-from harvesters import get_caltechdata
-from matchers import fix_multiple_links
+from ames.harvesters import get_caltechdata
+from ames.matchers import fix_multiple_links
 
 collection = 'caltechdata.ds'
 if os.path.isdir('data') == False:

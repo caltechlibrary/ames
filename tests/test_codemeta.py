@@ -2,7 +2,7 @@ import os,subprocess,json,re
 from caltechdata_api import caltechdata_edit
 from datacite import schema40
 import dataset
-from caltechdata import codemeta_to_datacite
+from ames import codemeta_to_datacite
 
 infile = open('codemeta.json','r')
 meta = json.load(infile)
@@ -20,4 +20,5 @@ if result == False:
     for error in errors:
         print(error.message)
     exit()
-
+else:
+    print("Valid DataCite Metadata")

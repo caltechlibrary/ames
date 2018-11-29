@@ -1,6 +1,6 @@
-from harvesters import get_crossref_refs
-from harvesters import get_caltechdata
-from matchers import match_cd_refs
+from ames.harvesters import get_crossref_refs
+from ames.harvesters import get_caltechdata
+from ames.matchers import match_cd_refs
 from xml.sax import saxutils as su
 import os,subprocess,json
 import requests

@@ -1,6 +1,6 @@
 import os
-from harvesters import get_caltechdata
-from matchers import update_datacite_media
+from ames.harvesters import get_caltechdata
+from ames.matchers import update_datacite_media
 
 password = os.environ['DATACITE']
 

@@ -91,7 +91,8 @@ def get_crossref_refs(new=True):
         err = dataset.create(collection,'captured',record)
         if err !="":
             print(f"Unexpected error on create: {err}")
-    err = dataset.indexer(collection,collection+'.bleve','../harvesters/crossref_refs.json')
+    definition = os.path.join(os.path.dirname(__file__),'crossref_refs.json')
+    err = dataset.indexer(collection,collection+'.bleve',definition)
     if err !="":
             print(f"Unexpected error on index: {err}")
 
