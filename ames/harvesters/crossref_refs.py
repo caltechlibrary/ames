@@ -25,8 +25,10 @@ def get_crossref_refs(new=True):
     count = 0
     while cursor != None:
         if collected == True:
-            date = dataset.read(collection,"captured")
-            date = date[0]['captured']
+            date,err = dataset.read(collection,"captured")
+            if err != '':
+                print('error on read: '+err)
+            date = date['captured']
             print(date)
             url = base_url + '&from-collected-date=' +date+ '&cursor='+cursor
         else:
@@ -52,8 +54,10 @@ def get_crossref_refs(new=True):
 
     if collected == True:
     
-        date = dataset.read(collection,"captured")
-        date = date[0]['captured']
+        date,err = dataset.read(collection,"captured")
+        if err != '':
+            print("Error in reading date: "+err)
+        date = date['captured']
 
         #Check Deleted
         cursor = ''
@@ -78,7 +82,9 @@ def get_crossref_refs(new=True):
             for rec in records['message']['events']:
                 #Delete results in dataset
                 print("Update: ",rec['id'])
-                dataset.update(collection,rec['id'],rec)
+                err = dataset.update(collection,rec['id'],rec)
+                if err !="":
+                    print(f"Unexpected error on write: {err}")
             cursor = records['message']['next-cursor']
 
     date = datetime.date.today().isoformat()
