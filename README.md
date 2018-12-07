@@ -32,6 +32,7 @@ CaltechDATA integration requires [caltechdata_api](https://github.com/caltechlib
 - caltechdata - Harvest metadata from CaltechDATA
 - cd_github - Harvest GitHub repos and codemeta files from CaltechDATA
 - matomo - Harvest web statistics from matomo
+- caltechfeeds - Harvest Caltech Library metadata from feeds.library.caltech.edu
 
 ### Matchers
 
@@ -104,8 +105,15 @@ This will harvest download information from matomo.  Very experimental.
 
 #### Setup
 You need to set environmental variables with your token to access
-CaltechDATA `export MATTOK=`
+Matomo `export MATTOK=`
 
 #### Usage
 Type `python run_downloads.py`. 
 
+### CODA Reports (Feeds)
+
+Harvest metadata from Caltech Library repositories and run reports.  In
+development.
+
+#### Usage
+Type `python run_coda_report.py`.
