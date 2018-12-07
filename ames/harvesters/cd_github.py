@@ -62,7 +62,7 @@ def get_cd_github(new=True):
                     line = zip_files[i]
                     while line[0] != '-':
                         split = line.split('/')
-                        fname = split[-1]
+                        fname = split[1]
                         if fname == 'codemeta.json':
                             path = ''
                             sp = line.split('   ')[-1]
@@ -70,8 +70,7 @@ def get_cd_github(new=True):
                             codemeta = True
                         i = i+1
                         line = zip_files[i]
-                        #Does not sensibly handle repos with multiple codemeta
-                        #files
+                        #Will only identify codemeta files in root of repo
 
                 #Trash downloaded files - extracted codemeta.json not impacted
                 print("Trash "+f)
