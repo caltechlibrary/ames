@@ -21,9 +21,17 @@ progress.bar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) +
 
 def get_caltechfeed(feed):
 
-    url ='https://s3-us-west-2.amazonaws.com/test-ames-dataset-location/'
-    fname = feed+'.ds.zip' 
-    cname = feed+'.ds'
+    url ='https://feeds.library.caltech.edu/'+feed+'/'
+
+    if feed=='authors':
+        fname = 'CaltechAUTHORS.ds.zip' 
+        cname = 'CaltechAUTHORS.ds'
+    if feed=='thesis':
+        fname = 'CaltechTHESIS.ds.zip'
+        cname = 'CaltechTHESIS.ds'
+    if feed=='caltechdata':
+        fname = 'CaltechDATA.ds.zip'
+        cname = 'CaltechDATA.ds'
 
     if os.path.isdir(cname) == False:
         #Collection doesn't exist
@@ -44,7 +52,7 @@ def get_caltechfeed(feed):
         print('Local Collection '+ feed +\
             ' last updated on '+captured_date.isoformat())
 
-        upname = feed+'-updated.csv'
+        upname = 'updated.csv'
         download_file(url,upname)
         with open(upname) as csv_file:
             reader = csv.reader(csv_file, delimiter=',')
