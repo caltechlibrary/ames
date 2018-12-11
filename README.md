@@ -112,8 +112,14 @@ Type `python run_downloads.py`.
 
 ### CODA Reports (Feeds)
 
-Harvest metadata from Caltech Library repositories and run reports.  In
-development.
+Harvest metadata from Caltech Library repositories and run reports.  Current
+report lists records (optionally filtered by year) and their DOIs.
 
 #### Usage
-Type `python run_coda_report.py`.
+Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978'
+The first option is the report type.
+The next option is the reporitory (thesis or authors)
+The next option is the output file name
+You can include a -year to return records from a specific year (1977) or a
+range (1977-1978)
+

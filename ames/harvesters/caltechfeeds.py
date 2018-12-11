@@ -80,3 +80,4 @@ def get_caltechfeed(feed):
             with zipfile.ZipFile(fname,"r") as zip_ref:
                 zip_ref.extractall('.')
             os.remove(fname)
+    return cname
