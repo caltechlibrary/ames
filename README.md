@@ -116,7 +116,7 @@ Harvest metadata from Caltech Library repositories and run reports.  Current
 report lists records (optionally filtered by year) and their DOIs.
 
 #### Usage
-Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978'
+Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978`
 
 - The first option is the report type.
 - The next option is the repository (thesis or authors)
