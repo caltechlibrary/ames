@@ -117,9 +117,10 @@ report lists records (optionally filtered by year) and their DOIs.
 
 #### Usage
 Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978'
-The first option is the report type.
-The next option is the repository (thesis or authors)
-The next option is the output file name
-You can include a -year to return records from a specific year (1977) or a
+
+- The first option is the report type.
+- The next option is the repository (thesis or authors)
+- The next option is the output file name
+- You can include a -year to return records from a specific year (1977) or a
 range (1977-1978)
 
