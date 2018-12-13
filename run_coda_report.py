@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description=\
         "Run a report on CODA repositories")
 parser.add_argument('report_name', nargs=1, help=\
         'report name (options: doi)')
-parser.add_argument('repository', nargs='*', help=\
+parser.add_argument('repository', nargs=1, help=\
         'options: thesis, authors')
 parser.add_argument('output', nargs=1, help=\
         'output tsv name')
@@ -20,6 +20,7 @@ args = parser.parse_args()
 
 with open('../'+args.output[0],'w') as fout:
     tsvout = csv.writer(fout,delimiter='\t')
+    tsvout.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL"])
     for repo in args.repository:
 
         collection = get_caltechfeed(repo)
