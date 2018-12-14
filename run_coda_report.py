@@ -3,6 +3,7 @@ import dataset
 from ames.harvesters import get_caltechfeed
 
 def is_in_range(year_arg,year):
+    #Is a given year in the range of a year argument YEAR-YEAR or YEAR?
     if year_arg != None:
         split = year_arg.split('-')
         if len(split)==2:
@@ -36,6 +37,38 @@ def doi_report(fname,collection,years=None):
                     print("Record matched: ",url)
                     tsvout.writerow([ep,doi,year,author,title,url])
 
+def file_report(fname,collection,years=None):
+    with open(fname,'w') as fout:
+        tsvout = csv.writer(fout,delimiter='\t')
+        tsvout.writerow(["Eprint ID","Problem","Impacted Files","Resolver URL"])
+        keys = dataset.keys(collection)
+        for k in keys:
+            metadata,err = dataset.read(collection,k)
+            if 'date' in metadata:
+                year = metadata['date'].split('-')[0]
+                if is_in_range(years,year):
+                    if 'documents' in metadata:
+                        for d in metadata['documents']:
+                            if 'files' in d:
+                                for f in d['files']:
+                                    filename = f['filename']
+                                    extension = filename.split('.')[-1]
+                                    if extension == 'html':
+                                        ep = metadata['eprint_id']
+                                        url = metadata['official_url']
+                                        print("HTML: ",url)
+                                        tsvout.writerow([ep,'HTML File',filename,url])
+                                    if extension == 'htm':
+                                        ep = metadata['eprint_id']
+                                        url = metadata['official_url']
+                                        print("HTM: ",url)
+                                        tsvout.writerow([ep,'HTML File',filename,url])
+                                    if len(filename) > 200:
+                                        ep = metadata['eprint_id']
+                                        url = metadata['official_url']
+                                        print("Length: ",url)
+                                        tsvout.writerow([ep,'File Name Length',filename,url])
+
 if __name__ == '__main__':
     if os.path.isdir('data') == False:
         os.mkdir('data')
@@ -57,8 +90,15 @@ if __name__ == '__main__':
 
     print("Running report for ",args.repository[0])
 
+    if args.years != None:
+        years = args.years[0]
+    else:
+        years = None
+
     if args.report_name[0] == 'doi_report':
-        doi_report('../'+args.output[0],collection,args.years[0])
+        doi_report('../'+args.output[0],collection,years)
+    elif args.report_name[0] == 'file_issues':
+        file_report('../'+args.output[0],collection,years)
     else:
         print(args.report_name[0],' is not known')
 
