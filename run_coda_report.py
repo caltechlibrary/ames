@@ -31,7 +31,11 @@ def doi_report(fname,collection,years=None):
                         doi = ''
                     else:
                         doi = metadata['doi']
-                    author = metadata['creators']['items'][0]['id']
+                    if 'id' in metadata['creators']['items'][0]:
+                        author = metadata['creators']['items'][0]['id']
+                    else:
+                        author = ''
+                        print("Record is missing author identifier")
                     title = metadata['title']
                     url = metadata['official_url']
                     print("Record matched: ",url)
