@@ -1,6 +1,6 @@
 import os,json,subprocess
 import requests
-from clint.textui import progress
+from progressbar import progressbar
 from caltechdata_api import decustomize_schema
 import dataset
 
@@ -13,7 +13,7 @@ def download_file(erecord,rid):
         with open(fname, 'wb') as f:
             total_length = int(r.headers.get('content-length'))
             for chunk in \
-progress.bar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) + 1):
+progressbar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) + 1):
                 if chunk:
                     f.write(chunk)
                     #f.flush()

@@ -1,5 +1,6 @@
 import os,argparse,csv
 import dataset
+from progressbar import progressbar
 from ames.harvesters import get_caltechfeed
 
 def is_in_range(year_arg,year):
@@ -17,11 +18,12 @@ def is_in_range(year_arg,year):
     return False
 
 def doi_report(fname,collection,years=None):
+    '''Output a report of DOIs (in the DOI field'''
     with open(fname,'w') as fout:
         tsvout = csv.writer(fout,delimiter='\t')
         tsvout.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL"])
         keys = dataset.keys(collection)
-        for k in keys:
+        for k in progressbar(keys, redirect_stdout=True):
             metadata,err = dataset.read(collection,k)
             if 'date' in metadata:
                 year = metadata['date'].split('-')[0]
@@ -36,17 +38,39 @@ def doi_report(fname,collection,years=None):
                     else:
                         author = ''
                         print("Record is missing author identifier")
+                    if 'title' not in metadata:
+                        print(metadata)
+                        exit()
                     title = metadata['title']
                     url = metadata['official_url']
                     print("Record matched: ",url)
                     tsvout.writerow([ep,doi,year,author,title,url])
 
+def status_report(fname,collection):
+    '''Output a report of items in feeds that have a status other than archive.
+    Under normal circumstances this should return no records'''
+    with open(fname,'w') as fout:
+        tsvout = csv.writer(fout,delimiter='\t')
+        tsvout.writerow(["Eprint ID","Resolver URL","Status"])
+        keys = dataset.keys(collection)
+        for k in progressbar(keys, redirect_stdout=True):
+            if k != 'captured':
+                metadata,err = dataset.read(collection,k)
+                if metadata['eprint_status'] != 'archive':
+                    ep = metadata['eprint_id']
+                    status = metadata['eprint_status']
+                    url = metadata['official_url']
+                    print("Record matched: ",url)
+                    tsvout.writerow([ep,url,status])
+
+
 def file_report(fname,collection,years=None):
+    '''Write out a report of files with potential issues'''
     with open(fname,'w') as fout:
         tsvout = csv.writer(fout,delimiter='\t')
         tsvout.writerow(["Eprint ID","Problem","Impacted Files","Resolver URL"])
         keys = dataset.keys(collection)
-        for k in keys:
+        for k in progressbar(keys, redirect_stdout=True):
             metadata,err = dataset.read(collection,k)
             if 'date' in metadata:
                 year = metadata['date'].split('-')[0]
@@ -81,7 +105,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=\
         "Run a report on CODA repositories")
     parser.add_argument('report_name', nargs=1, help=\
-        'report name (options: doi_report,file_issues)')
+        'report name (options: doi_report,file_report,status_report)')
     parser.add_argument('repository', nargs=1, help=\
         'options: thesis, authors')
     parser.add_argument('output', nargs=1, help=\
@@ -101,8 +125,10 @@ if __name__ == '__main__':
 
     if args.report_name[0] == 'doi_report':
         doi_report('../'+args.output[0],collection,years)
-    elif args.report_name[0] == 'file_issues':
+    elif args.report_name[0] == 'file_report':
         file_report('../'+args.output[0],collection,years)
+    elif args.report_name[0] == 'status_report':
+        status_report('../'+args.output[0],collection)
     else:
         print(args.report_name[0],' is not known')
 

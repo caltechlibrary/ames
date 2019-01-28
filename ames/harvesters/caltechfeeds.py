@@ -1,6 +1,6 @@
 import os,csv,shutil
 import requests
-from clint.textui import progress
+from progressbar import progressbar
 from datetime import datetime
 import dataset
 import zipfile
@@ -13,7 +13,7 @@ def download_file(url,fname):
         with open(fname, 'wb') as f:
             total_length = int(r.headers.get('content-length'))
             for chunk in \
-progress.bar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) + 1):
+progressbar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) + 1):
                 if chunk:
                     f.write(chunk)
                     #f.flush()

@@ -1,6 +1,5 @@
 import os,json,subprocess
 import requests
-from clint.textui import progress
 from caltechdata_api import decustomize_schema
 import dataset
 

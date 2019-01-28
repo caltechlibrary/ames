@@ -22,7 +22,7 @@ VERSION = '0.1.2'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests','datacite','clint','caltechdata_api'
+    'requests','datacite','progressbar2','caltechdata_api'
 ]
 
 # What packages are optional?
