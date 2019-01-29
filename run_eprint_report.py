@@ -94,7 +94,7 @@ def creator_report(eprint_url, csv_filename, sample_size = 0):
     if os.path.exists(csv_filename):
         os.remove(csv_filename)
     with open(csv_filename, 'w', encoding = 'utf-8') as f:
-        f.write("Creator ID, ORCID(s), EPrint ID(s)\n")
+        f.write("creator_id,orcid,eprint_id\n")
         for creator_id in creator_ids:
             creator = creators[creator_id]
             orcid = "|".join(creator['orcids'])
