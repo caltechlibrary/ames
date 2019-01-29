@@ -51,6 +51,10 @@ eprint_url, csv_filename, export_folder = sys.argv[1], sys.argv[2], sys.argv[3],
 if len(sys.argv) == 4:
     export_folder = sys.argv[3]
 
+#FIXME: Need to generate find all the authors with ORCID in
+# given eprint records so that we can do one update and fix that
+# record.
+
 # Iterate over the rows of the Creator Report CSV file
 records = {} 
 with open(csv_filename) as f:
@@ -60,29 +64,17 @@ with open(csv_filename) as f:
             if '|' in row['orcid']:
                 print(f"WARNING multiple orcids for {row['creator_id']}")
             else:
-                print(f"Processing {row['creator_id']} -> {row['orcid']} -> {row['eprint_id']}")
+                print(f"Saving {row['eprint_id']} -> {row['creator_id']} -> {row['orcid']}")
+                eprint_id = row['eprint_id']
+                orcid = row['orcid']
+                creator_id = row['creator_id']
+                if not eprint_id in records:
+                    records[eprint_id] = {}
+                records[eprint_id][creator_id] = orcid
 
 
-# Find the rows with an orcid
-# Find the eprint id numbers
-# generate the EPrint XML and save for update via epadmin import tool
-
-# # NOTE: We use get_eprints() because the XML we want should
-# # conform to what epadmin will expect for this record.
-# # E.g. <eprints><eprint> .... </eprint>...</eprints>
-# o = get_eprints(eprint_url, eprint_id)
-# if o == None:
-#     print(f"Failed to get record for eprint {eprint_id}")
-#     sys.exit(1)
-# if 'eprint' in o:
-#     # NOTE We're working with single records so let's pull out
-#     # our eprint element.
-#     obj = o['eprint'][0]
-#     if 'creators' in obj and 'items' in obj['creators']:
-#         items = obj['creators']['items']
-#         for item in items:
-#             if 'id' in item and item['id'] == creator_id:
-#                 item['orcid'] = orcid
-#                 break
-#         eprint_xml = eputils.eprint_as_xml(o)
-#         print(eprint_xml)
+# For each record find the eprint record, update the creators with orcids
+for record in records:
+    # Fetch EPrint object
+    # For each creator id in record append in EPrint object
+    # Generate the EPrint XML and save for update via epadmin import tool
