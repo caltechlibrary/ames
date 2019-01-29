@@ -10,3 +10,5 @@ CaltechDATA_Logo_cropped.png
 build/
 dist/
 ames.egg-info/
+# Test files
+*.csv
