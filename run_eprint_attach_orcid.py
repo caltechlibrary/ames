@@ -17,15 +17,17 @@ def usage(msg = "", exit_code = 0):
     print(f'''USAGE: 
     
     {app_name} URL_TO_EPRINTS \\
-        CREATOR_CSV_FILE CREATOR_ID [EXPORT_DIRECTORY]
+        CREATOR_CSV_FILE [EXPORT_DIRECTORY]
 
 This script reads the CREATOR_ID from CREATOR_CSV_FILE and
 retrieves the ORCID and EPrint IDs to update.
 
-EXPORT_DIRECTORY if provided will hold the eprint XML generated
-for import via epadmin. If not provided it deposits the eprint
-XML in the current directory in the form of EPRINT_ID.xml where
-EPRINT_ID is the numeric eprint id number.
+EXPORT_DIRECTORY if will hold the eprint XML generated
+for import via the formal EPrints epadmin tool. The name
+is in the form of EXPORT_DIRECTORY/EPRINT_ID.xml where 
+EPRINT_ID is the numeric eprint id number. If the 
+EXPORT_DIRECTORY is not provided it will put the XML files
+in the current directory.
 
 EXAMPLE:
 
@@ -34,8 +36,7 @@ rows to update a specific creator id of JONES-J. The exported
 eprint XML will be placed inthe updates directory.
 
     {app_name} 'https://username:secret@eprint.example.edu' \\
-            creator_report.csv JONES-J \\
-            updates
+            creator_report.csv updates
 
 ''')
     if msg != "":
@@ -46,8 +47,9 @@ eprint XML will be placed inthe updates directory.
 if len(sys.argv) < 3:
     usage("Expected URL to EPrints, CSV Creator report filename", 1)
 
-eprint_url, csv_filename, export_folder = sys.argv[1], sys.argv[2], sys.argv[3], '.'
+eprint_url, csv_filename = sys.argv[1], sys.argv[2]
 
+export_folder = '.'
 if len(sys.argv) == 4:
     export_folder = sys.argv[3]
 
@@ -60,21 +62,54 @@ records = {}
 with open(csv_filename) as f:
     table = csv.DictReader(f)
     for row in table:
-        if 'orcid' in row:
+        creator_id = row['creator_id']
+        update_ids = []
+        if '|' in row['update_ids']:
+                    update_ids = row['update_ids'].split('|')
+        elif row['update_ids'] != '':
+                    update_ids.append(row['update_ids'])
+        if 'orcid' in row and len(update_ids) > 0:
             if '|' in row['orcid']:
-                print(f"WARNING multiple orcids for {row['creator_id']}")
-            else:
-                print(f"Saving {row['eprint_id']} -> {row['creator_id']} -> {row['orcid']}")
-                eprint_id = row['eprint_id']
+                print(f"WARNING skipping, multiple orcids for {creator_id} {row['orcid']}")
+            elif len(update_ids) > 0 :
+                orcid = row['orcid']
+                update_ids = []
+                if '|' in row['update_ids']:
+                    update_ids = row['update_ids'].split('|')
+                elif row['update_ids'] != '':
+                    update_ids.append(row['update_ids'])
                 orcid = row['orcid']
                 creator_id = row['creator_id']
-                if not eprint_id in records:
-                    records[eprint_id] = {}
-                records[eprint_id][creator_id] = orcid
+                print(f"Saving {row['creator_id']}, {row['orcid']} to {update_ids}")
+                for eprint_id in update_ids:
+                    if not eprint_id in records:
+                        records[eprint_id] = {}
+                    records[eprint_id][creator_id] = orcid
 
 
 # For each record find the eprint record, update the creators with orcids
-for record in records:
+for eprint_id in records:
+    #print(f"DEBUG: {eprint_id} -> {records[eprint_id]}")
     # Fetch EPrint object
-    # For each creator id in record append in EPrint object
+    o = get_eprints(eprint_url, eprint_id)
+    # For each creator orcid id in record append in EPrint object
     # Generate the EPrint XML and save for update via epadmin import tool
+    #print(f"DEBUG: {eprint_id} -> {records[eprint_id]}")
+    # NOTE We're working with single records so let's pull out
+    # our eprint element.
+    if 'eprint' in o:
+        obj = o['eprint'][0]
+        #print(f"DEBUG obj: {obj}")
+        if 'creators' in obj and 'items' in obj['creators']:
+            items = obj['creators']['items']
+            for creator_id in records[eprint_id]:
+                for item in items:
+                    if 'id' in item and item['id'] == creator_id:
+                        item['orcid'] = records[eprint_id][creator_id] # orcid
+                        break
+            eprint_xml = eprint_as_xml(o)
+            f_name = os.path.join(export_folder, f"{eprint_id}.xml")
+            with open(f_name, "w") as f:
+                print(f"Writing {f_name}")
+                f.write(eprint_xml)
+

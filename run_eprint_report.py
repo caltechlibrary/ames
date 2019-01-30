@@ -73,19 +73,22 @@ def creator_report(eprint_url, csv_filename, sample_size = 0):
                             if orcid != '':
                                 if not orcid in creators[creator_id]['orcids']:
                                     creators[creator_id]['orcids'].append(orcid)
+                            elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
+                                creators[creator_id]['update_ids'].append(eprint_id)
                         else:
+                            # We have a new creator
                             j += 1
                             creators[creator_id] = {}
+                            creators[creator_id]['eprint_ids'] = [eprint_id]
+                            creators[creator_id]['update_ids'] = []
                             if orcid != '':
                                 creators[creator_id]['orcids'] = [orcid]
                             else:
                                 creators[creator_id]['orcids'] = []
-                            creators[creator_id]['eprint_ids'] = [eprint_id]
                             creator_ids.append(creator_id)
         i += 1
         if (i % batch_size) == 0:
             print(f"Processed {i} eprints, found {j} creators, last eprint id processed {eprint_id}")
-    
     print(f"Processed {i} eprints, found {j} creators, total")
     
     creator_ids.sort()
@@ -94,13 +97,14 @@ def creator_report(eprint_url, csv_filename, sample_size = 0):
     if os.path.exists(csv_filename):
         os.remove(csv_filename)
     with open(csv_filename, 'w', encoding = 'utf-8') as f:
-        f.write("creator_id,orcid,eprint_id\n")
+        f.write("creator_id,orcid,eprint_id,update_ids\n")
         for creator_id in creator_ids:
             creator = creators[creator_id]
             orcid = "|".join(creator['orcids'])
             eprint_ids = "|".join(creator['eprint_ids'])
-            print(f"Writing: {creator_id},{orcid},{eprint_ids}")
-            f.write(f"{creator_id},{orcid},{eprint_ids}\n")
+            update_ids = "|".join(creator['update_ids'])
+            print(f"Writing: {creator_id},{orcid},{eprint_ids},{update_ids}")
+            f.write(f"{creator_id},{orcid},{eprint_ids},{update_ids}\n")
     print("All Done!")
     
 
