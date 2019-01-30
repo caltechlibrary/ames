@@ -26,12 +26,14 @@ def get_caltechfeed(feed):
     if feed=='authors':
         fname = 'CaltechAUTHORS.ds.zip' 
         cname = 'CaltechAUTHORS.ds'
-    if feed=='thesis':
+    elif feed=='thesis':
         fname = 'CaltechTHESIS.ds.zip'
         cname = 'CaltechTHESIS.ds'
-    if feed=='caltechdata':
+    elif feed=='caltechdata':
         fname = 'CaltechDATA.ds.zip'
         cname = 'CaltechDATA.ds'
+    else:
+        raise Exception('Feed {} is not known'.format(feed))
 
     if os.path.isdir(cname) == False:
         #Collection doesn't exist
