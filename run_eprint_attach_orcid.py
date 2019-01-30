@@ -3,7 +3,7 @@
 #
 # Attach an orcid to a creator given an REST URL API, eprint id
 # number, the creator id and orcid. Output a an update EPrintXML
-# suitable for importing with epadmin
+# suitable for importing as update.
 #
 import os
 import sys
