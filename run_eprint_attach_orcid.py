@@ -16,18 +16,18 @@ def usage(msg = "", exit_code = 0):
     app_name = os.path.basename(sys.argv[0])
     print(f'''USAGE: 
     
-    {app_name} URL_TO_EPRINTS \\
-        CREATOR_CSV_FILE [EXPORT_DIRECTORY]
+    {app_name} \\
+        URL_TO_EPRINTS \\
+        CREATOR_CSV_FILE EXPORT_DIRECTORY
 
-This script reads the CREATOR_ID from CREATOR_CSV_FILE and
-retrieves the ORCID and EPrint IDs to update.
+This script reads the creator id from CREATOR_CSV_FILE and
+retrieves the ORCID and EPrint IDs to updated generating
+EPrints XML in EXPORT_DIRECTORY.
 
-EXPORT_DIRECTORY if will hold the eprint XML generated
-for import via the formal EPrints epadmin tool. The name
+EXPORT_DIRECTORY holds the eprint XML generated
+for use with the EPrints epadmin tools. The name
 is in the form of EXPORT_DIRECTORY/EPRINT_ID.xml where 
-EPRINT_ID is the numeric eprint id number. If the 
-EXPORT_DIRECTORY is not provided it will put the XML files
-in the current directory.
+EPRINT_ID is the numeric eprint id number. 
 
 EXAMPLE:
 
@@ -35,8 +35,9 @@ After running run_eprint_report creator ... use the CSV
 rows to update a specific creator id of JONES-J. The exported
 eprint XML will be placed inthe updates directory.
 
-    {app_name} 'https://username:secret@eprint.example.edu' \\
-            creator_report.csv updates
+    {app_name} \\
+        'https://username:secret@eprint.example.edu' \\
+        creator_report.csv updates
 
 ''')
     if msg != "":
@@ -44,20 +45,14 @@ eprint XML will be placed inthe updates directory.
         print(msg)
     sys.exit(exit_code)
 
-if len(sys.argv) < 3:
-    usage("Expected URL to EPrints, CSV Creator report filename", 1)
+if len(sys.argv) < 4:
+    usage("", 1)
 
-eprint_url, csv_filename = sys.argv[1], sys.argv[2]
+eprint_url, csv_filename, export_folder = sys.argv[1], sys.argv[2], sys.argv[3]
 
-export_folder = '.'
-if len(sys.argv) == 4:
-    export_folder = sys.argv[3]
-
-#FIXME: Need to generate find all the authors with ORCID in
-# given eprint records so that we can do one update and fix that
-# record.
 
 # Iterate over the rows of the Creator Report CSV file
+# And find the eprint ids that need updating.
 print(f"Processing {csv_filename}")
 records = {} 
 with open(csv_filename) as f:
@@ -88,8 +83,9 @@ with open(csv_filename) as f:
                     records[eprint_id][creator_id] = orcid
 
 
+# For each record find the eprint record to update
+# and update creators and render out EPrint XML
 print(f"Generating EPrints XML")
-# For each record find the eprint record, update the creators with orcids
 for eprint_id in records:
     # Fetch EPrint object
     o = get_eprints(eprint_url, eprint_id)
