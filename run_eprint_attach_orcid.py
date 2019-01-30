@@ -58,6 +58,7 @@ if len(sys.argv) == 4:
 # record.
 
 # Iterate over the rows of the Creator Report CSV file
+print(f"Processing {csv_filename}")
 records = {} 
 with open(csv_filename) as f:
     table = csv.DictReader(f)
@@ -80,33 +81,33 @@ with open(csv_filename) as f:
                     update_ids.append(row['update_ids'])
                 orcid = row['orcid']
                 creator_id = row['creator_id']
-                print(f"Saving {row['creator_id']}, {row['orcid']} to {update_ids}")
+                print(f"Saving {row['creator_id']}, {row['orcid']} for eprints {update_ids}")
                 for eprint_id in update_ids:
                     if not eprint_id in records:
                         records[eprint_id] = {}
                     records[eprint_id][creator_id] = orcid
 
 
+print(f"Generating EPrints XML")
 # For each record find the eprint record, update the creators with orcids
 for eprint_id in records:
-    #print(f"DEBUG: {eprint_id} -> {records[eprint_id]}")
     # Fetch EPrint object
     o = get_eprints(eprint_url, eprint_id)
-    # For each creator orcid id in record append in EPrint object
-    # Generate the EPrint XML and save for update via epadmin import tool
-    #print(f"DEBUG: {eprint_id} -> {records[eprint_id]}")
+
     # NOTE We're working with single records so let's pull out
     # our eprint element.
     if 'eprint' in o:
         obj = o['eprint'][0]
-        #print(f"DEBUG obj: {obj}")
         if 'creators' in obj and 'items' in obj['creators']:
             items = obj['creators']['items']
+            # For each creator w/orcid in record append in EPrint object
             for creator_id in records[eprint_id]:
                 for item in items:
                     if 'id' in item and item['id'] == creator_id:
-                        item['orcid'] = records[eprint_id][creator_id] # orcid
+                        # Attach the ORCID
+                        item['orcid'] = records[eprint_id][creator_id]
                         break
+            # Generate the EPrint XML for update via epadmin import tool
             eprint_xml = eprint_as_xml(o)
             f_name = os.path.join(export_folder, f"{eprint_id}.xml")
             with open(f_name, "w") as f:
