@@ -24,7 +24,7 @@ def update_datacite_media(username,password,collection,prefix):
         dataset.update(collection,'mediaupdate',{'mediaupdate':today})
         keys.remove('mediaupdate')
     else:
-        #Arbitrary old date - everythign will be updated
+        #Arbitrary old date - everything will be updated
         update = date(2011,1,1)
         dataset.create(collection,'mediaupdate',{'mediaupdate':today})
     for k in keys:
