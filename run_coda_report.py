@@ -100,53 +100,71 @@ def file_report(file_obj,keys,source,years=None):
                                     print("Length: ",url)
                                     file_obj.writerow([ep,'File Name Length',filename,url])
 
-def creator_report(file_obj,keys,source,update_only=False):
-    creators = {}
-    creator_ids = []
-    i = 0
-    j = 0
-    print(f"Processing {len(keys)} eprint records for creators")
-    for eprint_id in progressbar(keys, redirect_stdout=True):
-        if source.split('.')[-1] == 'ds':
-            metadata,err = dataset.read(source,eprint_id)
-        else:
-            metadata = get_eprint(source, eprint_id)
-        if metadata != None:
-            if 'creators' in metadata and 'items' in metadata['creators']:
-                items = metadata['creators']['items']
-                for item in items:
-                    if 'id' in item:
-                        creator_id = item['id']
-                        orcid = ''
-                        if 'orcid' in item:
-                            orcid = item['orcid']
-                        if creator_id in creators:
-                            creators[creator_id]['eprint_ids'].append(eprint_id)
-                            if orcid != '':
-                                if not orcid in creators[creator_id]['orcids']:
-                                    creators[creator_id]['orcids'].append(orcid)
-                            elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
-                                creators[creator_id]['update_ids'].append(eprint_id)
-                        else:
-                            # We have a new creator
-                            j += 1
-                            creators[creator_id] = {}
-                            creators[creator_id]['eprint_ids'] = [eprint_id]
-                            creators[creator_id]['update_ids'] = []
-                            if orcid != '':
-                                creators[creator_id]['orcids'] = [orcid]
-                            else:
-                                creators[creator_id]['orcids'] = []
-                            creator_ids.append(creator_id)
-        i += 1
-        if (i % 100) == 0:
-            print(f"Processed {i} eprints, found {j} creators, last eprint id processed {eprint_id}")
-    print(f"Processed {i} eprints, found {j} creators, total")
+def find_creators(items,eprint_id,creators,creator_ids):
+    '''Take a item list and return creators'''
+    for item in items:
+        if 'id' in item:
+            creator_id = item['id']
+            orcid = ''
+            if 'orcid' in item:
+                orcid = item['orcid']
+            if creator_id in creators:
+                creators[creator_id]['eprint_ids'].append(eprint_id)
+                if orcid != '':
+                    if not orcid in creators[creator_id]['orcids']:
+                        creators[creator_id]['orcids'].append(orcid)
+                elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
+                    creators[creator_id]['update_ids'].append(eprint_id)
+            else:
+                # We have a new creator
+                creators[creator_id] = {}
+                creators[creator_id]['eprint_ids'] = [eprint_id]
+                creators[creator_id]['update_ids'] = []
+                if orcid != '':
+                    creators[creator_id]['orcids'] = [orcid]
+                else:
+                    creators[creator_id]['orcids'] = []
+                creator_ids.append(creator_id)
+    return creators,creator_ids
 
+def creator_report(file_obj,keys,source,update_only=False):
+    creator_ids = []
+    creators = {}
+    print(f"Processing {len(keys)} eprint records for creators")
+    
+    if source.split('.')[-1] == 'ds':
+        dot_paths = ['._Key', '.creators.items']
+        f_name = 'creator'
+        if dataset.has_frame(source, f_name):
+            dataset.delete_frame(source, f_name)
+        print("Generating frame")
+        f, err = dataset.frame(source, f_name, keys, dot_paths)
+        if err != '':
+            log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
+        creator_grid = f['grid']
+        for metadata in progressbar(creator_grid, redirect_stdout=True):
+            key=metadata[0]
+            items = metadata[1]
+            if items != None:
+                find_creators(items,key,creators,creator_ids)
+                #creators.update(new_creators)
+                #creator_ids += new_creator_ids
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            metadata = get_eprint(source, eprint_id)
+            if metadata != None:
+                if 'creators' in metadata and 'items' in metadata['creators']:
+                    items = metadata['creators']['items']
+                    #creators,creator_ids =
+                    find_creators(items,eprint_id,creators,creator_ids)
+                    #creators.update(new_creators)
+                    #creator_ids += new_creator_ids
+    
     creator_ids.sort()
     file_obj.writerow(["creator_id","orcid","eprint_id","update_ids"])
     for creator_id in creator_ids:
         creator = creators[creator_id]
+        #print(creator)
         write = False
         if update_only:
             if creator['update_ids']:
@@ -186,6 +204,7 @@ if __name__ == '__main__':
     if args.source == 'feeds':
         source = get_caltechfeed(args.repository)
         keys = dataset.keys(source)
+        keys.remove('captured')
     elif args.source == 'eprints':
         if args.username:
             source = 'https://'+args.username+':'+args.password+'@'
