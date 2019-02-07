@@ -1,5 +1,6 @@
 import os,argparse,csv
 import dataset
+import random
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed
 from ames.harvesters import get_eprint_keys, get_eprint
@@ -99,7 +100,7 @@ def file_report(file_obj,keys,source,years=None):
                                     print("Length: ",url)
                                     file_obj.writerow([ep,'File Name Length',filename,url])
 
-def creator_report(file_obj,keys,source):
+def creator_report(file_obj,keys,source,update_only=False):
     creators = {}
     creator_ids = []
     i = 0
@@ -146,11 +147,18 @@ def creator_report(file_obj,keys,source):
     file_obj.writerow(["creator_id","orcid","eprint_id","update_ids"])
     for creator_id in creator_ids:
         creator = creators[creator_id]
-        orcid = "|".join(creator['orcids'])
-        eprint_ids = "|".join(creator['eprint_ids'])
-        update_ids = "|".join(creator['update_ids'])
-        print(f"Writing: {creator_id},{orcid},{eprint_ids},{update_ids}")
-        file_obj.writerow([creator_id,orcid,eprint_ids,update_ids])
+        write = False
+        if update_only:
+            if creator['update_ids']:
+                write=True
+        else:
+            write=True
+        if write==True:
+            orcid = "|".join(creator['orcids'])
+            eprint_ids = "|".join(creator['eprint_ids'])
+            update_ids = "|".join(creator['update_ids'])
+            print(f"Writing: {creator_id},{orcid},{eprint_ids},{update_ids}")
+            file_obj.writerow([creator_id,orcid,eprint_ids,update_ids])
     print("All Done!")
 
 if __name__ == '__main__':
@@ -171,6 +179,7 @@ if __name__ == '__main__':
     parser.add_argument('-years', help='format: 1939 or 1939-1940')
     parser.add_argument('-username', help='Eprints username')
     parser.add_argument('-password', help='Eprints password')
+    parser.add_argument('-sample', help='Number of records if you want a random sample')
 
     args = parser.parse_args()
 
@@ -194,6 +203,11 @@ if __name__ == '__main__':
         print('Source is not feeds or eprints, exiting')
         exit()
 
+    if args.sample != None:
+        keys = random.sample(keys, int(args.sample))
+    keys.sort(key=int, reverse = True)
+
+
     print("Running report for ",args.repository)
 
     if args.years != None:
@@ -210,7 +224,7 @@ if __name__ == '__main__':
         if args.report_name == 'file_report':
             file_report(file_out,keys,source,years)
         elif args.report_name == 'creator_report':
-            creator_report(file_out,keys,source)
+            creator_report(file_out,keys,source,update_only=True)
         #elif args.report_name == 'file_report':
         #    file_report(file_out,collection,years)
         #elif args.report_name == 'status_report':
