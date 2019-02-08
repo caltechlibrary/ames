@@ -28,34 +28,70 @@ def get_grid(dot_paths,f_name,d_name,keys):
         log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
     return f['grid']
 
-def doi_report(fname,collection,years=None):
-    '''Output a report of DOIs (in the DOI field'''
-    with open(fname,'w') as fout:
-        tsvout = csv.writer(fout,delimiter='\t')
-        tsvout.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL"])
-        keys = dataset.keys(collection)
-        for k in progressbar(keys, redirect_stdout=True):
-            metadata,err = dataset.read(collection,k)
-            if 'date' in metadata:
-                year = metadata['date'].split('-')[0]
-                if is_in_range(years,year):
-                    ep = metadata['eprint_id']
-                    if 'doi' not in metadata:
-                        doi = ''
-                    else:
-                        doi = metadata['doi']
+def doi_report(file_obj,keys,source,years=None,all_records=True):
+    '''Output a report of DOIs '''
+    file_obj.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL"])
+    all_metadata = []
+    if source.split('.')[-1] == 'ds':
+        dot_paths =\
+        ['._Key','.doi','.official_url','.date','.related_url','.creators','.title']
+        doi_grid = get_grid(dot_paths,'dois',source,keys)
+        for entry in doi_grid:
+            item = {}
+            item['eprint_id'] = entry[0]
+            if entry[1] != None:
+                item['doi'] = entry[1]
+            item['official_url'] = entry[2]
+            if entry[3] != None:
+                item['date'] = entry[3]
+            if entry[4] != None:
+                item['related_url'] = entry[4]
+            if entry[5] != None:
+                item['creators'] = entry[5]
+            item['title'] = entry[6]
+            all_metadata.append(item)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    for metadata in all_metadata:
+        if 'date' in metadata:
+            year = metadata['date'].split('-')[0]
+            if is_in_range(years,year):
+                ep = metadata['eprint_id']
+                #Handle odd CaltechAUTHORS DOI setup
+                if 'related_url' in metadata and 'items' in metadata['related_url']:
+                    items = metadata['related_url']['items']
+                    for item in items:
+                        if 'url' in item:
+                            url = item['url'].strip()
+                        if 'type' in item:
+                            itype = item['type'].strip().lower()
+                        if 'description' in item:
+                            description = item['description'].strip().lower()
+                        if itype == 'doi' and description == 'article':
+                            doi = url
+                            break
+                elif 'doi' not in metadata:
+                    doi = ''
+                else:
+                    doi = metadata['doi'].strip()
+                if 'creators' in metadata:
                     if 'id' in metadata['creators']['items'][0]:
                         author = metadata['creators']['items'][0]['id']
-                    else:
-                        author = ''
-                        print("Record is missing author identifier")
-                    if 'title' not in metadata:
-                        print(metadata)
-                        exit()
-                    title = metadata['title']
-                    url = metadata['official_url']
-                    print("Record matched: ",url)
-                    tsvout.writerow([ep,doi,year,author,title,url])
+                else:
+                    author = ''
+                    print("Record is missing author identifier")
+                if 'title' not in metadata:
+                    print("Record is missing Title")
+                    exit()
+                title = metadata['title']
+                url = metadata['official_url']
+                if all_records == False:
+                    if doi != '':
+                        file_obj.writerow([ep,doi,year,author,title,url])
+                else:
+                    file_obj.writerow([ep,doi,year,author,title,url])
 
 def status_report(file_obj,keys,source):
     '''Output a report of items that have a status other than archive.
@@ -264,8 +300,8 @@ if __name__ == '__main__':
             creator_report(file_out,keys,source,update_only=True)
         elif args.report_name == 'status_report':
             status_report(file_out,keys,source)
-        #elif args.report_name == 'status_report':
-        #    status_report(file_out,collection)
+        elif args.report_name == 'doi_report':
+            doi_report(file_out,keys,source,years,all_records=True)
         else:
             print(args.report_name,' is not known')
 
