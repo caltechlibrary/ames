@@ -19,6 +19,15 @@ def is_in_range(year_arg,year):
         return True
     return False
 
+def get_grid(dot_paths,f_name,d_name,keys):
+    if dataset.has_frame(d_name, f_name):
+        dataset.delete_frame(source, f_name)
+    print("Generating frame")
+    f, err = dataset.frame(d_name, f_name, keys, dot_paths)
+    if err != '':
+        log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
+    return f['grid']
+
 def doi_report(fname,collection,years=None):
     '''Output a report of DOIs (in the DOI field'''
     with open(fname,'w') as fout:
@@ -48,23 +57,32 @@ def doi_report(fname,collection,years=None):
                     print("Record matched: ",url)
                     tsvout.writerow([ep,doi,year,author,title,url])
 
-def status_report(fname,collection):
-    '''Output a report of items in feeds that have a status other than archive.
-    Under normal circumstances this should return no records'''
-    with open(fname,'w') as fout:
-        tsvout = csv.writer(fout,delimiter='\t')
-        tsvout.writerow(["Eprint ID","Resolver URL","Status"])
-        keys = dataset.keys(collection)
-        for k in progressbar(keys, redirect_stdout=True):
-            if k != 'captured':
-                metadata,err = dataset.read(collection,k)
-                if metadata['eprint_status'] != 'archive':
-                    ep = metadata['eprint_id']
-                    status = metadata['eprint_status']
-                    url = metadata['official_url']
-                    print("Record matched: ",url)
-                    tsvout.writerow([ep,url,status])
-
+def status_report(file_obj,keys,source):
+    '''Output a report of items that have a status other than archive.
+    Under normal circumstances this should return no records when run on feeds'''
+    file_obj.writerow(["Eprint ID","Resolver URL","Status"])
+        
+    all_metadata = []
+    if source.split('.')[-1] == 'ds':
+        dot_paths = ['._Key', '.eprint_status','.official_url']
+        file_grid = get_grid(dot_paths,'files',source,keys)
+        for entry in file_grid:
+            item = {}
+            item['eprint_id'] = entry[0]
+            item['eprint_status'] = entry[1]
+            item['official_url'] = entry[2]
+            all_metadata.append(item)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+        
+    for metadata in all_metadata:
+        if metadata['eprint_status'] != 'archive':
+            ep = metadata['eprint_id']
+            status = metadata['eprint_status']
+            url = metadata['official_url']
+            print("Record matched: ",url)
+            file_obj.writerow([ep,url,status])
 
 def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''
@@ -74,7 +92,7 @@ def file_report(file_obj,keys,source,years=None):
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.documents','.date','.official_url']
         file_grid = get_grid(dot_paths,'files',source,keys)
-        for entry in file_grid: #progressbar(file_grid, redirect_stdout=True):
+        for entry in file_grid:
             item = {}
             item['eprint_id'] = entry[0]
             if entry[1] != None:
@@ -87,7 +105,7 @@ def file_report(file_obj,keys,source,years=None):
         for eprint_id in progressbar(keys, redirect_stdout=True):
             all_metadata.append(get_eprint(source, eprint_id))
 
-    for metadata in all_metadata:#progressbar(all_metadata, redirect_stdout=True):
+    for metadata in all_metadata:
         if 'date' in metadata:
             year = metadata['date'].split('-')[0]
             if is_in_range(years,year):
@@ -112,41 +130,6 @@ def file_report(file_obj,keys,source,years=None):
                                     url = metadata['official_url']
                                     print("Length: ",url)
                                     file_obj.writerow([ep,'File Name Length',filename,url])
-
-def find_creators(items,eprint_id,creators,creator_ids):
-    '''Take a item list and return creators'''
-    for item in items:
-        if 'id' in item:
-            creator_id = item['id']
-            orcid = ''
-            if 'orcid' in item:
-                orcid = item['orcid']
-            if creator_id in creators:
-                creators[creator_id]['eprint_ids'].append(eprint_id)
-                if orcid != '':
-                    if not orcid in creators[creator_id]['orcids']:
-                        creators[creator_id]['orcids'].append(orcid)
-                elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
-                    creators[creator_id]['update_ids'].append(eprint_id)
-            else:
-                # We have a new creator
-                creators[creator_id] = {}
-                creators[creator_id]['eprint_ids'] = [eprint_id]
-                creators[creator_id]['update_ids'] = []
-                if orcid != '':
-                    creators[creator_id]['orcids'] = [orcid]
-                else:
-                    creators[creator_id]['orcids'] = []
-                creator_ids.append(creator_id)
-
-def get_grid(dot_paths,f_name,d_name,keys):
-    if dataset.has_frame(d_name, f_name):
-        dataset.delete_frame(source, f_name)
-    print("Generating frame")
-    f, err = dataset.frame(d_name, f_name, keys, dot_paths)
-    if err != '':
-        log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
-    return f['grid']
 
 def creator_report(file_obj,keys,source,update_only=False):
     creator_ids = []
@@ -187,6 +170,32 @@ def creator_report(file_obj,keys,source,update_only=False):
             print(f"Writing: {creator_id},{orcid},{eprint_ids},{update_ids}")
             file_obj.writerow([creator_id,orcid,eprint_ids,update_ids])
     print("All Done!")
+
+def find_creators(items,eprint_id,creators,creator_ids):
+    '''Take a item list and return creators'''
+    for item in items:
+        if 'id' in item:
+            creator_id = item['id']
+            orcid = ''
+            if 'orcid' in item:
+                orcid = item['orcid']
+            if creator_id in creators:
+                creators[creator_id]['eprint_ids'].append(eprint_id)
+                if orcid != '':
+                    if not orcid in creators[creator_id]['orcids']:
+                        creators[creator_id]['orcids'].append(orcid)
+                elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
+                    creators[creator_id]['update_ids'].append(eprint_id)
+            else:
+                # We have a new creator
+                creators[creator_id] = {}
+                creators[creator_id]['eprint_ids'] = [eprint_id]
+                creators[creator_id]['update_ids'] = []
+                if orcid != '':
+                    creators[creator_id]['orcids'] = [orcid]
+                else:
+                    creators[creator_id]['orcids'] = []
+                creator_ids.append(creator_id)
 
 if __name__ == '__main__':
     if os.path.isdir('data') == False:
@@ -253,8 +262,8 @@ if __name__ == '__main__':
             file_report(file_out,keys,source,years)
         elif args.report_name == 'creator_report':
             creator_report(file_out,keys,source,update_only=True)
-        #elif args.report_name == 'file_report':
-        #    file_report(file_out,collection,years)
+        elif args.report_name == 'status_report':
+            status_report(file_out,keys,source)
         #elif args.report_name == 'status_report':
         #    status_report(file_out,collection)
         else:
