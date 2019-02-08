@@ -70,11 +70,24 @@ def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''
     file_obj.writerow(["Eprint ID","Problem","Impacted Files","Resolver URL"])
     
-    for k in progressbar(keys, redirect_stdout=True):
-        if source.split('.')[-1] == 'ds':
-            metadata,err = dataset.read(source,k)
-        else:
-            metadata = get_eprint(source, k)
+    all_metadata = []
+    if source.split('.')[-1] == 'ds':
+        dot_paths = ['._Key', '.documents','.date','.official_url']
+        file_grid = get_grid(dot_paths,'files',source,keys)
+        for entry in file_grid: #progressbar(file_grid, redirect_stdout=True):
+            item = {}
+            item['eprint_id'] = entry[0]
+            if entry[1] != None:
+                item['documents'] = entry[1]
+            if entry[2] != None:
+                item['date'] = entry[2]
+            item['official_url'] = entry[3]
+            all_metadata.append(item)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    for metadata in all_metadata:#progressbar(all_metadata, redirect_stdout=True):
         if 'date' in metadata:
             year = metadata['date'].split('-')[0]
             if is_in_range(years,year):
@@ -125,7 +138,15 @@ def find_creators(items,eprint_id,creators,creator_ids):
                 else:
                     creators[creator_id]['orcids'] = []
                 creator_ids.append(creator_id)
-    return creators,creator_ids
+
+def get_grid(dot_paths,f_name,d_name,keys):
+    if dataset.has_frame(d_name, f_name):
+        dataset.delete_frame(source, f_name)
+    print("Generating frame")
+    f, err = dataset.frame(d_name, f_name, keys, dot_paths)
+    if err != '':
+        log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
+    return f['grid']
 
 def creator_report(file_obj,keys,source,update_only=False):
     creator_ids = []
@@ -134,31 +155,19 @@ def creator_report(file_obj,keys,source,update_only=False):
     
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.creators.items']
-        f_name = 'creator'
-        if dataset.has_frame(source, f_name):
-            dataset.delete_frame(source, f_name)
-        print("Generating frame")
-        f, err = dataset.frame(source, f_name, keys, dot_paths)
-        if err != '':
-            log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
-        creator_grid = f['grid']
+        creator_grid = get_grid(dot_paths,'creators',source,keys)
         for metadata in progressbar(creator_grid, redirect_stdout=True):
             key=metadata[0]
             items = metadata[1]
             if items != None:
                 find_creators(items,key,creators,creator_ids)
-                #creators.update(new_creators)
-                #creator_ids += new_creator_ids
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
             metadata = get_eprint(source, eprint_id)
             if metadata != None:
                 if 'creators' in metadata and 'items' in metadata['creators']:
                     items = metadata['creators']['items']
-                    #creators,creator_ids =
                     find_creators(items,eprint_id,creators,creator_ids)
-                    #creators.update(new_creators)
-                    #creator_ids += new_creator_ids
     
     creator_ids.sort()
     file_obj.writerow(["creator_id","orcid","eprint_id","update_ids"])
