@@ -241,9 +241,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=\
         "Run a report on CODA repositories")
     parser.add_argument('report_name', help=\
-        'report name (options: doi_report,file_report,status_report)')
+        'report name (options: doi_report,file_report,status_report,creator_report)')
     parser.add_argument('repository', help=\
-        'options: thesis, authors')
+        'options: thesis, authors, test (if using eprints source)')
     parser.add_argument('-source', default='feeds',help=\
         'options: feeds (default), eprints')
     parser.add_argument('output', help=\
@@ -268,6 +268,12 @@ if __name__ == '__main__':
             source += 'authors.library.caltech.edu'
         elif args.repository == 'thesis':
             source += 'thesis.library.caltech.edu'
+        elif args.repository =='test':
+            if args.username:
+                source = 'http://'+args.username+':'+args.password+'@'
+            else:
+                source = 'http://'
+            source += 'authorstest.library.caltech.edu'
         else:
             print('Repository not known')
             exit()
