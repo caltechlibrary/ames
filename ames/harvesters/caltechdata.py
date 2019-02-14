@@ -3,15 +3,17 @@ import requests
 from caltechdata_api import decustomize_schema
 import dataset
 
-def get_caltechdata(collection):
+def get_caltechdata(collection,production=True):
 
     if os.path.isdir(collection) == False:
         ok = dataset.init(collection)
         if ok == False:
             print("Dataset failed to init collection")
             exit()
-
-    url = 'https://data.caltech.edu/api/records'
+    if production == True:
+        url = 'https://data.caltech.edu/api/records'
+    else:
+        url = 'https://cd-sandbox.tind.io/api/records'
 
     response = requests.get(url+'/?size=1000')
     hits = response.json()
@@ -28,7 +30,7 @@ def get_caltechdata(collection):
         if result == False:
             dataset.create(collection,rid, metadata)
         else:
-            #Could check update data, but probably not worth it
+            #Could check update date, but probably not worth it
             dataset.update(collection,rid, metadata)
         
 def get_multiple_links(input_collection,output_collection):

@@ -87,10 +87,22 @@ account using `export DATACITE=`
 #### Usage
 Type `python run_media_update.py`.  
 
-### CaltechDATA metadata updates
+### CaltechDATA metadata checks
 
 This will run checks on the quality of metadata in CaltechDATA.  Currently this
 verifies whether redundent links are present in the related identifier section.  
+
+#### Setup
+You need to set environmental variables with your token to access
+CaltechDATA `export TINDTOK=`
+
+#### Usage
+Type `python run_caltechdata_checks.py`. 
+
+### CaltechDATA metadata updates
+
+This will improve the quality of metadata in CaltechDATA.  Currently this
+adds a recommended citation to the descriptions.
 
 #### Setup
 You need to set environmental variables with your token to access
