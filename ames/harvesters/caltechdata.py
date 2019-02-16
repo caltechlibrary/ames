@@ -3,7 +3,7 @@ import requests
 from caltechdata_api import decustomize_schema
 import dataset
 
-def get_caltechdata(collection,production=True):
+def get_caltechdata(collection,production=True,datacite=False):
 
     if os.path.isdir(collection) == False:
         ok = dataset.init(collection)
@@ -22,8 +22,13 @@ def get_caltechdata(collection,production=True):
     for h in hits['hits']['hits']:
         rid = str(h['id'])
         print(rid)
-        metadata = decustomize_schema(h['metadata'],True,True)
-        metadata['updated'] = h['updated']
+        #Get enriched metadata records (including files)
+        if datacite == False:
+            metadata = decustomize_schema(h['metadata'],True,True)
+            metadata['updated'] = h['updated']
+        else:
+            #Get just DataCite metadata
+            metadata = decustomize_schema(h['metadata'])           
 
         result = dataset.has_key(collection,rid)
 
