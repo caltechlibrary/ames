@@ -102,7 +102,8 @@ Type `python run_caltechdata_checks.py`.
 ### CaltechDATA metadata updates
 
 This will improve the quality of metadata in CaltechDATA.  Currently this
-adds a recommended citation to the descriptions.
+adds a recommended citation to the descriptions and can update metadata with
+DataCite.
 
 #### Setup
 You need to set environmental variables with your token to access
