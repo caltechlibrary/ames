@@ -2,6 +2,7 @@ import os,subprocess,json,re
 from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
 import dataset
+import requests
 
 def match_cd_refs():
     
@@ -133,3 +134,34 @@ def fix_multiple_links(input_collection,token):
                     response = caltechdata_edit(token,k,new_metadata,{},{},True)
                     print(response)
 
+def add_citation(collection,token,production=True):
+    keys = dataset.keys(collection)
+    for k in keys:
+        record,err = dataset.read(collection,k)
+        if err != '':
+            print(err)
+            exit()
+        description = record['descriptions']
+        cite_exists = False
+        for d in description:
+            descr_text = d['description']
+            if descr_text.startswith('<br>Cite this record as:'):
+                cite_exists = True
+        if cite_exists == False:
+            record_doi = record['identifier']['identifier']
+            citation_link =\
+            'https://data.datacite.org/text/x-bibliography;style=apa/'
+            citation = requests.get(citation_link+record_doi).text
+            doi_url = 'https://doi.org/'+record_doi.lower()
+            if doi_url in citation:
+                #Check that we have a citation and not a server error,
+                #otherwise wait till next time
+                citation = citation.replace(doi_url,'<a href="'+doi_url+'">'+doi_url+'</a>')
+                #Replace link text with HTML link
+                n_txt = '<br>Cite this record as:<br>'+citation+\
+                    '<br> or choose a <a href="https://crosscite.org/?doi='\
+                    +record_doi+'"> different citation style</a>'
+                description.append({'descriptionType':'Other','description':n_txt})
+                response =\
+                caltechdata_edit(token,k,{'descriptions':description},{},{},production)
+                print(response)
