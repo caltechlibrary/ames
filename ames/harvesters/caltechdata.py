@@ -19,6 +19,7 @@ def get_caltechdata(collection,production=True,datacite=False):
     hits = response.json()
 
     print("Saving Records")
+
     for h in hits['hits']['hits']:
         rid = str(h['id'])
         print(rid)

@@ -8,8 +8,8 @@ os.chdir('data')
 
 token = os.environ['TINDTOK']
 
-production = False
-collection = 'caltechdata-test.ds'
+production = True
+collection = 'caltechdata.ds'
 
 get_caltechdata(collection,production)
 add_citation(collection,token,production)
