@@ -1,6 +1,7 @@
 import os,subprocess,json
 import dataset
 import requests
+from datacite import DataCiteMDSClient, schema40
 from datetime import date, datetime
 
 def delete_datacite_media(username,password,doi):
@@ -24,7 +25,7 @@ def update_datacite_media(username,password,collection,prefix):
         dataset.update(collection,'mediaupdate',{'mediaupdate':today})
         keys.remove('mediaupdate')
     else:
-        #Arbitrary old date - everythign will be updated
+        #Arbitrary old date - everything will be updated
         update = date(2011,1,1)
         dataset.create(collection,'mediaupdate',{'mediaupdate':today})
     for k in keys:
@@ -51,3 +52,39 @@ def update_datacite_media(username,password,collection,prefix):
                                 auth=(username,password),headers=headers)  
                             print(r)
 
+def update_datacite_metadata(collection,token,password):
+    keys = dataset.keys(collection)
+   
+    #First version just TIND DOIs
+    prefix = '10.22002'
+
+    # Initialize the MDS client.
+    d = DataCiteMDSClient(
+        username='TIND.CALTECH',
+        password=password,
+        prefix=prefix,
+        url='https://mds.datacite.org'
+        )
+
+    for k in ['226']:#keys:
+        print(k)
+        metadata,err = dataset.read(collection,k)
+        #Get rid of Key from dataset
+        metadata.pop('_Key')
+
+        record_doi = metadata['identifier']['identifier']
+
+        if record_doi.split('/')[0] == prefix:
+            result =  schema40.validate(metadata)
+            #Debugging if this fails
+            if result == False:
+                v = schema40.validator.validate(metadata)
+                errors = sorted(v.iter_errors(instance), key=lambda e: e.path)
+                for error in errors:
+                    print(error.message)
+                exit()
+
+            xml = schema40.tostring(metadata)
+
+            response = d.metadata_post(xml)
+            print(response)

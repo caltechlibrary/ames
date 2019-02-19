@@ -11,3 +11,6 @@ build/
 dist/
 ames.egg-info/
 run_codemeta.sh
+# Test files
+*.csv
+updates

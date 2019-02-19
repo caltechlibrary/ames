@@ -1,35 +1,42 @@
 import os,json,subprocess
 import requests
-from clint.textui import progress
 from caltechdata_api import decustomize_schema
 import dataset
 
-def get_caltechdata(collection):
+def get_caltechdata(collection,production=True,datacite=False):
 
     if os.path.isdir(collection) == False:
         ok = dataset.init(collection)
         if ok == False:
             print("Dataset failed to init collection")
             exit()
-
-    url = 'https://data.caltech.edu/api/records'
+    if production == True:
+        url = 'https://data.caltech.edu/api/records'
+    else:
+        url = 'https://cd-sandbox.tind.io/api/records'
 
     response = requests.get(url+'/?size=1000')
     hits = response.json()
 
     print("Saving Records")
+
     for h in hits['hits']['hits']:
         rid = str(h['id'])
         print(rid)
-        metadata = decustomize_schema(h['metadata'],True,True)
-        metadata['updated'] = h['updated']
+        #Get enriched metadata records (including files)
+        if datacite == False:
+            metadata = decustomize_schema(h['metadata'],True,True)
+            metadata['updated'] = h['updated']
+        else:
+            #Get just DataCite metadata
+            metadata = decustomize_schema(h['metadata'])           
 
         result = dataset.has_key(collection,rid)
 
         if result == False:
             dataset.create(collection,rid, metadata)
         else:
-            #Could check update data, but probably not worth it
+            #Could check update date, but probably not worth it
             dataset.update(collection,rid, metadata)
         
 def get_multiple_links(input_collection,output_collection):
