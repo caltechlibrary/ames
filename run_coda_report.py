@@ -189,7 +189,7 @@ def creator_report(file_obj,keys,source,update_only=False):
                     find_creators(items,eprint_id,creators,creator_ids)
     
     creator_ids.sort()
-    file_obj.writerow(["creator_id","orcid","eprint_id","update_ids"])
+    file_obj.writerow(["creator_id","orcid","existing_ids","update_ids"])
     for creator_id in creator_ids:
         creator = creators[creator_id]
         #print(creator)
@@ -216,12 +216,13 @@ def find_creators(items,eprint_id,creators,creator_ids):
             if 'orcid' in item:
                 orcid = item['orcid']
             if creator_id in creators:
-                creators[creator_id]['eprint_ids'].append(eprint_id)
                 if orcid != '':
                     if not orcid in creators[creator_id]['orcids']:
                         creators[creator_id]['orcids'].append(orcid)
                 elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
                     creators[creator_id]['update_ids'].append(eprint_id)
+                else:
+                    creators[creator_id]['eprint_ids'].append(eprint_id)
             else:
                 # We have a new creator
                 creators[creator_id] = {}
