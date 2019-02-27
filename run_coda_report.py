@@ -94,19 +94,22 @@ def doi_report(file_obj,keys,source,years=None,all_records=True):
                     file_obj.writerow([ep,doi,year,author,title,url])
 
 def status_report(file_obj,keys,source):
-    '''Output a report of items that have a status other than archive.
+    '''Output a report of items that have a status other than archive
+    or have metadata visability other than show.  
     Under normal circumstances this should return no records when run on feeds'''
     file_obj.writerow(["Eprint ID","Resolver URL","Status"])
         
     all_metadata = []
     if source.split('.')[-1] == 'ds':
-        dot_paths = ['._Key', '.eprint_status','.official_url']
+        dot_paths = ['._Key',
+        '.eprint_status','.official_url','.metadata_visibility']
         file_grid = get_grid(dot_paths,'files',source,keys)
         for entry in file_grid:
             item = {}
             item['eprint_id'] = entry[0]
             item['eprint_status'] = entry[1]
             item['official_url'] = entry[2]
+            item['metadata_visibility'] = entry[3]
             all_metadata.append(item)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -119,6 +122,15 @@ def status_report(file_obj,keys,source):
             url = metadata['official_url']
             print("Record matched: ",url)
             file_obj.writerow([ep,url,status])
+        if metadata['metadata_visibility'] != 'show':
+            print(metadata['metadata_visibility'])
+            ep = metadata['eprint_id']
+            status = metadata['metadata_visibility']
+            url = metadata['official_url']
+            print("Record matched: ",url)
+            file_obj.writerow([ep,url,status])
+        
+
 
 def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''

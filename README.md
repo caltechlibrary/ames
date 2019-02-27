@@ -59,6 +59,7 @@ You need to set an environmental variable with your token to access
 CaltechDATA `export TINDTOK=`
 
 #### Usage
+
 Type `python run_codemeta.py`. 
 
 ### CaltechDATA Citation Alerts
@@ -85,6 +86,7 @@ You need to set an environmental variable with your password for your DataCite
 account using `export DATACITE=`
 
 #### Usage
+
 Type `python run_media_update.py`.  
 
 ### CaltechDATA metadata checks
@@ -97,6 +99,7 @@ You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=`
 
 #### Usage
+
 Type `python run_caltechdata_checks.py`. 
 
 ### CaltechDATA metadata updates
@@ -110,6 +113,7 @@ You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=`
 
 #### Usage
+
 Type `python run_caltechdata_updates.py`. 
 
 ### Matomo downloads
@@ -121,6 +125,7 @@ You need to set environmental variables with your token to access
 Matomo `export MATTOK=`
 
 #### Usage
+
 Type `python run_downloads.py`. 
 
 ### CODA Reports
@@ -128,12 +133,14 @@ Type `python run_downloads.py`.
 Runs reports on Caltech Library repositories.  Current reports:
 
 - doi_report: Records (optionally filtered by year) and their DOIs.
-- creator_report: Finds records where ORCIDS are known but not included.  Also 
-  lists cases where an author has two ORCIDS
+- creator_report: Finds records where an Eprints Creator ID has an ORCID 
+but it is not included on all records.  Also lists cases where an author has
+two ORCIDS.
 - file_report: Records that have potential problems with the attached files
 - status_report: Reports on any records with an incorrect status in feeds
 
 #### Usage
+
 Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978`
 
 - The first option is the report type 
