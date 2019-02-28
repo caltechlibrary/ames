@@ -138,6 +138,7 @@ but it is not included on all records.  Also lists cases where an author has
 two ORCIDS.
 - file_report: Records that have potential problems with the attached files
 - status_report: Reports on any records with an incorrect status in feeds
+- license_report: Report out the license types in CaltechDATA
 
 #### Usage
 
