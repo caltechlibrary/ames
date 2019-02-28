@@ -130,7 +130,46 @@ def status_report(file_obj,keys,source):
             print("Record matched: ",url)
             file_obj.writerow([ep,url,status])
         
+def license_report(file_obj,keys,source,item_type=None):
+    '''Write report with license types'''
+    file_obj.writerow(["License Name","Number of Records","IDs"])
+    if source.split('.')[0] != 'CaltechDATA':
+        print(source.split('.')[0]+ " is not supported for license report")
+        exit()
+    else:
+        all_metadata = []
+        dot_paths = ['._Key','.rightsList','.resourceType']
+        file_grid = get_grid(dot_paths,'files',source,keys)
+        for entry in file_grid:
+            item = {}
+            item['id'] = entry[0]
+            item['rightsList'] = entry[1]
+            item['resourceType'] = entry[2]
+            all_metadata.append(item)
+        licenses = {}
+        for metadata in all_metadata:
+            if item_type != None:
+                #Restrict to a specific item type
+                if metadata['resourceType']['resourceTypeGeneral'] == item_type:
+                    license = metadata['rightsList'][0]['rights']
+                else:
+                    license = None
+            #Otherwise we always save license
+            else:
+                license = metadata['rightsList']['rights']
+            
+            if license != None:
+                if license in licenses:
+                    licenses[license]['count'] += 1
+                    licenses[license]['ids'].append(metadata['id']) 
+                else:
+                    new = {}
+                    new['count'] = 1
+                    new['ids'] = [metadata['id']]
+                    licenses[license] = new
 
+        for license in licenses:
+            file_obj.writerow([license,licenses[license]['count'],licenses[license]['ids']])
 
 def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''
@@ -256,12 +295,14 @@ if __name__ == '__main__':
     parser.add_argument('report_name', help=\
         'report name (options: doi_report,file_report,status_report,creator_report)')
     parser.add_argument('repository', help=\
-        'options: thesis, authors, test (if using eprints source)')
+        'options: thesis, authors, caltechdata, test (if using eprints source)')
     parser.add_argument('-source', default='feeds',help=\
         'options: feeds (default), eprints')
     parser.add_argument('output', help=\
         'output tsv name')
     parser.add_argument('-years', help='format: 1939 or 1939-1940')
+    parser.add_argument('-item', help=\
+            'Item type from repository (e.g. Dataset or "Technical Report")')
     parser.add_argument('-username', help='Eprints username')
     parser.add_argument('-password', help='Eprints password')
     parser.add_argument('-sample', help='Number of records if you want a random sample')
@@ -321,6 +362,8 @@ if __name__ == '__main__':
             status_report(file_out,keys,source)
         elif args.report_name == 'doi_report':
             doi_report(file_out,keys,source,years,all_records=True)
+        elif args.report_name == 'license_report':
+            license_report(file_out,keys,source,item_type=args.item)
         else:
             print(args.report_name,' is not known')
 

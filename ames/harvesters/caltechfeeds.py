@@ -1,7 +1,7 @@
 import os,csv,shutil
 import requests
 from progressbar import progressbar
-from datetime import datetime
+from datetime import datetime,timezone
 import dataset
 import zipfile
 
@@ -49,30 +49,32 @@ def get_caltechfeed(feed):
         datev,err = dataset.read(cname,'captured')
         if err != '':
             print("Error on date read")
-        captured_date = datetime.fromisoformat(datev['captured'])
-
-        print('Local Collection '+ feed +\
-            ' last updated on '+captured_date.isoformat())
-
-        upname = 'updated.csv'
-        download_file(url,upname)
-        with open(upname) as csv_file:
-            reader = csv.reader(csv_file, delimiter=',')
-    
-            header = next(reader)
-            record_date = datetime.fromisoformat(next(reader)[1])
-            count = 0
-
-            while captured_date < record_date:
-                count = count + 1
-                record_date = datetime.fromisoformat(next(reader)[1])
-
-        if count > 0: 
-            print(str(count)+" Outdated Records")
-            update = input("Do you want to update your local copy (Y or N)? ")
+        if datev == {}:
+            #No date, collection must be updated
+            update = 'Y'
         else:
-            print("Collection up to date")
-            update = 'N'
+            captured_date =datetime.fromisoformat(datev['captured'])
+            print('Local Collection '+ feed +' last updated on '+captured_date.isoformat())
+
+            upname = 'updated.csv'
+            download_file(url,upname)
+            with open(upname) as csv_file:
+                reader = csv.reader(csv_file, delimiter=',')
+    
+                header = next(reader)
+                record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
+                count = 0
+
+                while captured_date < record_date:
+                    count = count + 1
+                    record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
+
+            if count > 0: 
+                print(str(count)+" Outdated Records")
+                update = input("Do you want to update your local copy (Y or N)? ")
+            else:
+                print("Collection up to date")
+                update = 'N'
 
         if update == 'Y':
             shutil.rmtree(cname)
