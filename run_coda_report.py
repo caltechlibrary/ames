@@ -246,7 +246,7 @@ def creator_report(file_obj,keys,source,update_only=False):
         #print(creator)
         write = False
         if update_only:
-            if creator['update_ids']:
+            if creator['orcids'] and creator['update_ids']:
                 write=True
         else:
             write=True
@@ -254,7 +254,10 @@ def creator_report(file_obj,keys,source,update_only=False):
             orcid = "|".join(creator['orcids'])
             eprint_ids = "|".join(creator['eprint_ids'])
             update_ids = "|".join(creator['update_ids'])
-            print(f"Writing: {creator_id},{orcid},{eprint_ids},{update_ids}")
+            if len(creator['orcids']) > 1:
+                #All items will need to be updated if there are multiple orcids
+                update_ids = update_ids + '|' + eprint_ids
+                eprint_ids = ''
             file_obj.writerow([creator_id,orcid,eprint_ids,update_ids])
     print("All Done!")
 
@@ -267,22 +270,28 @@ def find_creators(items,eprint_id,creators,creator_ids):
             if 'orcid' in item:
                 orcid = item['orcid']
             if creator_id in creators:
+                #Existing creator
                 if orcid != '':
                     if not orcid in creators[creator_id]['orcids']:
+                        #Creator has multiple orcids
                         creators[creator_id]['orcids'].append(orcid)
-                elif orcid == "" and len(creators[creator_id]['orcids']) > 0:
-                    creators[creator_id]['update_ids'].append(eprint_id)
+                        creators[creator_id]['update_ids'].append(eprint_id)
+                    else:
+                        creators[creator_id]['eprint_ids'].append(eprint_id)
                 else:
-                    creators[creator_id]['eprint_ids'].append(eprint_id)
+                    #We always want to (potentially) update blank orcids
+                    creators[creator_id]['update_ids'].append(eprint_id)
             else:
                 # We have a new creator
                 creators[creator_id] = {}
-                creators[creator_id]['eprint_ids'] = [eprint_id]
-                creators[creator_id]['update_ids'] = []
                 if orcid != '':
                     creators[creator_id]['orcids'] = [orcid]
+                    creators[creator_id]['eprint_ids'] = [eprint_id]
+                    creators[creator_id]['update_ids'] = []
                 else:
                     creators[creator_id]['orcids'] = []
+                    creators[creator_id]['eprint_ids'] = []
+                    creators[creator_id]['update_ids'] = [eprint_id]
                 creator_ids.append(creator_id)
 
 if __name__ == '__main__':
