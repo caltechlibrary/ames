@@ -1,15 +1,21 @@
-import os,json,subprocess
+import os,json,subprocess,shutil
 import requests
 from caltechdata_api import decustomize_schema
 import dataset
 
 def get_caltechdata(collection,production=True,datacite=False):
+    '''Harvest all records from CaltechDATA .
+    Always creates collection from scratch'''
+    
+    #Delete existing collection
+    if os.path.isdir(collection):
+        shutil.rmtree(collection)
+    
+    ok = dataset.init(collection)
+    if ok == False:
+        print("Dataset failed to init collection")
+        exit()
 
-    if os.path.isdir(collection) == False:
-        ok = dataset.init(collection)
-        if ok == False:
-            print("Dataset failed to init collection")
-            exit()
     if production == True:
         url = 'https://data.caltech.edu/api/records'
     else:
@@ -18,11 +24,8 @@ def get_caltechdata(collection,production=True,datacite=False):
     response = requests.get(url+'/?size=1000')
     hits = response.json()
 
-    print("Saving Records")
-
     for h in hits['hits']['hits']:
         rid = str(h['id'])
-        print(rid)
         #Get enriched metadata records (including files)
         if datacite == False:
             metadata = decustomize_schema(h['metadata'],True,True)
@@ -31,13 +34,7 @@ def get_caltechdata(collection,production=True,datacite=False):
             #Get just DataCite metadata
             metadata = decustomize_schema(h['metadata'])           
 
-        result = dataset.has_key(collection,rid)
-
-        if result == False:
-            dataset.create(collection,rid, metadata)
-        else:
-            #Could check update date, but probably not worth it
-            dataset.update(collection,rid, metadata)
+        dataset.create(collection,rid, metadata)
         
 def get_multiple_links(input_collection,output_collection):
     keys = dataset.keys(input_collection)
