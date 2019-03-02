@@ -147,10 +147,28 @@ Type something like `python run_coda_report.py doi_report thesis report.tsv -yea
 - The first option is the report type 
 - Next is the repository (thesis or authors)
 - Next is the output file name (include .csv or .tsv extension, will show up in current directory)
+
+#### Options
 - Some reports include a -year option to return just the records from a specific year (1977) or a
 range (1977-1978)
+- Some reports include a -group option to return just the records with a
+  specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
+- Some reports include a -item_type option to return just records with a
+  specific item type.  Supported types include:
+    - CaltechDATA item types (Dataset, Software, ...)
+    - CaltechAUTHORS item types (article, monograph, ...)
+    - CaltechAUTHORS monograph sub-types
+        - discussion_paper
+        - documentation
+        - manual
+        - other
+        - project_report
+        - report
+        - technical_report
+        - white_paper
+        - working_paper
 
-There are some additional optional arguments if you want to change the default behavior.
+There are some additional technical arguments if you want to change the default behavior.
 - Adding `-source eprints` will pull report data from Eprints instead of feeds.  This is
 very slow.  You may need to add -username and -password to provide login
 credentials
