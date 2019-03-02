@@ -18,16 +18,16 @@ URL = 'https://github.com/caltechlibrary/ames'
 EMAIL = 'tmorrell@caltech.edu'
 AUTHOR = 'Tom Morrell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests','datacite','progressbar2','caltechdata_api'
+    'requests','datacite','progressbar2'
 ]
 
 # What packages are optional?
 EXTRAS = {
-    # 'fancy feature': ['django'],
+    'caltechdata_integration': ['caltechdata_api'],
 }
 
 # The rest you shouldn't have to touch too much :)
