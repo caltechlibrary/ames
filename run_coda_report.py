@@ -2,7 +2,7 @@ import os,argparse,csv
 import dataset
 import random
 from progressbar import progressbar
-from ames.harvesters import get_caltechfeed
+from ames.harvesters import get_caltechfeed, get_records
 from ames.harvesters import get_eprint_keys, get_eprint
 
 def is_in_range(year_arg,year):
@@ -18,15 +18,6 @@ def is_in_range(year_arg,year):
     else:
         return True
     return False
-
-def get_grid(dot_paths,f_name,d_name,keys):
-    if dataset.has_frame(d_name, f_name):
-        dataset.delete_frame(source, f_name)
-    print("Generating frame")
-    f, err = dataset.frame(d_name, f_name, keys, dot_paths)
-    if err != '':
-        log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
-    return f['grid']
 
 def keep_record(metadata,years,item_type,group):
     keep = True
@@ -91,28 +82,10 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
     all_metadata = []
     if source.split('.')[-1] == 'ds':
         dot_paths =\
-        ['._Key','.doi','.official_url','.date','.related_url','.creators','.title','.local_group','.type','.monograph_type']
-        doi_grid = get_grid(dot_paths,'dois',source,keys)
-        for entry in doi_grid:
-            item = {}
-            item['eprint_id'] = entry[0]
-            if entry[1] != None:
-                item['doi'] = entry[1]
-            item['official_url'] = entry[2]
-            if entry[3] != None:
-                item['date'] = entry[3]
-            if entry[4] != None:
-                item['related_url'] = entry[4]
-            if entry[5] != None:
-                item['creators'] = entry[5]
-            item['title'] = entry[6]
-            if entry[7] != None:
-                item['local_group'] = entry[7]
-            if entry[8] != None:
-                item['type'] = entry[8]
-            if entry[9] != None:
-                item['monograph_type'] = entry[9]
-            all_metadata.append(item)
+            ['._Key','.doi','.official_url','.date','.related_url','.creators','.title','.local_group','.type','.monograph_type']
+        labels=\
+            ['eprint_id','doi','official_url','date','related_url','creators','title','local_group','type','monograph_type']
+        all_metadata = get_records(dot_paths,'dois',source,keys,labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
             all_metadata.append(get_eprint(source, eprint_id))
@@ -173,14 +146,9 @@ def status_report(file_obj,keys,source):
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key',
         '.eprint_status','.official_url','.metadata_visibility']
-        file_grid = get_grid(dot_paths,'files',source,keys)
-        for entry in file_grid:
-            item = {}
-            item['eprint_id'] = entry[0]
-            item['eprint_status'] = entry[1]
-            item['official_url'] = entry[2]
-            item['metadata_visibility'] = entry[3]
-            all_metadata.append(item)
+        labels =\
+        ['eprint_id','eprint_status','official_url','metadata_visibility']
+        all_metadata = get_records(dot_paths,'dois',source,keys,labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
             all_metadata.append(get_eprint(source, eprint_id))
@@ -209,13 +177,8 @@ def license_report(file_obj,keys,source,item_type=None):
     else:
         all_metadata = []
         dot_paths = ['._Key','.rightsList','.resourceType']
-        file_grid = get_grid(dot_paths,'files',source,keys)
-        for entry in file_grid:
-            item = {}
-            item['id'] = entry[0]
-            item['rightsList'] = entry[1]
-            item['resourceType'] = entry[2]
-            all_metadata.append(item)
+        labels = ['id','rightsList','resourceType']
+        all_metadata = get_records(dot_paths,'dois',source,keys,labels)
         licenses = {}
         for metadata in all_metadata:
             if item_type != None:
@@ -248,16 +211,8 @@ def file_report(file_obj,keys,source,years=None):
     all_metadata = []
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.documents','.date','.official_url']
-        file_grid = get_grid(dot_paths,'files',source,keys)
-        for entry in file_grid:
-            item = {}
-            item['eprint_id'] = entry[0]
-            if entry[1] != None:
-                item['documents'] = entry[1]
-            if entry[2] != None:
-                item['date'] = entry[2]
-            item['official_url'] = entry[3]
-            all_metadata.append(item)
+        labels = ['eprint_id','documents','date','official_url']
+        all_metadata = get_records(dot_paths,'dois',source,keys,labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
             all_metadata.append(get_eprint(source, eprint_id))
@@ -295,10 +250,11 @@ def creator_report(file_obj,keys,source,update_only=False):
     
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.creators.items']
-        creator_grid = get_grid(dot_paths,'creators',source,keys)
-        for metadata in progressbar(creator_grid, redirect_stdout=True):
-            key=metadata[0]
-            items = metadata[1]
+        labels = ['eprint_id','items']
+        all_metadata = get_records(dot_paths,'dois',source,keys,labels)
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key=metadata['eprint_id']
+            items = metadata['items']
             if items != None:
                 find_creators(items,key,creators,creator_ids)
     else:
