@@ -11,6 +11,5 @@ token = os.environ['TINDTOK']
 production = True
 collection = 'caltechdata.ds'
 
-get_caltechdata(collection,production)
-add_citation(collection,token,production)
-
+thesis_collection = get_caltechfeed('thesis',autoupdate=True)
+add_thesis_doi(collection,thesis_collection,token,production)

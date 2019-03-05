@@ -1,6 +1,9 @@
-import os,subprocess,json,re
+import os,subprocess,json,re,copy
 from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
+from ames.harvesters import get_records
+from progressbar import progressbar
+import idutils
 import dataset
 import requests
 
@@ -135,6 +138,7 @@ def fix_multiple_links(input_collection,token):
                     print(response)
 
 def add_citation(collection,token,production=True):
+    '''Add in example citation text in the description field'''
     keys = dataset.keys(collection)
     for k in keys:
         record,err = dataset.read(collection,k)
@@ -165,3 +169,64 @@ def add_citation(collection,token,production=True):
                 response =\
                 caltechdata_edit(token,k,{'descriptions':description},{},{},production)
                 print(response)
+
+def add_thesis_doi(data_collection,thesis_collection,token,production=True):
+    '''Add in theis DOI to CaltechDATA records'''
+
+    #Search across CaltechTHESIS DOIs
+    dot_paths =['._Key','.doi','.official_url','.related_url']
+    labels = ['eprint_id','doi','official_url','related_url']
+    keys = dataset.keys(thesis_collection)
+    all_metadata = get_records(dot_paths,'dois',thesis_collection,keys,labels)
+    dois = []
+    for metadata in progressbar(all_metadata, redirect_stdout=True):
+        if 'doi' in metadata:
+            record_doi = metadata['doi'].strip()
+            if 'related_url' in metadata and 'items' in metadata['related_url']:
+                items = metadata['related_url']['items']
+                for item in items:
+                    if 'url' in item:
+                        url = item['url'].strip()
+                    if 'type' in item:
+                        itype = item['type'].strip().lower()
+                    if itype == 'doi':
+                        if idutils.is_doi(url):
+                            doi = '10.' + url.split('10.')[1]
+                            prefix = doi.split('/')[0]
+                            if prefix == '10.22002':
+                                dois.append([doi,record_doi])
+                        else:
+                            print("Ignoring non-DOI")
+                            print(metadata['eprint_id'])
+                            print(url.split('10.'))
+    for doi_link in dois:
+        cd_doi = doi_link[0]
+        thesis_doi = doi_link[1]
+        print("Checking "+cd_doi)
+        if 'D1' in cd_doi:
+            record_number = cd_doi.split('D1.')[1]
+        if 'd1' in cd_doi:
+            record_number = cd_doi.split('d1.')[1]
+        record,err = dataset.read(data_collection,record_number)
+        if err != '':
+            print(err)
+            exit()
+
+        done = False
+        if 'relatedIdentifiers' in record:
+            for idv in record['relatedIdentifiers']:
+                identifier = idv['relatedIdentifier']
+                if identifier == thesis_doi:
+                    done = True
+            if done == False:
+                new_metadata = copy.copy(record['relatedIdentifiers'])
+                new_metadata.append({'relatedIdentifier':thesis_doi,
+                            'relatedIdentifierType':'DOI','relatedIdentifierRelation':'IsSupplementTo'})
+        else:
+            new_metadata = {'relatedIdentifiers':[\
+                        {'relatedIdentifier':thesis_doi,
+                            'relatedIdentifierType':'DOI','relatedIdentifierRelation':'IsSupplementTo'}]}
+        if done = False:
+            print("Adding "+thesis_doi+" to "+cd_doi)
+            response = caltechdata_edit(token,record_number,new_metadata,{},{},True)
+            print(response)

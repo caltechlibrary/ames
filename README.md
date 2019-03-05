@@ -93,6 +93,7 @@ Type `python run_media_update.py`.
 
 This will run checks on the quality of metadata in CaltechDATA.  Currently this
 verifies whether redundent links are present in the related identifier section.  
+It also can update metadata with DataCite.
 
 #### Setup
 You need to set environmental variables with your token to access
@@ -104,9 +105,11 @@ Type `python run_caltechdata_checks.py`.
 
 ### CaltechDATA metadata updates
 
-This will improve the quality of metadata in CaltechDATA.  Currently this
-adds a recommended citation to the descriptions and can update metadata with
-DataCite.
+This will improve the quality of metadata in CaltechDATA.  This option is
+broken up into updates that should run frequently (currently every 10 minutes)
+and daily. Frequent updates include adding a recommended citation to the
+descriptions, and daily updates include adding CaltechTHESIS DOIs to
+CaltechDATA.
 
 #### Setup
 You need to set environmental variables with your token to access
@@ -114,7 +117,7 @@ CaltechDATA `export TINDTOK=`
 
 #### Usage
 
-Type `python run_caltechdata_updates.py`. 
+Type `python run_caltechdata_updates.py` or `python run_caltechdata_daily.py`. 
 
 ### Matomo downloads
 

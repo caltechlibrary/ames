@@ -13,7 +13,7 @@ def download_file(url,fname):
         with open(fname, 'wb') as f:
             total_length = int(r.headers.get('content-length'))
             for chunk in \
-progressbar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) + 1):
+progressbar(r.iter_content(chunk_size=1024),max_value=(total_length/1024) + 1):
                 if chunk:
                     f.write(chunk)
                     #f.flush()
@@ -37,7 +37,7 @@ def get_records(dot_paths,f_name,d_name,keys,labels):
         records.append(item)
     return records
 
-def get_caltechfeed(feed):
+def get_caltechfeed(feed,autoupdate=False):
 
     url ='https://feeds.library.caltech.edu/'+feed+'/'
 
@@ -89,7 +89,10 @@ def get_caltechfeed(feed):
 
             if count > 0: 
                 print(str(count)+" Outdated Records")
-                update = input("Do you want to update your local copy (Y or N)? ")
+                if autoupdate == False:
+                    update = input("Do you want to update your local copy (Y or N)? ")
+                else:
+                    update = 'Y'
             else:
                 print("Collection up to date")
                 update = 'N'
