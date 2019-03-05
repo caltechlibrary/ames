@@ -254,9 +254,8 @@ def creator_report(file_obj,keys,source,update_only=False):
         all_metadata = get_records(dot_paths,'dois',source,keys,labels)
         for metadata in progressbar(all_metadata, redirect_stdout=True):
             key=metadata['eprint_id']
-            items = metadata['items']
-            if items != None:
-                find_creators(items,key,creators,creator_ids)
+            if 'items' in metadata:
+                find_creators(metadata['items'],key,creators,creator_ids)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
             metadata = get_eprint(source, eprint_id)
