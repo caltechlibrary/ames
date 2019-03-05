@@ -219,14 +219,14 @@ def add_thesis_doi(data_collection,thesis_collection,token,production=True):
                 if identifier == thesis_doi:
                     done = True
             if done == False:
-                new_metadata = copy.copy(record['relatedIdentifiers'])
-                new_metadata.append({'relatedIdentifier':thesis_doi,
-                            'relatedIdentifierType':'DOI','relatedIdentifierRelation':'IsSupplementTo'})
+                identifiers = record['relatedIdentifiers']
+                identifiers.append({'relatedIdentifier':thesis_doi,
+                            'relatedIdentifierType':'DOI','relationType':'IsSupplementTo'})
+                new_metadata = {'relatedIdentifiers':identifiers}
         else:
-            new_metadata = {'relatedIdentifiers':[\
-                        {'relatedIdentifier':thesis_doi,
-                            'relatedIdentifierType':'DOI','relatedIdentifierRelation':'IsSupplementTo'}]}
-        if done = False:
+            new_metadata = {'relatedIdentifiers':[{'relatedIdentifier':thesis_doi,
+                            'relatedIdentifierType':'DOI','relationType':'IsSupplementTo'}]}
+        if done == False:
             print("Adding "+thesis_doi+" to "+cd_doi)
             response = caltechdata_edit(token,record_number,new_metadata,{},{},True)
             print(response)

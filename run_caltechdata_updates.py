@@ -1,6 +1,6 @@
 import os
-from ames.harvesters import get_caltechdata,get_caltechfeed
-from ames.matchers import add_citation,add_thesis_doi
+from ames.harvesters import get_caltechdata
+from ames.matchers import add_citation
 
 if os.path.isdir('data') == False:
     os.mkdir('data')
