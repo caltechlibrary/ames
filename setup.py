@@ -22,7 +22,7 @@ VERSION = '0.2.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests','datacite','progressbar2'
+    'requests','datacite','progressbar2','idutils'
 ]
 
 # What packages are optional?

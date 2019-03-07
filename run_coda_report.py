@@ -44,18 +44,22 @@ def keep_record(metadata,years,item_type,group):
     if item_type:
         #CaltechDATA item
         if 'resourceTye' in metadata:
-            if metadata['resourceType']['resourceTypeGeneral'] != item_type:
+            if metadata['resourceType']['resourceTypeGeneral'] not in item_type:
                 keep = False
         #Eprints item
         elif 'type' in metadata:
-            if item_type in monograph_types:
-                if metadata['type'] != 'monograph':
-                    keep=False
-                elif metadata['monograph_type'] != item_type:
-                    keep=False
+            if 'monograph_type' in metadata:
+                #There are records with monograph_type that arn't monographs
+                if metadata['type'] == 'monograph':
+                    if metadata['monograph_type'] not in item_type and\
+                    metadata['type'] not in item_type:
+                        keep=False 
+                else:
+                    if metadata['type'] not in item_type:
+                        keep=False
             else:
-                if metadata['type'] != item_type:
-                    keep=False
+                if metadata['type'] not in item_type:
+                    keep=False    
         else:   
             print("Item type not found in record")
             keep=False
@@ -68,7 +72,7 @@ def keep_record(metadata,years,item_type,group):
                 #Deal with single item listings
                 metadata['local_group']['items'] = [metadata['local_group']['items']]
             for gname in metadata['local_group']['items']:
-                if gname == group:
+                if gname in group:
                     match = True
             if match == False:
                 keep = False
@@ -335,9 +339,9 @@ if __name__ == '__main__':
     parser.add_argument('output', help=\
         'output tsv name')
     parser.add_argument('-years', help='format: 1939 or 1939-1940')
-    parser.add_argument('-item', help=\
+    parser.add_argument('-item', nargs='+', help=\
             'Item type from repository (e.g. Dataset or "technical_report")')
-    parser.add_argument('-group', help=\
+    parser.add_argument('-group', nargs='+', help=\
             'Group from repository (e.g. "Keck Institute for Space Studies")')
     parser.add_argument('-username', help='Eprints username')
     parser.add_argument('-password', help='Eprints password')
