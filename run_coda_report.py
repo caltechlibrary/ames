@@ -31,16 +31,6 @@ def keep_record(metadata,years,item_type,group):
         else:
             keep = False
 
-    monograph_types = ["discussion_paper",
-            "documentation",
-            "manual",
-            "other",
-            "project_report",
-            "report",
-            "technical_report",
-            "white_paper",
-            "working_paper"]
-
     if item_type:
         #CaltechDATA item
         if 'resourceTye' in metadata:
