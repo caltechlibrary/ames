@@ -19,18 +19,30 @@ progressbar(r.iter_content(chunk_size=1024),max_value=(total_length/1024) + 1):
                     #f.flush()
         return fname
 
-def get_records(dot_paths,f_name,d_name,keys,labels):
+def get_records(dot_paths,f_name,d_name,keys,labels=None):
     if dataset.has_frame(d_name, f_name):
         dataset.delete_frame(d_name, f_name)
     print("Gathering data!")
     f, err = dataset.frame(d_name, f_name, keys, dot_paths)
     if err != '':
-        log.fatal(f"ERROR: Can't create {f_name} in {c_name}, {err}")
+        log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
     records = []
+    if labels:
+        #We need to handle that .Key will always be returned
+        if dot_paths[0] != '.Key':
+            dot_paths.insert(0,'.Key')
+            labels.insert(0,'Key')
+        err = dataset.frame_labels(d_name,f_name,labels)
+        if err != '':
+            log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
+        #Reload frame
+        f, err = dataset.frame(d_name, f_name, keys, dot_paths)
+        if err != '':
+            log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
     for entry in f['grid']:
         item = {}
         counter = 0
-        for label in labels:
+        for label in f['labels']:
             if entry[counter] != None:
                 item[label] = entry[counter]
             counter = counter + 1
