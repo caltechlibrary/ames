@@ -28,9 +28,9 @@ def get_records(dot_paths,f_name,d_name,keys,labels=None):
         log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
     records = []
     if labels:
-        #We need to handle that .Key will always be returned
-        if dot_paths[0] != '.Key':
-            dot_paths.insert(0,'.Key')
+        #We need to handle that ._Key will always be returned
+        if dot_paths[0] != '._Key':
+            dot_paths.insert(0,'._Key')
             labels.insert(0,'Key')
         err = dataset.frame_labels(d_name,f_name,labels)
         if err != '':
