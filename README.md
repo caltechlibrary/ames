@@ -11,14 +11,12 @@ added over time.
 
 ## Install:
 
-If you just need functions (like codemeta_to_datacite): `pip install ames`
-If you want to run operations, download the whole repo to get examples
+Requires Python 3.7 (Recommended via [Anaconda](https://www.anaconda.com/download))
 
-## Requirements: 
-
-Python 3.7 (Recommended via [Anaconda](https://www.anaconda.com/download)) 
-
-You should have requests and datacite: `pip install requests datacite`
+If you just need functions (like codemeta_to_datacite) type `pip install ames`
+If you want to run operations, download the 
+[latest release](https://github.com/caltechlibrary/ames/releases), extract the
+zip, navigate to the extracted folder and type `python setup.py install`.  
 
 Harvesting requires [Dataset](https://github.com/caltechlibrary/dataset).
 

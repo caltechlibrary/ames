@@ -11,14 +11,43 @@ from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
 
-# Package meta-data.
+def read(fname):
+    with open(fname, mode = "r", encoding = "utf-8") as f:
+        src = f.read()
+    return src
+
+codemeta_json = "codemeta.json"
+
+# Let's pickup as much metadata as we need from codemeta.json
+with open(codemeta_json, mode = "r", encoding = "utf-8") as f:
+    src = f.read()
+    meta = json.loads(src)
+
+# Let's make our symvar string
+VERSION = meta["version"]
+LICENSE = meta["license"]
+
+# Now we need to pull and format our author, author_email strings.
+author = ""
+author_email = ""
+for obj in meta["author"]:
+    given = obj["givenName"]
+    family = obj["familyName"]
+    email = obj["email"]
+    if len(author) == 0:
+        author = given + " " + family
+    else:
+        author = author + ", " + given + " " + family
+    if len(author_email) == 0:
+        author_email = email
+    else:
+        author_email = author_email + ", " + email
+
+# Package metadata.
 NAME = 'ames'
 DESCRIPTION = "Automated Metadata Service: manage metadata from different sources."
 URL = 'https://github.com/caltechlibrary/ames'
-EMAIL = 'tmorrell@caltech.edu'
-AUTHOR = 'Tom Morrell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.2.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -27,7 +56,7 @@ REQUIRED = [
 
 # What packages are optional?
 EXTRAS = {
-    'caltechdata_integration': ['caltechdata_api'],
+    'caltechdata': ['caltechdata_api'],
 }
 
 # The rest you shouldn't have to touch too much :)
@@ -108,7 +137,7 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
-    license='BSD',
+    license=LICENSE,
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers

@@ -291,12 +291,17 @@ def find_creators(items,eprint_id,creators,creator_ids):
             if creator_id in creators:
                 #Existing creator
                 if orcid != '':
-                    if not orcid in creators[creator_id]['orcids']:
+                    if creators[creator_id]['orcids'] == []:
+                        #New ORCID
+                        creators[creator_id]['orcids'].append(orcid)
+                        creators[creator_id]['eprint_ids'].append(eprint_id)
+                    elif orcid in creators[creator_id]['orcids']:
+                        #We already have ORCID
+                        creators[creator_id]['eprint_ids'].append(eprint_id)
+                    else: 
                         #Creator has multiple orcids
                         creators[creator_id]['orcids'].append(orcid)
                         creators[creator_id]['update_ids'].append(eprint_id)
-                    else:
-                        creators[creator_id]['eprint_ids'].append(eprint_id)
                 else:
                     #We always want to (potentially) update blank orcids
                     creators[creator_id]['update_ids'].append(eprint_id)
