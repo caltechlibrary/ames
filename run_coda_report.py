@@ -92,7 +92,9 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
 
             ep = metadata['eprint_id']
             #Handle odd CaltechAUTHORS DOI setup
-            if 'related_url' in metadata and 'items' in metadata['related_url']:
+            if 'doi' in metadata:
+                doi = metadata['doi'].strip()
+            elif 'related_url' in metadata and 'items' in metadata['related_url']:
                 items = metadata['related_url']['items']
                 for item in items:
                     if 'url' in item:
@@ -104,10 +106,8 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
                     if itype == 'doi' and description == 'article':
                         doi = url
                         break
-            elif 'doi' not in metadata:
-                doi = ''
             else:
-                doi = metadata['doi'].strip()
+                doi = ''
             if 'creators' in metadata:
                 if 'id' in metadata['creators']['items'][0]:
                     author = metadata['creators']['items'][0]['id']
@@ -386,7 +386,7 @@ if __name__ == '__main__':
         if args.report_name == 'file_report':
             file_report(file_out,keys,source,args.years)
         elif args.report_name == 'creator_report':
-            creator_report(file_out,keys,source,update_only=True)
+            creator_report(file_out,keys,source,update_only=False)
         elif args.report_name == 'status_report':
             status_report(file_out,keys,source)
         elif args.report_name == 'doi_report':
