@@ -77,8 +77,6 @@ def get_caltechfeed(feed,autoupdate=False):
         #We decide whether to update
     
         datev,err = dataset.read(cname,'captured')
-        if err != '':
-            print("Error on date read")
         if datev == {}:
             #No date, collection must be updated
             update = 'Y'

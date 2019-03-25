@@ -154,7 +154,7 @@ Type something like `python run_coda_report.py doi_report thesis report.tsv -yea
 range (1977-1978)
 - Some reports include a -group option to return just the records with a
   specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
-- Some reports include a -item_type option to return just records with a
+- Some reports include a -item option to return just records with a
   specific item type.  Supported types include:
     - CaltechDATA item types (Dataset, Software, ...)
     - CaltechAUTHORS item types (article, monograph, ...)

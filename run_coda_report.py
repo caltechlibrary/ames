@@ -162,42 +162,74 @@ def status_report(file_obj,keys,source):
             print("Record matched: ",url)
             file_obj.writerow([ep,url,status])
         
-def license_report(file_obj,keys,source,item_type=None):
+def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
     '''Write report with license types'''
-    file_obj.writerow(["License Name","Number of Records","IDs"])
     if source.split('.')[0] != 'CaltechDATA':
         print(source.split('.')[0]+ " is not supported for license report")
         exit()
     else:
         all_metadata = []
-        dot_paths = ['._Key','.rightsList','.resourceType']
-        labels = ['id','rightsList','resourceType']
+        dot_paths = ['._Key','.rightsList','.resourceType',
+                '.creators','.fundingReferences']
+        labels = ['id','rightsList','resourceType',
+                'creators','fundingReferences']
         all_metadata = get_records(dot_paths,'dois',source,keys,labels)
         licenses = {}
-        for metadata in all_metadata:
-            if item_type != None:
-                #Restrict to a specific item type
-                if metadata['resourceType']['resourceTypeGeneral'] == item_type:
-                    license = metadata['rightsList'][0]['rights']
+
+        if rtype == 'summary':
+
+            file_obj.writerow(["License Name","Number of Records","IDs"])
+            for metadata in all_metadata:
+                if item_type != None:
+                    #Restrict to a specific item type
+                    if metadata['resourceType']['resourceTypeGeneral'] in item_type:
+                        license = metadata['rightsList'][0]['rights']
+                    else:
+                        license = None
+                #Otherwise we always save license
                 else:
-                    license = None
-            #Otherwise we always save license
-            else:
-                license = metadata['rightsList']['rights']
+                    license = metadata['rightsList']['rights']
             
-            if license != None:
-                if license in licenses:
-                    licenses[license]['count'] += 1
-                    licenses[license]['ids'].append(metadata['id']) 
+                if license != None:
+                    if license in licenses:
+                        licenses[license]['count'] += 1
+                        licenses[license]['ids'].append(metadata['id']) 
+                    else:
+                        new = {}
+                        new['count'] = 1
+                        new['ids'] = [metadata['id']]
+                        licenses[license] = new
+
+            for license in licenses:
+                file_obj.writerow([license,licenses[license]['count'],licenses[license]['ids']])
+
+        else:
+
+            file_obj.writerow(["CaltechDATA ID","Authors","License","Funders"])
+            for metadata in all_metadata:
+                write = False
+                if item_type != None:
+                    #Restrict to a specific item type
+                    if metadata['resourceType']['resourceTypeGeneral'] in item_type:
+                        write = True
+                #Otherwise we always save license
                 else:
-                    new = {}
-                    new['count'] = 1
-                    new['ids'] = [metadata['id']]
-                    licenses[license] = new
+                    write = True
 
-        for license in licenses:
-            file_obj.writerow([license,licenses[license]['count'],licenses[license]['ids']])
-
+                if write == True:
+                    creators = ''
+                    for c in metadata['creators']:
+                        if creators != '':
+                            creators += ';'
+                        creators += c['creatorName']
+                    funders = ''
+                    if 'fundingReferences' in metadata:
+                        for c in metadata['fundingReferences']:
+                            if funders != '':
+                                funders += ';'
+                            funders += c['funderName']
+                    file_obj.writerow([metadata['id'],creators,metadata['rightsList'][0]['rights'],funders])
+ 
 def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''
     file_obj.writerow(["Eprint ID","Problem","Impacted Files","Resolver URL"])
@@ -392,7 +424,7 @@ if __name__ == '__main__':
         elif args.report_name == 'doi_report':
             doi_report(file_out,keys,source,years=args.years,all_records=True,item_type=args.item,group=args.group)
         elif args.report_name == 'license_report':
-            license_report(file_out,keys,source,item_type=args.item)
+            license_report(file_out,keys,source,item_type=args.item,rtype='full')
         else:
             print(args.report_name,' is not known')
 
