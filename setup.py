@@ -55,12 +55,11 @@ REQUIRES_PYTHON = '>=3.7.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests','datacite','progressbar2','idutils'
+    'requests','datacite','progressbar2','idutils','caltechdata_api'
 ]
 
 # What packages are optional?
 EXTRAS = {
-    'caltechdata': ['caltechdata_api'],
 }
 
 # The rest you shouldn't have to touch too much :)
