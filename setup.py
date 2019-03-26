@@ -6,7 +6,7 @@
 
 import io
 import os
-import sys
+import sys,json
 from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
@@ -24,8 +24,7 @@ with open(codemeta_json, mode = "r", encoding = "utf-8") as f:
     meta = json.loads(src)
 
 # Let's make our symvar string
-VERSION = meta["version"]
-LICENSE = meta["license"]
+version = meta["version"]
 
 # Now we need to pull and format our author, author_email strings.
 author = ""
@@ -42,6 +41,11 @@ for obj in meta["author"]:
         author_email = email
     else:
         author_email = author_email + ", " + email
+description = meta['description']
+url = meta['codeRepository']
+download = meta['downloadUrl']
+license = meta['license']
+name = meta['name']
 
 # Package metadata.
 NAME = 'ames'
@@ -76,11 +80,11 @@ except FileNotFoundError:
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
-if not VERSION:
+if not version:
     with open(os.path.join(here, NAME, '__version__.py')) as f:
         exec(f.read(), about)
 else:
-    about['__version__'] = VERSION
+    about['__version__'] = version
 
 
 class UploadCommand(Command):
@@ -118,15 +122,15 @@ class UploadCommand(Command):
 
 # Where the magic happens:
 setup(
-    name=NAME,
-    version=about['__version__'],
-    description=DESCRIPTION,
+    name=name,
+    version=version,
+    description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author=AUTHOR,
-    author_email=EMAIL,
+    author=author,
+    author_email=author_email,
     python_requires=REQUIRES_PYTHON,
-    url=URL,
+    url=url,
     packages=find_packages(exclude=('tests',)),
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
@@ -137,7 +141,7 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
-    license=LICENSE,
+    license=license,
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
