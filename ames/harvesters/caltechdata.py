@@ -2,6 +2,7 @@ import os,json,subprocess,shutil
 import requests
 from caltechdata_api import decustomize_schema
 import dataset
+from progressbar import progressbar
 
 def get_caltechdata(collection,production=True,datacite=False):
     '''Harvest all records from CaltechDATA .
@@ -24,7 +25,7 @@ def get_caltechdata(collection,production=True,datacite=False):
     response = requests.get(url+'/?size=1000')
     hits = response.json()
 
-    for h in hits['hits']['hits']:
+    for h in progressbar(hits['hits']['hits']):
         rid = str(h['id'])
         #Get enriched metadata records (including files)
         if datacite == False:
