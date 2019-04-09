@@ -418,7 +418,7 @@ if __name__ == '__main__':
         if args.report_name == 'file_report':
             file_report(file_out,keys,source,args.years)
         elif args.report_name == 'creator_report':
-            creator_report(file_out,keys,source,update_only=False)
+            creator_report(file_out,keys,source,update_only=True)
         elif args.report_name == 'status_report':
             status_report(file_out,keys,source)
         elif args.report_name == 'doi_report':

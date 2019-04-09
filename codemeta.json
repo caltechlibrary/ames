@@ -1,8 +1,8 @@
 {
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
-  "description": "Manage metadata from different sources.",
-  "name": "AMES: Automated Metadata Service",
+  "description": "Automated Metadata Service: Manage metadata from different sources.",
+  "name": "ames",
   "codeRepository": "https://github.com/caltechlibrary/ames",
   "issueTracker": "https://github.com/caltechlibrary/ames/issues",
   "license": "https://data.caltech.edu/license",

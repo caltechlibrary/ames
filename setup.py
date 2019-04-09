@@ -47,10 +47,6 @@ download = meta['downloadUrl']
 license = meta['license']
 name = meta['name']
 
-# Package metadata.
-NAME = 'ames'
-DESCRIPTION = "Automated Metadata Service: manage metadata from different sources."
-URL = 'https://github.com/caltechlibrary/ames'
 REQUIRES_PYTHON = '>=3.7.0'
 
 # What packages are required for this module to be executed?
@@ -75,7 +71,7 @@ try:
     with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
         long_description = '\n' + f.read()
 except FileNotFoundError:
-    long_description = DESCRIPTION
+    long_description = description
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
