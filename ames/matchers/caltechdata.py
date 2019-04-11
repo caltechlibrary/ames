@@ -163,8 +163,10 @@ def add_citation(collection,token,production=True):
                 citation = citation.replace(doi_url,'<a href="'+doi_url+'">'+doi_url+'</a>')
                 #Replace link text with HTML link
                 n_txt = '<br>Cite this record as:<br>'+citation+\
-                    '<br> or choose a <a href="https://crosscite.org/?doi='\
-                    +record_doi+'"> different citation style</a>'
+                '<br> or choose a <a href="https://crosscite.org/?doi='\
+                +record_doi+'"> different citation style.</a><br>'+\
+                '<a href="https://data.datacite.org/application/x-bibtex/'+\
+                record_doi+'">Download Citation</a><br>'
                 description.append({'descriptionType':'Other','description':n_txt})
                 response =\
                 caltechdata_edit(token,k,{'descriptions':description},{},{},production)
