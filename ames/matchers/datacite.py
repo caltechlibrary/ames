@@ -66,7 +66,7 @@ def update_datacite_metadata(collection,token,password):
         url='https://mds.datacite.org'
         )
 
-    for k in ['226']:#keys:
+    for k in keys:
         print(k)
         metadata,err = dataset.read(collection,k)
         #Get rid of Key from dataset
