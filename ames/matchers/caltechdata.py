@@ -88,7 +88,7 @@ def match_codemeta():
                 for s in standardized['subjects']:
                     if s == 'Github':
                         add = False
-                    if s == 'GitHUb':
+                    if s == 'GitHub':
                         add = False
                 if add == True:
                     standardized['subjects'].append({'subject':'GitHub'})
