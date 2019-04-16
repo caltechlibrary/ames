@@ -85,7 +85,7 @@ def match_codemeta():
                 
                 #Check that all records have a GitHub subject tag
                 add = True
-                for s in standardized['subjects']
+                for s in standardized['subjects']:
                     if s == 'Github':
                         add = False
                     if s == 'GitHUb':
