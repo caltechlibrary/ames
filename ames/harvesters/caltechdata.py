@@ -22,7 +22,7 @@ def get_caltechdata(collection,production=True,datacite=False):
     else:
         url = 'https://cd-sandbox.tind.io/api/records'
 
-    response = requests.get(url+'/?size=1000')
+    response = requests.get(url+'/?size=5000')
     hits = response.json()
 
     for h in progressbar(hits['hits']['hits']):
