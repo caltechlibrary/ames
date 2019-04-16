@@ -82,6 +82,16 @@ def match_codemeta():
                 infile = open('codemeta.json','r')
                 meta = json.load(infile)
                 standardized = codemeta_to_datacite(meta)
+                
+                #Check that all records have a GitHub subject tag
+                add = True
+                for s in standardized['subjects']
+                    if s == 'Github':
+                        add = False
+                    if s == 'GitHUb':
+                        add = False
+                if add == True:
+                    standardized['subjects'].append({'subject':'GitHub'})
                 response = caltechdata_edit(token,k,standardized,{},{},True)
                 print(response)
                 os.system('rm codemeta.json')
