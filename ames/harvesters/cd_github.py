@@ -13,7 +13,7 @@ def download_file(erecord,rid):
         with open(fname, 'wb') as f:
             total_length = int(r.headers.get('content-length'))
             for chunk in \
-progressbar(r.iter_content(chunk_size=1024),expected_size=(total_length/1024) + 1):
+progressbar(r.iter_content(chunk_size=1024),max_value=(total_length/1024) + 1):
                 if chunk:
                     f.write(chunk)
                     #f.flush()
