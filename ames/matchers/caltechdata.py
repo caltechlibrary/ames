@@ -80,20 +80,24 @@ def match_codemeta():
                 token = os.environ['TINDTOK']
 
                 infile = open('codemeta.json','r')
-                meta = json.load(infile)
-                standardized = codemeta_to_datacite(meta)
+                try:
+                    meta = json.load(infile)
+                except:
+                    print("Invalid json file - Skipping forever ",k)
+                else:
+                    standardized = codemeta_to_datacite(meta)
                 
-                #Check that all records have a GitHub subject tag
-                add = True
-                for s in standardized['subjects']:
-                    if s == 'Github':
-                        add = False
-                    if s == 'GitHub':
-                        add = False
-                if add == True:
-                    standardized['subjects'].append({'subject':'GitHub'})
-                response = caltechdata_edit(token,k,standardized,{},{},True)
-                print(response)
+                    #Check that all records have a GitHub subject tag
+                    add = True
+                    for s in standardized['subjects']:
+                        if s == 'Github':
+                            add = False
+                        if s == 'GitHub':
+                            add = False
+                    if add == True:
+                        standardized['subjects'].append({'subject':'GitHub'})
+                    response = caltechdata_edit(token,k,standardized,{},{},True)
+                    print(response)
                 os.system('rm codemeta.json')
 
             existing['completed'] = 'True'
