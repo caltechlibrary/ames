@@ -72,13 +72,13 @@ def keep_record(metadata,years,item_type,group):
 
 def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,group=None):
     '''Output a report of DOIs '''
-    file_obj.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL"])
+    file_obj.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL","Series Information"])
     all_metadata = []
     if source.split('.')[-1] == 'ds':
         dot_paths =\
-            ['._Key','.doi','.official_url','.date','.related_url','.creators','.title','.local_group','.type','.monograph_type']
+            ['._Key','.doi','.official_url','.date','.related_url','.creators','.title','.local_group','.type','.monograph_type','.other_numbering_system','.series','.number']
         labels=\
-            ['eprint_id','doi','official_url','date','related_url','creators','title','local_group','type','monograph_type']
+            ['eprint_id','doi','official_url','date','related_url','creators','title','local_group','type','monograph_type','other_numbering_system','series','number']
         all_metadata = get_records(dot_paths,'dois',source,keys,labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -124,11 +124,27 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
                 year = metadata['date'].split('-')[0]
             else:
                 year = ''
+            #Series info
+            series = ''
+            if 'other_numbering_system' in metadata:
+                num = metadata['other_numbering_system']
+                series = 'other numbering:'
+                for item in num['items']:
+                    if 'id' in item:
+                        series += ' '+item['name']+' '+item['id']
+                    else:
+                        series += ' '+item['name']
+            if 'series' in metadata:
+                series += 'series:'
+                if 'number' in metadata:
+                    series += ' '+metadata['series']+' '+metadata['number']
+                else:
+                    series += ' '+metadata['series']
             if all_records == False:
                 if doi != '':
-                    file_obj.writerow([ep,doi,year,author,title,url])
+                    file_obj.writerow([ep,doi,year,author,title,url,series])
             else:
-                file_obj.writerow([ep,doi,year,author,title,url])
+                file_obj.writerow([ep,doi,year,author,title,url,series])
 
 def status_report(file_obj,keys,source):
     '''Output a report of items that have a status other than archive
@@ -228,6 +244,9 @@ def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
                             if funders != '':
                                 funders += ';'
                             funders += c['funderName']
+                    if 'rightsList' not in metadata:
+                        print('record ',metadata['id'],' is missing license')
+                        exit()
                     file_obj.writerow([metadata['id'],creators,metadata['rightsList'][0]['rights'],funders])
  
 def file_report(file_obj,keys,source,years=None):
@@ -424,7 +443,7 @@ if __name__ == '__main__':
         elif args.report_name == 'doi_report':
             doi_report(file_out,keys,source,years=args.years,all_records=True,item_type=args.item,group=args.group)
         elif args.report_name == 'license_report':
-            license_report(file_out,keys,source,item_type=args.item,rtype='full')
+            license_report(file_out,keys,source,item_type=args.item)#,rtype='full')
         else:
             print(args.report_name,' is not known')
 
