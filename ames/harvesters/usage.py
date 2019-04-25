@@ -3,74 +3,8 @@ import requests
 import pandas as pd
 from datetime import datetime
 from caltechdata_api import decustomize_schema
+from progressbar import progressbar
 import dataset
-
-def get_downloads(new=True):
-
-    token = os.environ['MATTOK']
-
-    collection = 'download_records.ds'
-    if os.path.isdir('data') == False:
-        os.mkdir('data')
-    os.chdir('data')
-
-    if new==True:
-        os.system('rm -rf '+collection)
-
-    if os.path.isdir(collection) == False:
-        ok = dataset.init(collection)
-        if ok == False:
-            print("Dataset failed to init collection")
-            exit()
-
-    url = 'https://data.caltech.edu/api/records'
-
-    matomo =\
-    'https://piwik.tind.io/?module=API&method=Actions.getDownload&format=json&idSite=1161&period=range&date=2018-05-01,2018-05-30&&period=range'
-    matomo = matomo + '&token_auth='+token
-
-
-    response = requests.get(url+'/?size=5000')
-    hits = response.json()
-
-    for h in hits['hits']['hits']:
-        rid = str(h['id'])
-        print(rid)
-        record = h['metadata']
-        downloads = []
-
-        #Ignore embargoed records
-        if 'electronic_location_and_access' in record:
-            for filev in record['electronic_location_and_access']:
-                data = requests.get(matomo +\
-                    '&downloadUrl='+filev['uniform_resource_identifier'])
-                data = data.json()
-                if data == []:
-                    data = {'file_name':filev['electronic_name'][0]}
-                else:
-                    data = data[0]
-                    data['file_name']=filev['electronic_name'][0]
-                downloads.append(data)
-
-            result = dataset.has_key(collection,rid)
-            if result == False:
-                err = dataset.create(collection,rid,{'downloads':downloads})
-                if err !="":
-                    print(f"Unexpected error on create: {err}")
-            else:
-                err = dataset.update(collection,rid,{'downloads':downloads})
-                if err !="":
-                    print(f"Unexpected error on create: {err}")
-
-#Views and unique views
-#https://stats.tind.io/index.php?module=API&method=API.getProcessedReport&idSite=1161&period=day&date=yesterday&apiModule=Actions&apiAction=getPageUrls&showTimer=1&format=JSON&flat=1&token_auth=
-#Downloads and unique downloads
-#https://stats.tind.io/?module=API&method=Actions.getDownloads&format=json&idSite=1161&period=range&date=2018-05-01,2018-05-31&flat=1&token_auth=
-#Visit info
-# https://stats.tind.io/index.php?module=API&method=Live.getLastVisitsDetails&idSite=1161&period=day&date=yesterday&format=JSON&token_auth=
-
-#Plan - build structure
-#Build mappling of file ID to record
 
 def file_mapping(source_collection,mapping_file):
     '''Return a dictionary that maps /tindfiles/serve urls to records.
@@ -116,42 +50,27 @@ def get_usage(caltechdata_collection,usage_collection,mapping,token):
         #Write date to start collecting statistics for new collection
         dataset.create(usage_collection,'end-date',{'end-date':'2017-02-01'})
     
-    #Build out structure
+    #Build out dict for record creation
     ids = dataset.keys(caltechdata_collection)
+    record_dates = {}
     for k in ids:
-        #Do we have a usage object?
-        if dataset.has_key(usage_collection,k)==False:
-            metadata,err = dataset.read(caltechdata_collection,k)
-            #When record was submitted to CaltechDATA:
-            rdate = None
-            for date in metadata['dates']:
-                if date['dateType']=='Submitted':
+        metadata,err = dataset.read(caltechdata_collection,k)
+        #When record was submitted to CaltechDATA:
+        rdate = None
+        for date in metadata['dates']:
+            if date['dateType']=='Submitted':
+                rdate = date['date']
+            if date['dateType']=='Updated':
+                if rdate == None:
                     rdate = date['date']
-                if date['dateType']=='Updated':
-                    if rdate == None:
-                        rdate = date['date']
-            report_data = {'dataset-id':[{'type':'doi',
-            'value':metadata['identifier']['identifier']}],
-            'uri': 'https://data.caltech.edu/records/'+k,
-            'publisher':'CaltechDATA','yop':metadata['publicationYear'],
-            'data-type':metadata['resourceType']['resourceTypeGeneral'],
-            'begin-date':rdate,'performance':[]}
-            err = dataset.create(usage_collection,k,report_data)
-            if err != '':
-                print("Error on write ",err)
-                exit()
-        #else:
-        #    report_data,err = dataset.read(usage_collection,k)
-        #    if err != '':
-        #        print("Error on read ",err)
-        #        exit()
+        record_dates[k] = datetime.fromisoformat(rdate)
 
     #Find time periods
     datev,err = dataset.read(usage_collection,'end-date')
     new_start = datetime.fromisoformat(datev['end-date'])
     #Always start at the beginning of a month
     if new_start.day != 1:
-        new_start = new_start.year+'-'+new_start.month+'-01'
+        new_start = str(new_start.year)+'-'+str(new_start.month)+'-01'
     today = datetime.today().date().isoformat()
     start_list = pd.date_range(new_start,today,freq='MS').strftime('%Y-%m-%d').to_list()
     end_list = pd.date_range(new_start,today,freq='M').strftime('%Y-%m-%d').to_list()
@@ -162,27 +81,96 @@ def get_usage(caltechdata_collection,usage_collection,mapping,token):
     view_url_base =\
     'https://stats.tind.io/index.php?module=API&method=Actions.getPageUrl&idSite=1161&period=range&format=JSON'
     dl_url_base =\
-    'https://stats.tind.io/?module=API&method=Actions.getDownloads&format=json&idSite=1161&period=range&flat=1'
+    'https://stats.tind.io/?module=API&method=Actions.getDownload&idSite=1161&period=range&format=JSON'
 
     for i in range(len(start_list)):
         end_date = datetime.fromisoformat(end_list[i])
+        print('Collecting usage from ',start_list[i],' to',end_list[i])
         token_s = '&token_auth='+token
         view_url = view_url_base + '&date='+start_list[i]+','+end_list[i]+token_s
-        for k in ids:
-            report_data,err = dataset.read(usage_collection,k)
-            record_date = datetime.fromisoformat(report_data['begin-date'])
+        dl_url = dl_url_base + '&date='+start_list[i]+','+end_list[i]+token_s
+        #Build report structure
+        report = {'report-header': {'report-name':"dataset report",
+                'report-id': "DSR",
+                "release": "rd1",
+                "created-by": "Caltech Library",
+                'created': today,
+                "reporting-period":{'begin-date':start_list[i],'end-date':end_list[i]}},
+                "report-datasets":[]}
+
+        print('Collecting downloads')
+        aggr_downloads = {}
+        for m in progressbar(mapping):
+            record_date = record_dates[mapping[m]]
+            #report_data,err = dataset.read(usage_collection,mapping[m])
+            #record_date = datetime.fromisoformat(report_data['begin-date'])
             #If the record existed at this date
             if record_date < end_date:
-                view_url = view_url + '&pageUrl=https://data.caltech.edu/records/'+k
-                response = requests.get(view_url)
+                #Handle old URL-might not be needed depending on mapping
+                d_url = m
+                if end_date < datetime.fromisoformat('2017-06-01'):
+                    d_url = 'https://caltechdata.tind.io'+m.split('data.caltech.edu')[1]
+                url = dl_url + '&downloadUrl='+d_url
+                response = requests.get(url)
+                if response.status_code != 200:
+                    print(response.text)
+                    print(dl_url)
+                r_data = response.json()
+                recid = mapping[m]
+                if r_data != []:
+                    downloads = r_data[0]['nb_visits']
+                    if recid in aggr_downloads:
+                        aggr_downloads[recid] += downloads
+                    else:
+                        aggr_downloads[recid] = downloads
+                else:
+                    if recid not in aggr_downloads:
+                        aggr_downloads[recid] = 0
+        print('Collecting views')
+        for k in progressbar(ids):
+            performance ={'period':
+                {'begin-date':start_list[i],'end-date':end_list[i]},'instance':[]}
+            #report_data,err = dataset.read(usage_collection,k)
+            #record_date = datetime.fromisoformat(report_data['begin-date'])
+            record_date = record_dates[k]
+            metadata,err = dataset.read(caltechdata_collection,k)
+            #If the record existed at this date
+            if record_date < end_date:
+                url = view_url + '&pageUrl=https://data.caltech.edu/records/'+k
+                response = requests.get(url)
                 r_data = response.json()
                 if r_data != []:
                     visits = r_data[0]['nb_visits']
                 else:
                     visits = 0
-                print(k,visits)
-        exit()
-
-    #dataset.update(usage_collection,'end-date',{'end-date':today})
+                entry =\
+                {'count':visits,'metric-type':'unique-dataset-investigations','access-method':'regular'}
+                performance['instance'].append(entry)
+                #Also add downloads to structure
+                if k in aggr_downloads:
+                    entry =\
+                    {'count':aggr_downloads[k],'metric-type':'unique-dataset-requests','access-method':'regular'}
+                performance['instance'].append(entry)
+                #Save to report
+                report_data = {'dataset-id':[{'type':'doi',
+                'value':metadata['identifier']['identifier']}],
+                'uri': 'https://data.caltech.edu/records/'+k,
+                'publisher':'CaltechDATA',
+                'publisher-id':[{'type':'grid','value':'grid.20861.3d'}],
+                'yop':metadata['publicationYear'],
+                'data-type':metadata['resourceType']['resourceTypeGeneral'],
+                'dataset-dates':[{"type":"pub-date","value":record_date.isoformat()}],
+                'dataset-title':metadata['titles'][0]['title'],
+                'performance':[performance]}
+                report['report-datasets'].append(report_data)
+        rname = start_list[i]+'/'+end_list[i]
+        if dataset.has_key(usage_collection,rname):
+             err = dataset.update(usage_collection,rname,report)
+        else:
+            err = dataset.create(usage_collection,rname,report)
+        if err != '':
+            print(err)
+            exit()
+        dataset.update(usage_collection,'end-date',{'end-date':end_list[i]})
 
 
