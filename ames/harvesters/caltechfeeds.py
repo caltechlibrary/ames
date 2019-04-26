@@ -2,7 +2,7 @@ import os,csv,shutil
 import requests
 from progressbar import progressbar
 from datetime import datetime,timezone
-import dataset
+from py_dataset import dataset
 import zipfile
 
 def download_file(url,fname):
@@ -77,6 +77,9 @@ def get_caltechfeed(feed,autoupdate=False):
         #We decide whether to update
     
         datev,err = dataset.read(cname,'captured')
+        if err != '':
+            print(err)
+            exit()
         if datev == {}:
             #No date, collection must be updated
             update = 'Y'

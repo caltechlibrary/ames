@@ -1,7 +1,7 @@
-import os,json,subprocess,shutil
+import os,subprocess,shutil
 import requests
 from caltechdata_api import decustomize_schema
-import dataset
+from py_dataset import dataset
 from progressbar import progressbar
 
 def get_caltechdata(collection,production=True,datacite=False):

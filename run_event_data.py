@@ -2,9 +2,9 @@ from ames.harvesters import get_crossref_refs
 from ames.harvesters import get_caltechdata
 from ames.matchers import match_cd_refs
 from xml.sax import saxutils as su
-import os,subprocess,json
+import os
 import requests
-import dataset
+from py_dataset import dataset
 
 #Environment variable AWS_SDK_LOAD_CONFIG=1 must be set before running
 

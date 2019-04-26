@@ -1,5 +1,5 @@
 from ames.harvesters import get_github_id
-import argparse,json
+import argparse
 
 parser = argparse.ArgumentParser(description=\
         "Get Markdown for a doi badge from CaltechDATA")

@@ -1,7 +1,6 @@
 from ames.harvesters import get_cd_github
 from ames.matchers import match_codemeta
-import os,subprocess,json
-import requests
+import os
 
 if os.path.isdir('data') == False:
     os.mkdir('data')

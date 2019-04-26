@@ -5,11 +5,9 @@
 #
 # For the Go package see https://github.com/caltechlibrary/eprinttools.
 #
-import os
-import io
 import json
 import sys
-from subprocess import run, Popen, PIPE
+from subprocess import run, Popen
 
 
 #

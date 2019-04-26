@@ -1,10 +1,10 @@
-import os,subprocess,json,re,copy
+import os,json,re
 from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
 from ames.harvesters import get_records
 from progressbar import progressbar
 import idutils
-import dataset
+from py_dataset import dataset
 import requests
 
 def match_cd_refs():

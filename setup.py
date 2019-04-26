@@ -51,7 +51,7 @@ REQUIRES_PYTHON = '>=3.7.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests','datacite','progressbar2','idutils','caltechdata_api'
+    'requests','datacite','progressbar2','idutils','caltechdata_api','py_dataset'
 ]
 
 # What packages are optional?

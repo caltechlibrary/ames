@@ -1,10 +1,9 @@
-import os,json,csv,subprocess
+import os,json,csv
 import requests
 import pandas as pd
 from datetime import datetime
-from caltechdata_api import decustomize_schema
 from progressbar import progressbar
-import dataset
+from py_dataset import dataset
 
 def file_mapping(source_collection,mapping_file):
     '''Return a dictionary that maps /tindfiles/serve urls to records.
@@ -24,6 +23,9 @@ def file_mapping(source_collection,mapping_file):
     keys = dataset.keys(source_collection)
     for k in keys:
         record,err = dataset.read(source_collection,k)
+        if err != '':
+            print(err)
+            exit()
 
         #Ignore embargoed records
         if 'electronic_location_and_access' in record:

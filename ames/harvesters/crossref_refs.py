@@ -1,6 +1,6 @@
 import os,shutil,json,subprocess, datetime
 import requests
-import dataset
+from py_dataset import dataset
 
 def get_crossref_refs(new=True):
     #New=True will download everything from scratch and delete any existing records

@@ -4,12 +4,10 @@
 # 
 # For Go package see https://github.com/caltechlibrary/eprinttools.
 #
-import os
 import json
 import sys
 from subprocess import run, Popen, PIPE
-from datetime import datetime, timedelta
-
+from datetime import datetime
 
 #
 # get_eprint_keys  returns a list of keys available from the
@@ -99,8 +97,6 @@ def get_eprint(eprint_url, eprint_id):
 #     'https://jane.doe:secret@eprint.example.edu'
 #
 def get_eprints(eprint_url, eprint_id):
-    eprints = []
-    eprint = {}
     cmd = ['eputil']
     cmd.append('-json')
     cmd.append(eprint_url + '/rest/eprint/' + eprint_id + '.xml')
