@@ -1,4 +1,4 @@
-import os,shutil,json,subprocess, datetime
+import os,shutil,json, datetime
 import requests
 from py_dataset import dataset
 
@@ -47,13 +47,12 @@ def get_crossref_refs(new=True):
             if err != '':
                 print("Error in saving record: "+err)
 
-        if cursor == records['message']['next-cursor']: 
+        if cursor == records['message']['next-cursor']:
         # Catches bug where we get the same curser back at end of results
             break
         cursor = records['message']['next-cursor']
 
     if collected == True:
-    
         date,err = dataset.read(collection,"captured")
         if err != '':
             print("Error in reading date: "+err)

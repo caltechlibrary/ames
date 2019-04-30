@@ -44,8 +44,21 @@ for obj in meta["author"]:
 description = meta['description']
 url = meta['codeRepository']
 download = meta['downloadUrl']
-license = meta['license']
+lic = meta['license']
 name = meta['name']
+
+# Setup for our Go based executable as a "data_file".
+platform = sys.platform
+exec_path = ["exec/Linux/eputil","exec/Linux/epfmt"]
+OS_Classifier = "Operating System :: POSIX :: Linux"
+if platform.startswith("darwin"):
+    exec_path = ["exec/MacOS/eputil","exec/MacOS/epfmt"]
+    platform = "Mac OS X"
+    OS_Classifier = "Operating System :: MacOS :: MacOS X"
+elif platform.startswith("win"):
+    exec_path = ["exec/Win/eputil.exe","exec/Win/epfmt.exe"]
+    platform = "Windows"
+    OS_Classifier = "Operating System :: Microsoft :: Windows :: Windows 10"
 
 REQUIRES_PYTHON = '>=3.7.0'
 
@@ -106,8 +119,8 @@ class UploadCommand(Command):
         except OSError:
             pass
 
-        self.status('Building Source and Wheel (universal) distribution…')
-        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
+        self.status('Building Source and Wheel distribution…')
+        os.system('{0} setup.py sdist bdist_wheel '.format(sys.executable))
 
         self.status('Uploading the package to PyPI via Twine…')
         os.system('twine upload dist/*')
@@ -135,8 +148,8 @@ setup(
     # },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    include_package_data=True,
-    license=license,
+    package_data={name:[
+    license=lic,
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers

@@ -54,7 +54,7 @@ def get_caltechfeed(feed,autoupdate=False):
     url ='https://feeds.library.caltech.edu/'+feed+'/'
 
     if feed=='authors':
-        fname = 'CaltechAUTHORS.ds.zip' 
+        fname = 'CaltechAUTHORS.ds.zip'
         cname = 'CaltechAUTHORS.ds'
     elif feed=='thesis':
         fname = 'CaltechTHESIS.ds.zip'
@@ -100,7 +100,7 @@ def get_caltechfeed(feed,autoupdate=False):
                     count = count + 1
                     record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
 
-            if count > 0: 
+            if count > 0:
                 print(str(count)+" Outdated Records")
                 if autoupdate == False:
                     update = input("Do you want to update your local copy (Y or N)? ")

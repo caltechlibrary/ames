@@ -49,7 +49,7 @@ def keep_record(metadata,years,item_type,group):
                         keep=False
             else:
                 if metadata['type'] not in item_type:
-                    keep=False    
+                    keep=False
         else:   
             print("Item type not found in record")
             keep=False
@@ -148,8 +148,8 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
 
 def status_report(file_obj,keys,source):
     '''Output a report of items that have a status other than archive
-    or have metadata visability other than show.  
-    Under normal circumstances this should return no records when run on feeds'''
+    or have metadata visability other than show. Under normal 
+    circumstances this should return no records when run on feeds'''
     file_obj.writerow(["Eprint ID","Resolver URL","Status"])
         
     all_metadata = []
@@ -199,25 +199,25 @@ def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
                 if item_type != None:
                     #Restrict to a specific item type
                     if metadata['resourceType']['resourceTypeGeneral'] in item_type:
-                        license = metadata['rightsList'][0]['rights']
+                        lic = metadata['rightsList'][0]['rights']
                     else:
-                        license = None
+                        lic = None
                 #Otherwise we always save license
                 else:
-                    license = metadata['rightsList']['rights']
+                    lic = metadata['rightsList']['rights']
             
-                if license != None:
-                    if license in licenses:
-                        licenses[license]['count'] += 1
-                        licenses[license]['ids'].append(metadata['id']) 
+                if lic != None:
+                    if lic in licenses:
+                        licenses[lic]['count'] += 1
+                        licenses[lic]['ids'].append(metadata['id'])
                     else:
                         new = {}
                         new['count'] = 1
                         new['ids'] = [metadata['id']]
-                        licenses[license] = new
+                        licenses[lic] = new
 
-            for license in licenses:
-                file_obj.writerow([license,licenses[license]['count'],licenses[license]['ids']])
+            for lic in licenses:
+                file_obj.writerow([lic,licenses[lic]['count'],licenses[lic]['ids']])
 
         else:
 
@@ -349,7 +349,7 @@ def find_creators(items,eprint_id,creators,creator_ids):
                     elif orcid in creators[creator_id]['orcids']:
                         #We already have ORCID
                         creators[creator_id]['eprint_ids'].append(eprint_id)
-                    else: 
+                    else:
                         #Creator has multiple orcids
                         creators[creator_id]['orcids'].append(orcid)
                         creators[creator_id]['update_ids'].append(eprint_id)
@@ -433,7 +433,6 @@ if __name__ == '__main__':
             file_out = csv.writer(fout,delimiter='\t')
         else:
             file_out = csv.writer(fout)
-        
         if args.report_name == 'file_report':
             file_report(file_out,keys,source,args.years)
         elif args.report_name == 'creator_report':

@@ -33,10 +33,10 @@ def get_caltechdata(collection,production=True,datacite=False):
             metadata['updated'] = h['updated']
         else:
             #Get just DataCite metadata
-            metadata = decustomize_schema(h['metadata'])           
+            metadata = decustomize_schema(h['metadata'])
 
         dataset.create(collection,rid, metadata)
-        
+
 def get_multiple_links(input_collection,output_collection):
     keys = dataset.keys(input_collection)
     for k in keys:
@@ -115,7 +115,6 @@ def get_cd_github(new=True):
                         split = line.split('/')
                         fname = split[1]
                         if fname == 'codemeta.json':
-                            path = ''
                             sp = line.split('   ')[-1]
                             os.system('unzip -j '+f.rstrip()+' '+sp+' -d .')
                             codemeta = True

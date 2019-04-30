@@ -1,4 +1,4 @@
-import os,argparse
+import os
 from py_dataset import dataset
 from ames.harvesters import get_caltechfeed, get_records
 
@@ -6,7 +6,6 @@ if __name__ == '__main__':
 
     import_coll = "imported.ds"
     sheet = '1ZI3-XvQ_3rLcKrF-4FBa2tEInIdQfOnGJ9L_NmhmoGs'
-    
     os.system("rm -rf imported.ds")
     dataset.init(import_coll)
     err = dataset.import_gsheet(import_coll,sheet,'CaltechPEOPLE',4,'A:AA')
@@ -45,5 +44,5 @@ if __name__ == '__main__':
     # TODO - port to python
     #Run on command line
     # dataset frame -all imported.ds gsheet-sync ._Key .ORCID
-    # dataset frame-labels imported.ds gsheet-sync "CL_PEOPLE_ID" "ORCID"    
+    # dataset frame-labels imported.ds gsheet-sync "CL_PEOPLE_ID" "ORCID"
     # dataset sync-send imported.ds gsheet-sync 1ZI3-XvQ_3rLcKrF-4FBa2tEInIdQfOnGJ9L_NmhmoGs CaltechPEOPLE

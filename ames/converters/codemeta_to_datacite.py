@@ -37,7 +37,7 @@ def codemeta_to_datacite(metadata):
             grant_info = metadata['funding'].split(',')
         if isinstance(metadata['funder'],list):
             count = 0
-            for f in metadata['funder']:
+            for funder in metadata['funder']:
                 entry = {'funderName':funder['name']}
                 if '@id' in funder:
                     element = {}

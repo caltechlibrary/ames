@@ -1,13 +1,23 @@
 #
 # eputil.py is a Python 3.7 wrapper for the Go eprinttools
 # eputil command line program.
-# 
+#
 # For Go package see https://github.com/caltechlibrary/eprinttools.
 #
 import json
-import sys
-from subprocess import run, Popen, PIPE
-from datetime import datetime
+import sys,os
+from subprocess import run
+
+# get path to executible
+def get_eputil_exec():
+    platform = sys.platform
+    path = os.path.join(os.path.dirname(__file__)
+    exec_path = path+"exec/Linux/eputil"
+    if platform.startswith("darwin"):
+        exec_path = path+"exec/MacOS/eputil"
+    elif platform.startswith("win"):
+        exec_path = path+"exec/Win/eputil.exe"
+    return exec_path
 
 #
 # get_eprint_keys  returns a list of keys available from the
@@ -19,7 +29,8 @@ from datetime import datetime
 #     'https://jane.doe:secret@eprint.example.edu'
 #
 def get_eprint_keys(eprint_url):
-    cmd = ['eputil']
+    execp = get_eputil_exec()
+    cmd = [ execp ]
     cmd.append('-json')
     cmd.append(eprint_url + '/rest/eprint/')
     try:
@@ -52,13 +63,14 @@ def get_eprint_keys(eprint_url):
 # via the EPrints rest API indicated in the provided eprint_url. 
 #
 # The eprint_url often is in the form containing a username/password
-# for access the API. E.g. 
+# for access the API. E.g.
 #
 #     'https://jane.doe:secret@eprint.example.edu'
 #
 def get_eprint(eprint_url, eprint_id):
     eprint = {}
-    cmd = ['eputil']
+    execp = get_eputil_exec()
+    cmd = [ execp ]
     cmd.append('-json')
     cmd.append(eprint_url + '/rest/eprint/' + eprint_id + '.xml')
     try:
@@ -97,7 +109,8 @@ def get_eprint(eprint_url, eprint_id):
 #     'https://jane.doe:secret@eprint.example.edu'
 #
 def get_eprints(eprint_url, eprint_id):
-    cmd = ['eputil']
+    execp = get_eputil_exec()
+    cmd = [ execp ]
     cmd.append('-json')
     cmd.append(eprint_url + '/rest/eprint/' + eprint_id + '.xml')
     try:

@@ -1,4 +1,4 @@
-import os,json,csv
+import os,csv
 import requests
 import pandas as pd
 from datetime import datetime
@@ -8,7 +8,7 @@ from py_dataset import dataset
 def file_mapping(source_collection,mapping_file):
     '''Return a dictionary that maps /tindfiles/serve urls to records.
     Expects either an existing csv file dictionary or a file name
-    to save a new dictionary.''' 
+    to save a new dictionary.'''
     
     available = os.path.isfile(mapping_file)
     #If we have an existing file
@@ -79,7 +79,6 @@ def get_usage(caltechdata_collection,usage_collection,mapping,token):
     #If today isn't the last day in the month, add end date
     if len(start_list) == len(end_list) + 1:
         end_list.append(today)
-    
     view_url_base =\
     'https://stats.tind.io/index.php?module=API&method=Actions.getPageUrl&idSite=1161&period=range&format=JSON'
     dl_url_base =\

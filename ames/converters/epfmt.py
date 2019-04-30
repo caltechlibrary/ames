@@ -6,9 +6,20 @@
 # For the Go package see https://github.com/caltechlibrary/eprinttools.
 #
 import json
-import sys
-from subprocess import run, Popen
+import sys,os
+from subprocess import run
 
+
+# get path to executible
+def get_epfmt_exec():
+    platform = sys.platform
+    path = os.path.join(os.path.dirname(__file__)
+    exec_path = path+"exec/Linux/epfmt"
+    if platform.startswith("darwin"):
+        exec_path = path+"exec/MacOS/epfmt"
+    elif platform.startswith("win"):
+        exec_path = path+"exec/Win/epfmt.exe"
+    return exec_path
 
 #
 # eprint_as_xml takes a Python dict of EPrint content like
@@ -18,7 +29,8 @@ def eprint_as_xml(eprint_obj):
     src = json.dumps(eprint_obj)
     #if not isinstance(src, bytes):
     #    src = src.encode('utf-8')
-    cmd = ['epfmt', '-xml']
+    execp = get_epfmt_exec()
+    cmd = [execp, '-xml']
     try:
         p = run(cmd, input = src.encode('utf-8'), capture_output = True)
     except Exception as e:
@@ -40,7 +52,8 @@ def eprint_as_json(eprint_obj):
     src = json.dumps(eprint_obj)
     if not isinstance(src, bytes):
         src = src.encode('utf-8')
-    cmd = ['epfmt', '-json']
+    execp = get_epfmt_exec()
+    cmd = [execp, '-json']
     try:
         p = run(cmd, input = src, capture_output = True)
     except Exception as e:

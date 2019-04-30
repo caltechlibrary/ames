@@ -7,5 +7,5 @@ if os.path.isdir('data') == False:
 os.chdir('data')
 
 get_cd_github(False)
-matches = match_codemeta()
+match_codemeta()
 
