@@ -13,8 +13,7 @@ from subprocess import run
 # get path to executible
 def get_epfmt_exec():
     platform = sys.platform
-    path = os.path.join(os.path.dirname(__file__)
-    exec_path = path+"exec/Linux/epfmt"
+    path = os.path.join(os.path.dirname(__file__),"exec/Linux/epfmt")
     if platform.startswith("darwin"):
         exec_path = path+"exec/MacOS/epfmt"
     elif platform.startswith("win"):

@@ -68,6 +68,9 @@ def update_datacite_metadata(collection,token,password):
     for k in keys:
         print(k)
         metadata,err = dataset.read(collection,k)
+        if err != '':
+            print(err)
+            exit()
         #Get rid of Key from dataset
         metadata.pop('_Key')
 

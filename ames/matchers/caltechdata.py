@@ -86,7 +86,7 @@ def match_codemeta():
                     print("Invalid json file - Skipping forever ",k)
                 else:
                     standardized = codemeta_to_datacite(meta)
-                
+
                     #Check that all records have a GitHub subject tag
                     add = True
                     for s in standardized['subjects']:

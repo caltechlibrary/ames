@@ -1,7 +1,7 @@
 import os,csv,shutil
 import requests
 from progressbar import progressbar
-from datetime import datetime,timezone
+from datetime import datetime
 from py_dataset import dataset
 import zipfile
 
@@ -91,15 +91,13 @@ def get_caltechfeed(feed,autoupdate=False):
             download_file(url,upname)
             with open(upname) as csv_file:
                 reader = csv.reader(csv_file, delimiter=',')
-    
-                header = next(reader)
+                #Drop header
+                next(reader)
                 record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
                 count = 0
-
                 while captured_date < record_date:
                     count = count + 1
                     record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
-
             if count > 0:
                 print(str(count)+" Outdated Records")
                 if autoupdate == False:

@@ -31,7 +31,7 @@ def file_mapping(source_collection,mapping_file):
         if 'electronic_location_and_access' in record:
             for filev in record['electronic_location_and_access']:
                 url = filev['uniform_resource_identifier']
-                name = filev['electronic_name'][0]
+                #name = filev['electronic_name'][0]
                 if url not in mapping:
                     mapping[url] = k
     
@@ -51,7 +51,7 @@ def get_usage(caltechdata_collection,usage_collection,mapping,token):
             exit()
         #Write date to start collecting statistics for new collection
         dataset.create(usage_collection,'end-date',{'end-date':'2017-02-01'})
-    
+
     #Build out dict for record creation
     ids = dataset.keys(caltechdata_collection)
     record_dates = {}

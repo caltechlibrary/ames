@@ -6,6 +6,7 @@
 
 import io
 import os
+import glob
 import sys,json
 from shutil import rmtree
 
@@ -17,6 +18,12 @@ def read(fname):
     return src
 
 codemeta_json = "codemeta.json"
+
+def package_files(package,directory):
+    os.chdir(package)
+    paths = glob.glob(directory+'/**', recursive=True)
+    os.chdir('..')
+    return paths
 
 # Let's pickup as much metadata as we need from codemeta.json
 with open(codemeta_json, mode = "r", encoding = "utf-8") as f:
@@ -94,6 +101,8 @@ if not version:
 else:
     about['__version__'] = version
 
+files = package_files('ames','exec')
+print(files)
 
 class UploadCommand(Command):
     """Support setup.py upload."""
@@ -122,8 +131,8 @@ class UploadCommand(Command):
         self.status('Building Source and Wheel distribution…')
         os.system('{0} setup.py sdist bdist_wheel '.format(sys.executable))
 
-        self.status('Uploading the package to PyPI via Twine…')
-        os.system('twine upload dist/*')
+        #self.status('Uploading the package to PyPI via Twine…')
+        #os.system('twine upload dist/*')
 
         sys.exit()
 
@@ -148,7 +157,7 @@ setup(
     # },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    package_data={name:[
+    package_data={name:files},
     license=lic,
     classifiers=[
         # Trove classifiers

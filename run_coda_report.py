@@ -43,14 +43,14 @@ def keep_record(metadata,years,item_type,group):
                 if metadata['type'] == 'monograph':
                     if metadata['monograph_type'] not in item_type and\
                     metadata['type'] not in item_type:
-                        keep=False 
+                        keep=False
                 else:
                     if metadata['type'] not in item_type:
                         keep=False
             else:
                 if metadata['type'] not in item_type:
                     keep=False
-        else:   
+        else:
             print("Item type not found in record")
             keep=False
 
@@ -148,8 +148,8 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
 
 def status_report(file_obj,keys,source):
     '''Output a report of items that have a status other than archive
-    or have metadata visability other than show. Under normal 
-    circumstances this should return no records when run on feeds'''
+    or have metadata visability other than show.
+    Under normal circumstances this should return no records when run on feeds'''
     file_obj.writerow(["Eprint ID","Resolver URL","Status"])
         
     all_metadata = []
@@ -308,7 +308,7 @@ def creator_report(file_obj,keys,source,update_only=False):
                 if 'creators' in metadata and 'items' in metadata['creators']:
                     items = metadata['creators']['items']
                     find_creators(items,eprint_id,creators,creator_ids)
-    
+
     creator_ids.sort()
     file_obj.writerow(["creator_id","orcid","existing_ids","update_ids"])
     for creator_id in creator_ids:

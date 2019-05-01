@@ -11,8 +11,7 @@ from subprocess import run
 # get path to executible
 def get_eputil_exec():
     platform = sys.platform
-    path = os.path.join(os.path.dirname(__file__)
-    exec_path = path+"exec/Linux/eputil"
+    path = os.path.join(os.path.dirname(__file__),"exec/Linux/eputil")
     if platform.startswith("darwin"):
         exec_path = path+"exec/MacOS/eputil"
     elif platform.startswith("win"):

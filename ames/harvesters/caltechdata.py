@@ -11,7 +11,6 @@ def get_caltechdata(collection,production=True,datacite=False):
     #Delete existing collection
     if os.path.isdir(collection):
         shutil.rmtree(collection)
-    
     ok = dataset.init(collection)
     if ok == False:
         print("Dataset failed to init collection")
