@@ -113,10 +113,10 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
                     author = metadata['creators']['items'][0]['id']
                 else:
                     author = ''
-                    print("Record is missing author identifier")
+                    print("Record "+ep+" is missing author id")
             
             if 'title' not in metadata:
-                print("Record is missing Title")
+                print("Record "+ep+" is missing Title")
                 exit()
             title = metadata['title']
             url = metadata['official_url']
@@ -145,6 +145,7 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
                     file_obj.writerow([ep,doi,year,author,title,url,series])
             else:
                 file_obj.writerow([ep,doi,year,author,title,url,series])
+    print("Report finished!")
 
 def status_report(file_obj,keys,source):
     '''Output a report of items that have a status other than archive
@@ -177,7 +178,8 @@ def status_report(file_obj,keys,source):
             url = metadata['official_url']
             print("Record matched: ",url)
             file_obj.writerow([ep,url,status])
-        
+     print("Report finished!")
+
 def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
     '''Write report with license types'''
     if source.split('.')[0] != 'CaltechDATA':
@@ -286,6 +288,7 @@ def file_report(file_obj,keys,source,years=None):
                                     url = metadata['official_url']
                                     print("Length: ",url)
                                     file_obj.writerow([ep,'File Name Length',filename,url])
+    print("Report finished!")
 
 def creator_report(file_obj,keys,source,update_only=False):
     creator_ids = []
@@ -327,7 +330,7 @@ def creator_report(file_obj,keys,source,update_only=False):
                 update_ids = update_ids + '|' + eprint_ids
                 eprint_ids = ''
             file_obj.writerow([creator_id,orcid,eprint_ids,update_ids])
-    print("All Done!")
+    print("Report finished!")
 
 def find_creators(items,eprint_id,creators,creator_ids):
     '''Take a item list and return creators'''
