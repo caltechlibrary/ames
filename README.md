@@ -163,11 +163,15 @@ Type `python run_usage.py`.
 Runs reports on Caltech Library repositories.  Current reports:
 
 -   doi_report: Records (optionally filtered by year) and their DOIs.
+
 -   creator_report: Finds records where an Eprints Creator ID has an ORCID
 but it is not included on all records.  Also lists cases where an author has
 two ORCIDS.
+
 -   file_report: Records that have potential problems with the attached files
+
 -   status_report: Reports on any records with an incorrect status in feeds
+
 -   license_report: Report out the license types in CaltechDATA
 
 #### Report Usage
@@ -179,29 +183,34 @@ Type something like `python run_coda_report.py doi_report thesis report.tsv -yea
 -   Next is the output file name (include .csv or .tsv extension, will show up in current directory)
 
 #### Report Options
+
 -   Some reports include a -year option to return just the records from a specific year (1977) or a
 range (1977-1978)
+
 -   Some reports include a -group option to return just the records with a
 specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
+
 -   Some reports include a -item option to return just records with a
 specific item type.  Supported types include:
     -   CaltechDATA item types (Dataset, Software, ...)
     -   CaltechAUTHORS item types (article, monograph, ...)
     -   CaltechAUTHORS monograph sub-types
-      -   discussion_paper
-      - documentation
-      - manual
-      - other
-      -project_report
-      - report
-      - technical_report
-      - white_paper
-      - working_paper
+        - discussion_paper
+        - documentation
+        - manual
+        - other
+        - project_report
+        - report
+        - technical_report
+        - white_paper
+        - working_paper
 
 There are some additional technical arguments if you want to change the default behavior.
+
 -   Adding `-source eprints` will pull report data from Eprints instead of feeds.  This is
 very slow.  You may need to add -username and -password to provide login
 credentials
+
 -   Adding `-sample XXX` allows you to select a number of randomly selected records.  This makes it
   more reasonable to pull data directly from Eprints.
 
