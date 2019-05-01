@@ -5,17 +5,17 @@
 Automated Metadata Service
 
 Manage metadata from different sources.  The examples in the package are
-specific to Caltech repositories, but could be generalized.  This package 
-is currently in development and will have additional sources and matchers 
+specific to Caltech repositories, but could be generalized.  This package
+is currently in development and will have additional sources and matchers
 added over time.
 
 ## Basic Install
 
 You need to have Python 3.7 on your machine
 ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) is a great
-installation option). 
+installation option).
 
-If you just need the python functions to write your own code 
+If you just need the python functions to write your own code
 (like codemeta_to_datacite) open a terminal and type `pip install ames`
 
 ## Full Install
@@ -54,16 +54,16 @@ the installation steps unless there are major updates.
 
 ### Harvesters
 
-  - crossref_refs - Harvest references in datacite metadata from crossref event data
-  - caltechdata - Harvest metadata from CaltechDATA
-  - cd_github - Harvest GitHub repos and codemeta files from CaltechDATA
-  - matomo - Harvest web statistics from matomo
-  - caltechfeeds - Harvest Caltech Library metadata from feeds.library.caltech.edu
+-   crossref_refs - Harvest references in datacite metadata from crossref event data
+-   caltechdata - Harvest metadata from CaltechDATA
+-   cd_github - Harvest GitHub repos and codemeta files from CaltechDATA
+-   matomo - Harvest web statistics from matomo
+-   caltechfeeds - Harvest Caltech Library metadata from feeds.library.caltech.edu
 
 ### Matchers
 
-  - caltechdata - Match content in CaltechDATA
-  - update_datacite - Match content in DataCite
+-   caltechdata - Match content in CaltechDATA
+-   update_datacite - Match content in DataCite
 
 ## Example Operations
 
@@ -86,7 +86,7 @@ CaltechDATA `export TINDTOK=`
 
 #### CodeMeta Usage
 
-Type `python run_codemeta.py`. 
+Type `python run_codemeta.py`.
 
 ### CaltechDATA Citation Alerts
 
@@ -100,7 +100,7 @@ CaltechDATA `export TINDTOK=` and Mailgun `export MAILTOK=`.
 
 #### Citation Alerts Usage
 
-Type `python run_event_data.py`. You'll be prompted for confirmation if any 
+Type `python run_event_data.py`. You'll be prompted for confirmation if any
 new citations are found.  
 
 ### Media Updates
@@ -127,7 +127,7 @@ CaltechDATA `export TINDTOK=`
 
 #### Metadata ChecksUsage
 
-Type `python run_caltechdata_checks.py`. 
+Type `python run_caltechdata_checks.py`.
 
 ### CaltechDATA Metadata Updates
 
@@ -143,7 +143,7 @@ CaltechDATA `export TINDTOK=`
 
 #### Metadata Updates Usage
 
-Type `python run_caltechdata_updates.py` or `python run_caltechdata_daily.py`. 
+Type `python run_caltechdata_updates.py` or `python run_caltechdata_daily.py`.
 
 ### CaltechDATA COUNTER Usage Reports
 
@@ -156,39 +156,39 @@ Matomo `export MATTOK=`
 
 #### Usage Report Usage
 
-Type `python run_usage.py`. 
+Type `python run_usage.py`.
 
 ### CODA Reports
 
 Runs reports on Caltech Library repositories.  Current reports:
 
-  - doi_report: Records (optionally filtered by year) and their DOIs.
-  - creator_report: Finds records where an Eprints Creator ID has an ORCID 
-  but it is not included on all records.  Also lists cases where an author has
-  two ORCIDS.
-  - file_report: Records that have potential problems with the attached files
-  - status_report: Reports on any records with an incorrect status in feeds
-  - license_report: Report out the license types in CaltechDATA
+-   doi_report: Records (optionally filtered by year) and their DOIs.
+-   creator_report: Finds records where an Eprints Creator ID has an ORCID
+but it is not included on all records.  Also lists cases where an author has
+two ORCIDS.
+-   file_report: Records that have potential problems with the attached files
+-   status_report: Reports on any records with an incorrect status in feeds
+-   license_report: Report out the license types in CaltechDATA
 
 #### Report Usage
 
 Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978`
 
-  - The first option is the report type 
-  - Next is the repository (thesis or authors)
-  - Next is the output file name (include .csv or .tsv extension, will show up in current directory)
+-   The first option is the report type
+-   Next is the repository (thesis or authors)
+-   Next is the output file name (include .csv or .tsv extension, will show up in current directory)
 
 #### Report Options
-  - Some reports include a -year option to return just the records from a specific year (1977) or a
+-   Some reports include a -year option to return just the records from a specific year (1977) or a
 range (1977-1978)
-  - Some reports include a -group option to return just the records with a
-  specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
-  - Some reports include a -item option to return just records with a
-  specific item type.  Supported types include:
-    - CaltechDATA item types (Dataset, Software, ...)
-    - CaltechAUTHORS item types (article, monograph, ...)
-    - CaltechAUTHORS monograph sub-types
-      - discussion_paper
+-   Some reports include a -group option to return just the records with a
+specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
+-   Some reports include a -item option to return just records with a
+specific item type.  Supported types include:
+    -   CaltechDATA item types (Dataset, Software, ...)
+    -   CaltechAUTHORS item types (article, monograph, ...)
+    -   CaltechAUTHORS monograph sub-types
+      -   discussion_paper
       - documentation
       - manual
       - other
@@ -199,10 +199,10 @@ range (1977-1978)
       - working_paper
 
 There are some additional technical arguments if you want to change the default behavior.
-  - Adding `-source eprints` will pull report data from Eprints instead of feeds.  This is
+-   Adding `-source eprints` will pull report data from Eprints instead of feeds.  This is
 very slow.  You may need to add -username and -password to provide login
 credentials
-  - Adding `-sample XXX` allows you to select a number of randomly selected records.  This makes it
+-   Adding `-sample XXX` allows you to select a number of randomly selected records.  This makes it
   more reasonable to pull data directly from Eprints.
 
 You can combine multiple options to build more complex queries, such as this
@@ -211,4 +211,3 @@ request for reports from a group:
 ```
 python run_coda_report.py doi_report authors keck_tech_reports.csv -group "Keck Institute for Space Studies" -item technical_report project_report discussion_paper
 ```
-
