@@ -429,7 +429,7 @@ if __name__ == '__main__':
 
     print("Running report for ",args.repository)
 
-    with open('../'+args.output,'w',encoding = 'utf-8') as fout:
+    with open('../'+args.output,'w', newline="\n", encoding = 'utf-8') as fout:
         if args.output.split('.')[-1] == 'tsv':
             file_out = csv.writer(fout,delimiter='\t')
         else:
