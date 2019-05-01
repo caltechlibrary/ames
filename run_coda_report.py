@@ -252,7 +252,6 @@ def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
 def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''
     file_obj.writerow(["Eprint ID","Problem","Impacted Files","Resolver URL"])
-    
     all_metadata = []
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.documents','.date','.official_url']

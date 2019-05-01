@@ -38,7 +38,7 @@ def file_mapping(source_collection,mapping_file):
     with open(mapping_file,'w') as f:
         w = csv.writer(f)
         w.writerows(mapping.items())
-    
+
     return mapping
 
 def get_usage(caltechdata_collection,usage_collection,mapping,token):
