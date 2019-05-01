@@ -178,7 +178,7 @@ def status_report(file_obj,keys,source):
             url = metadata['official_url']
             print("Record matched: ",url)
             file_obj.writerow([ep,url,status])
-     print("Report finished!")
+    print("Report finished!")
 
 def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
     '''Write report with license types'''
