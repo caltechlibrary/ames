@@ -7,7 +7,6 @@ from progressbar import progressbar
 def get_caltechdata(collection,production=True,datacite=False):
     '''Harvest all records from CaltechDATA .
     Always creates collection from scratch'''
-    
     #Delete existing collection
     if os.path.isdir(collection):
         shutil.rmtree(collection)

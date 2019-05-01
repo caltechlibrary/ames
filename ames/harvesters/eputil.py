@@ -20,7 +20,7 @@ def get_eputil_exec():
 
 #
 # get_eprint_keys  returns a list of keys available from the
-# EPrints rest API indicated in the provided eprint_url. 
+# EPrints rest API indicated in the provided eprint_url.
 #
 # The eprint_url often is in the form containing a username/password
 # for access the API. E.g. 
@@ -59,7 +59,7 @@ def get_eprint_keys(eprint_url):
 
 #
 # get_eprint returns a single EPrint element for given EPrint ID.
-# via the EPrints rest API indicated in the provided eprint_url. 
+# via the EPrints rest API indicated in the provided eprint_url.
 #
 # The eprint_url often is in the form containing a username/password
 # for access the API. E.g.
@@ -67,7 +67,6 @@ def get_eprint_keys(eprint_url):
 #     'https://jane.doe:secret@eprint.example.edu'
 #
 def get_eprint(eprint_url, eprint_id):
-    eprint = {}
     execp = get_eputil_exec()
     cmd = [ execp ]
     cmd.append('-json')
@@ -87,7 +86,7 @@ def get_eprint(eprint_url, eprint_id):
     src = value.decode()
     if type(src) == str:
         if src == "":
-            return {} 
+            return {}
         obj = json.loads(src)
         if 'eprint' in obj and len(obj['eprint']) > 0:
             return obj['eprint'][0]
@@ -98,12 +97,12 @@ def get_eprint(eprint_url, eprint_id):
 
 #
 # get_eprints returns an EPrint element in List form
-# for given EPrint ID via the EPrints rest API indicated in the 
+# for given EPrint ID via the EPrints rest API indicated in the
 # provided eprint_url (the outer XML is <eprints>... rather
 # than the inner XML of <eprints><eprint>...)
 #
 # The eprint_url often is in the form containing a username/password
-# for access the API. E.g. 
+# for access the API. E.g.
 #
 #     'https://jane.doe:secret@eprint.example.edu'
 #

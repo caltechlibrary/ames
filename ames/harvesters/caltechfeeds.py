@@ -75,7 +75,6 @@ def get_caltechfeed(feed,autoupdate=False):
         os.remove(fname)
     else:
         #We decide whether to update
-    
         datev,err = dataset.read(cname,'captured')
         if err != '':
             print(err)

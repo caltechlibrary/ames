@@ -43,7 +43,6 @@ def file_mapping(source_collection,mapping_file):
 
 def get_usage(caltechdata_collection,usage_collection,mapping,token):
     '''Build up a usage object for items in CaltechDATA'''
-    
     if not os.path.isdir(usage_collection):
         ok = dataset.init(usage_collection)
         if ok == False:

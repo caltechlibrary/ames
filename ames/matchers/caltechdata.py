@@ -8,7 +8,6 @@ from py_dataset import dataset
 import requests
 
 def match_cd_refs():
-    
     token = os.environ['TINDTOK']
 
     matches = []

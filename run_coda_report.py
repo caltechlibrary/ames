@@ -292,7 +292,6 @@ def creator_report(file_obj,keys,source,update_only=False):
     creator_ids = []
     creators = {}
     print(f"Processing {len(keys)} eprint records for creators")
-    
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.creators.items']
         labels = ['eprint_id','items']
