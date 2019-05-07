@@ -4,7 +4,7 @@ import argparse,json
 parser = argparse.ArgumentParser(description=\
         "Get Codemeta from existing source")
 parser.add_argument('-doi', help=\
-    'report name (options: doi_report,file_report,status_report,creator_report)')
+    'DataCite DOI')
 
 args = parser.parse_args()
 

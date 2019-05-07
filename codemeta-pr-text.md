@@ -1,8 +1,7 @@
 Thanks for your submission to CaltechDATA!  You can also preserve this GitHub
 repository using the automated integration in CaltechDATA. This PR includes a
 codemeta file, which lets us populate metadata like your ORCID in
-CaltechDATA. Please check it for completness, add a license to your code,
-and set up software preservation using CaltechDATA:
+CaltechDATA. Please make sure it is accurate and set up software preservation using CaltechDATA:
 
 1.  Log into data.caltech.edu with your Caltech (access.caltech) account credentials.
 2.  Select GitHub from the profile menu in the upper right hand side of the screen.
