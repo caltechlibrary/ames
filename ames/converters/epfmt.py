@@ -6,19 +6,21 @@
 # For the Go package see https://github.com/caltechlibrary/eprinttools.
 #
 import json
-import sys,os
+import ames
+import sys,os,inspect
 from subprocess import run
 
 
 # get path to executible
 def get_epfmt_exec():
     platform = sys.platform
-    path = os.path.join(os.path.dirname(__file__),"exec/Linux/epfmt")
+    m_path = os.path.dirname(inspect.getfile(ames))
+    path = os.path.join(m_path,"exec/Linux/epfmt")
     if platform.startswith("darwin"):
-        exec_path = path+"exec/MacOS/epfmt"
+        path = os.path.join(m_path,"exec/MacOS/epfmt")
     elif platform.startswith("win"):
-        exec_path = path+"exec/Win/epfmt.exe"
-    return exec_path
+        path = os.path.join(m_path,"exec/Win/epfmt.exe")
+    return path
 
 #
 # eprint_as_xml takes a Python dict of EPrint content like
