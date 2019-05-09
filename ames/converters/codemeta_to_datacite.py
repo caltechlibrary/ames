@@ -25,14 +25,14 @@ def codemeta_to_datacite(metadata):
     datacite = {}
     creators = []
     if 'author' in metadata:
-        creators.append(parse_names(metadata['author']))
+        creators += parse_names(metadata['author'])
     #Not technically codemeta, but DataCite is using
     if 'authors' in metadata:
-        creators.append(parse_names(metadata['authors']))
+        creators += parse_names(metadata['authors'])
     if 'creator' in metadata:
-        creators.append(parse_names(metadata['creator']))
+        creators += parse_names(metadata['creator'])
     if 'creators' in metadata:
-        creators.append(parse_names(metadata['creators']))
+        creators += parse_names(metadata['creators'])
     if creators != []:
         datacite['creators'] = creators
     if 'license' in metadata:
