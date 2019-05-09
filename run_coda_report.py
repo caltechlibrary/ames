@@ -1,5 +1,5 @@
 import os,argparse,csv
-import dataset
+from py_dataset import dataset
 import random
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records
@@ -43,14 +43,14 @@ def keep_record(metadata,years,item_type,group):
                 if metadata['type'] == 'monograph':
                     if metadata['monograph_type'] not in item_type and\
                     metadata['type'] not in item_type:
-                        keep=False 
+                        keep=False
                 else:
                     if metadata['type'] not in item_type:
                         keep=False
             else:
                 if metadata['type'] not in item_type:
-                    keep=False    
-        else:   
+                    keep=False
+        else:
             print("Item type not found in record")
             keep=False
 
@@ -72,13 +72,13 @@ def keep_record(metadata,years,item_type,group):
 
 def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,group=None):
     '''Output a report of DOIs '''
-    file_obj.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL"])
+    file_obj.writerow(["Eprint ID","DOI","Year","Author ID","Title","Resolver URL","Series Information"])
     all_metadata = []
     if source.split('.')[-1] == 'ds':
         dot_paths =\
-            ['._Key','.doi','.official_url','.date','.related_url','.creators','.title','.local_group','.type','.monograph_type']
+            ['._Key','.doi','.official_url','.date','.related_url','.creators','.title','.local_group','.type','.monograph_type','.other_numbering_system','.series','.number']
         labels=\
-            ['eprint_id','doi','official_url','date','related_url','creators','title','local_group','type','monograph_type']
+            ['eprint_id','doi','official_url','date','related_url','creators','title','local_group','type','monograph_type','other_numbering_system','series','number']
         all_metadata = get_records(dot_paths,'dois',source,keys,labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -113,10 +113,10 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
                     author = metadata['creators']['items'][0]['id']
                 else:
                     author = ''
-                    print("Record is missing author identifier")
+                    print("Record "+ep+" is missing author id")
             
             if 'title' not in metadata:
-                print("Record is missing Title")
+                print("Record "+ep+" is missing Title")
                 exit()
             title = metadata['title']
             url = metadata['official_url']
@@ -124,15 +124,32 @@ def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,g
                 year = metadata['date'].split('-')[0]
             else:
                 year = ''
+            #Series info
+            series = ''
+            if 'other_numbering_system' in metadata:
+                num = metadata['other_numbering_system']
+                series = 'other numbering:'
+                for item in num['items']:
+                    if 'id' in item:
+                        series += ' '+item['name']+' '+item['id']
+                    else:
+                        series += ' '+item['name']
+            if 'series' in metadata:
+                series += 'series:'
+                if 'number' in metadata:
+                    series += ' '+metadata['series']+' '+metadata['number']
+                else:
+                    series += ' '+metadata['series']
             if all_records == False:
                 if doi != '':
-                    file_obj.writerow([ep,doi,year,author,title,url])
+                    file_obj.writerow([ep,doi,year,author,title,url,series])
             else:
-                file_obj.writerow([ep,doi,year,author,title,url])
+                file_obj.writerow([ep,doi,year,author,title,url,series])
+    print("Report finished!")
 
 def status_report(file_obj,keys,source):
     '''Output a report of items that have a status other than archive
-    or have metadata visability other than show.  
+    or have metadata visability other than show.
     Under normal circumstances this should return no records when run on feeds'''
     file_obj.writerow(["Eprint ID","Resolver URL","Status"])
         
@@ -161,7 +178,8 @@ def status_report(file_obj,keys,source):
             url = metadata['official_url']
             print("Record matched: ",url)
             file_obj.writerow([ep,url,status])
-        
+    print("Report finished!")
+
 def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
     '''Write report with license types'''
     if source.split('.')[0] != 'CaltechDATA':
@@ -183,25 +201,25 @@ def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
                 if item_type != None:
                     #Restrict to a specific item type
                     if metadata['resourceType']['resourceTypeGeneral'] in item_type:
-                        license = metadata['rightsList'][0]['rights']
+                        lic = metadata['rightsList'][0]['rights']
                     else:
-                        license = None
+                        lic = None
                 #Otherwise we always save license
                 else:
-                    license = metadata['rightsList']['rights']
+                    lic = metadata['rightsList']['rights']
             
-                if license != None:
-                    if license in licenses:
-                        licenses[license]['count'] += 1
-                        licenses[license]['ids'].append(metadata['id']) 
+                if lic != None:
+                    if lic in licenses:
+                        licenses[lic]['count'] += 1
+                        licenses[lic]['ids'].append(metadata['id'])
                     else:
                         new = {}
                         new['count'] = 1
                         new['ids'] = [metadata['id']]
-                        licenses[license] = new
+                        licenses[lic] = new
 
-            for license in licenses:
-                file_obj.writerow([license,licenses[license]['count'],licenses[license]['ids']])
+            for lic in licenses:
+                file_obj.writerow([lic,licenses[lic]['count'],licenses[lic]['ids']])
 
         else:
 
@@ -228,12 +246,14 @@ def license_report(file_obj,keys,source,item_type=None,rtype='summary'):
                             if funders != '':
                                 funders += ';'
                             funders += c['funderName']
+                    if 'rightsList' not in metadata:
+                        print('record ',metadata['id'],' is missing license')
+                        exit()
                     file_obj.writerow([metadata['id'],creators,metadata['rightsList'][0]['rights'],funders])
  
 def file_report(file_obj,keys,source,years=None):
     '''Write out a report of files with potential issues'''
     file_obj.writerow(["Eprint ID","Problem","Impacted Files","Resolver URL"])
-    
     all_metadata = []
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.documents','.date','.official_url']
@@ -268,12 +288,12 @@ def file_report(file_obj,keys,source,years=None):
                                     url = metadata['official_url']
                                     print("Length: ",url)
                                     file_obj.writerow([ep,'File Name Length',filename,url])
+    print("Report finished!")
 
 def creator_report(file_obj,keys,source,update_only=False):
     creator_ids = []
     creators = {}
     print(f"Processing {len(keys)} eprint records for creators")
-    
     if source.split('.')[-1] == 'ds':
         dot_paths = ['._Key', '.creators.items']
         labels = ['eprint_id','items']
@@ -289,7 +309,7 @@ def creator_report(file_obj,keys,source,update_only=False):
                 if 'creators' in metadata and 'items' in metadata['creators']:
                     items = metadata['creators']['items']
                     find_creators(items,eprint_id,creators,creator_ids)
-    
+
     creator_ids.sort()
     file_obj.writerow(["creator_id","orcid","existing_ids","update_ids"])
     for creator_id in creator_ids:
@@ -310,7 +330,7 @@ def creator_report(file_obj,keys,source,update_only=False):
                 update_ids = update_ids + '|' + eprint_ids
                 eprint_ids = ''
             file_obj.writerow([creator_id,orcid,eprint_ids,update_ids])
-    print("All Done!")
+    print("Report finished!")
 
 def find_creators(items,eprint_id,creators,creator_ids):
     '''Take a item list and return creators'''
@@ -330,7 +350,7 @@ def find_creators(items,eprint_id,creators,creator_ids):
                     elif orcid in creators[creator_id]['orcids']:
                         #We already have ORCID
                         creators[creator_id]['eprint_ids'].append(eprint_id)
-                    else: 
+                    else:
                         #Creator has multiple orcids
                         creators[creator_id]['orcids'].append(orcid)
                         creators[creator_id]['update_ids'].append(eprint_id)
@@ -409,12 +429,11 @@ if __name__ == '__main__':
 
     print("Running report for ",args.repository)
 
-    with open('../'+args.output,'w',encoding = 'utf-8') as fout:
+    with open('../'+args.output,'w', newline="\n", encoding = 'utf-8') as fout:
         if args.output.split('.')[-1] == 'tsv':
             file_out = csv.writer(fout,delimiter='\t')
         else:
             file_out = csv.writer(fout)
-        
         if args.report_name == 'file_report':
             file_report(file_out,keys,source,args.years)
         elif args.report_name == 'creator_report':
@@ -424,7 +443,7 @@ if __name__ == '__main__':
         elif args.report_name == 'doi_report':
             doi_report(file_out,keys,source,years=args.years,all_records=True,item_type=args.item,group=args.group)
         elif args.report_name == 'license_report':
-            license_report(file_out,keys,source,item_type=args.item,rtype='full')
+            license_report(file_out,keys,source,item_type=args.item)#,rtype='full')
         else:
             print(args.report_name,' is not known')
 

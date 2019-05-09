@@ -1,14 +1,13 @@
-import os,subprocess,json,re,copy
+import os,json,re
 from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
 from ames.harvesters import get_records
 from progressbar import progressbar
 import idutils
-import dataset
+from py_dataset import dataset
 import requests
 
 def match_cd_refs():
-    
     token = os.environ['TINDTOK']
 
     matches = []
@@ -52,7 +51,7 @@ def match_cd_refs():
                     ids.append(m)
             matches.append([k,record_matches])
             #Now collect identifiers for record
-            for match in record_matches:            
+            for match in record_matches:
                 #matches.append([match,k])
                 split = match.split('doi.org/')
                 new_id = {"relatedIdentifier":split[1],\
@@ -86,7 +85,7 @@ def match_codemeta():
                     print("Invalid json file - Skipping forever ",k)
                 else:
                     standardized = codemeta_to_datacite(meta)
-                
+
                     #Check that all records have a GitHub subject tag
                     add = True
                     for s in standardized['subjects']:

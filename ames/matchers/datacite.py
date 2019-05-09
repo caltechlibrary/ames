@@ -1,5 +1,4 @@
-import os,subprocess,json
-import dataset
+from py_dataset import dataset
 import requests
 from datacite import DataCiteMDSClient, schema40
 from datetime import date, datetime
@@ -43,18 +42,18 @@ def update_datacite_media(username,password,collection,prefix):
                     delete_datacite_media(username,password,doi)
                     for file_met in existing['electronic_location_and_access']:
                         if file_met['electronic_name'][0].split('.')[-1] == 'nc':
-                            url = 'https://mds.datacite.org/media/'+doi 
+                            url = 'https://mds.datacite.org/media/'+doi
                             data =\
                             'application/x-netcdf='+file_met['uniform_resource_identifier']
                             headers = {'Content-Type':'application/txt;charset=UTF-8'}
                             print(data)
                             r = requests.post(url, data = data.encode('utf-8'),\
-                                auth=(username,password),headers=headers)  
+                                auth=(username,password),headers=headers)
                             print(r)
 
 def update_datacite_metadata(collection,token,password):
     keys = dataset.keys(collection)
-   
+
     #First version just TIND DOIs
     prefix = '10.22002'
 
@@ -69,6 +68,9 @@ def update_datacite_metadata(collection,token,password):
     for k in keys:
         print(k)
         metadata,err = dataset.read(collection,k)
+        if err != '':
+            print(err)
+            exit()
         #Get rid of Key from dataset
         metadata.pop('_Key')
 

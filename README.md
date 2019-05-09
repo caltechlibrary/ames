@@ -5,37 +5,65 @@
 Automated Metadata Service
 
 Manage metadata from different sources.  The examples in the package are
-specific to Caltech repositories, but could be generalized.  This package 
-is currently in development and will have additional sources and matchers 
+specific to Caltech repositories, but could be generalized.  This package
+is currently in development and will have additional sources and matchers
 added over time.
 
-## Install:
+## Basic Install
 
-Requires Python 3.7 (Recommended via [Anaconda](https://www.anaconda.com/download))
+You need to have Python 3.7 on your machine
+([Miniconda](https://docs.conda.io/en/latest/miniconda.html) is a great
+installation option).
 
-If you just need functions (like codemeta_to_datacite) type `pip install ames`
-If you want to run operations, download the 
-[latest release](https://github.com/caltechlibrary/ames/releases), extract the
-zip, navigate to the extracted folder and type `python setup.py install`.  
+If you just need the python functions to write your own code
+(like codemeta_to_datacite) open a terminal and type `pip install ames`
 
-Harvesting requires [Dataset](https://github.com/caltechlibrary/dataset).
+## Full Install
 
-CaltechDATA integration requires [caltechdata_api](https://github.com/caltechlibrary/caltechdata_api)
+You need to have Python 3.7 on your machine
+([Miniconda](https://docs.conda.io/en/latest/miniconda.html) is a great
+installation option).  Test whether you have python installed by opening a terminal or
+anaconda prompt window and typing `python -V`, which should print version 3.7
+or greater.
+
+### Clone ames
+
+It's best to download this software using git.  To install git, type
+`conda install git` in your terminal or anaconda prompt window.  Then find where you
+want the ames folder to live on your computer in File Explorer or Finder
+(This could be the Desktop or Documents folder, for example).  Type `cd `
+in anaconda prompt or terminal and drag the location from the file browser into
+the terminal window.  The path to the location
+will show up, so your terminal will show a command like
+`cd /Users/tmorrell/Desktop`.  Hit enter.  Then type
+`git clone https://github.com/caltechlibrary/ames.git`. Once you
+hit enter you'll see an epxml_to_datacite folder.  Type `cd ames`
+
+### Install
+
+Now that you're in the ames folder, type `python setup.py install`.  You can
+now run all the different operations described below.
+
+### Updating
+
+When there is a new version of the software, go to the ames
+folder in anaconda prompt or terminal and type `git pull`.  You shouldn't need to re-do
+the installation steps unless there are major updates.
 
 ## Organization
 
 ### Harvesters
 
-- crossref_refs - Harvest references in datacite metadata from crossref event data
-- caltechdata - Harvest metadata from CaltechDATA
-- cd_github - Harvest GitHub repos and codemeta files from CaltechDATA
-- matomo - Harvest web statistics from matomo
-- caltechfeeds - Harvest Caltech Library metadata from feeds.library.caltech.edu
+-   crossref_refs - Harvest references in datacite metadata from crossref event data
+-   caltechdata - Harvest metadata from CaltechDATA
+-   cd_github - Harvest GitHub repos and codemeta files from CaltechDATA
+-   matomo - Harvest web statistics from matomo
+-   caltechfeeds - Harvest Caltech Library metadata from feeds.library.caltech.edu
 
 ### Matchers
 
-- caltechdata - Match content in CaltechDATA
-- update_datacite - Match content in DataCite
+-   caltechdata - Match content in CaltechDATA
+-   update_datacite - Match content in DataCite
 
 ## Example Operations
 
@@ -52,13 +80,13 @@ function to convert a codemeta file to DataCite standard metdata
 Collect GitHub records in CaltechDATA, search for a codemeta.json file, and
 update CaltechDATA with new metadata.
 
-#### Setup
+#### CodeMeta Setup
 You need to set an environmental variable with your token to access
 CaltechDATA `export TINDTOK=`
 
-#### Usage
+#### CodeMeta Usage
 
-Type `python run_codemeta.py`. 
+Type `python run_codemeta.py`.
 
 ### CaltechDATA Citation Alerts
 
@@ -66,24 +94,24 @@ Harvest citation data from the Crossref Event Data API, records in
 CaltechDATA, match records, update metadata in CaltechDATA, and send email to
 user.
 
-#### Setup
+#### Citation Alerts Setup
 You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=` and Mailgun `export MAILTOK=`.
 
-#### Usage
+#### Citation Alerts Usage
 
-Type `python run_event_data.py`. You'll be prompted for confirmation if any 
+Type `python run_event_data.py`. You'll be prompted for confirmation if any
 new citations are found.  
 
 ### Media Updates
 
 Update media records in DataCite that indicate the files associated with a DOI.
 
-#### Setup
+#### Media Setup
 You need to set an environmental variable with your password for your DataCite
 account using `export DATACITE=`
 
-#### Usage
+#### Media Usage
 
 Type `python run_media_update.py`.  
 
@@ -93,15 +121,15 @@ This will run checks on the quality of metadata in CaltechDATA.  Currently this
 verifies whether redundent links are present in the related identifier section.  
 It also can update metadata with DataCite.
 
-#### Setup
+#### Metadata Checks Setup
 You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=`
 
-#### Usage
+#### Metadata ChecksUsage
 
-Type `python run_caltechdata_checks.py`. 
+Type `python run_caltechdata_checks.py`.
 
-### CaltechDATA metadata updates
+### CaltechDATA Metadata Updates
 
 This will improve the quality of metadata in CaltechDATA.  This option is
 broken up into updates that should run frequently (currently every 10 minutes)
@@ -109,56 +137,64 @@ and daily. Frequent updates include adding a recommended citation to the
 descriptions, and daily updates include adding CaltechTHESIS DOIs to
 CaltechDATA.
 
-#### Setup
+#### Metadata Updates Setup
 You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=`
 
-#### Usage
+#### Metadata Updates Usage
 
-Type `python run_caltechdata_updates.py` or `python run_caltechdata_daily.py`. 
+Type `python run_caltechdata_updates.py` or `python run_caltechdata_daily.py`.
 
-### Matomo downloads
+### CaltechDATA COUNTER Usage Reports
 
-This will harvest download information from matomo.  Very experimental.  
+This will harvest download and view information from matomo and format it into
+a COUNTER report.  This feature is still being tested.  
 
-#### Setup
+#### Usage Report Setup
 You need to set environmental variables with your token to access
 Matomo `export MATTOK=`
 
-#### Usage
+#### Usage Report Usage
 
-Type `python run_downloads.py`. 
+Type `python run_usage.py`.
 
 ### CODA Reports
 
 Runs reports on Caltech Library repositories.  Current reports:
 
-- doi_report: Records (optionally filtered by year) and their DOIs.
-- creator_report: Finds records where an Eprints Creator ID has an ORCID 
+-   doi_report: Records (optionally filtered by year) and their DOIs.
+
+-   creator_report: Finds records where an Eprints Creator ID has an ORCID
 but it is not included on all records.  Also lists cases where an author has
 two ORCIDS.
-- file_report: Records that have potential problems with the attached files
-- status_report: Reports on any records with an incorrect status in feeds
-- license_report: Report out the license types in CaltechDATA
 
-#### Usage
+-   file_report: Records that have potential problems with the attached files
+
+-   status_report: Reports on any records with an incorrect status in feeds
+
+-   license_report: Report out the license types in CaltechDATA
+
+#### Report Usage
 
 Type something like `python run_coda_report.py doi_report thesis report.tsv -year 1977-1978`
 
-- The first option is the report type 
-- Next is the repository (thesis or authors)
-- Next is the output file name (include .csv or .tsv extension, will show up in current directory)
+-   The first option is the report type
+-   Next is the repository (thesis or authors)
+-   Next is the output file name (include .csv or .tsv extension, will show up in current directory)
 
-#### Options
-- Some reports include a -year option to return just the records from a specific year (1977) or a
+#### Report Options
+
+-   Some reports include a -year option to return just the records from a specific year (1977) or a
 range (1977-1978)
-- Some reports include a -group option to return just the records with a
-  specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
-- Some reports include a -item option to return just records with a
-  specific item type.  Supported types include:
-    - CaltechDATA item types (Dataset, Software, ...)
-    - CaltechAUTHORS item types (article, monograph, ...)
-    - CaltechAUTHORS monograph sub-types
+
+-   Some reports include a -group option to return just the records with a
+specific group name.  Surround long names with quotes (e.g. "Keck Institute for Space Studies")
+
+-   Some reports include a -item option to return just records with a
+specific item type.  Supported types include:
+    -   CaltechDATA item types (Dataset, Software, ...)
+    -   CaltechAUTHORS item types (article, monograph, ...)
+    -   CaltechAUTHORS monograph sub-types
         - discussion_paper
         - documentation
         - manual
@@ -170,10 +206,12 @@ range (1977-1978)
         - working_paper
 
 There are some additional technical arguments if you want to change the default behavior.
-- Adding `-source eprints` will pull report data from Eprints instead of feeds.  This is
+
+-   Adding `-source eprints` will pull report data from Eprints instead of feeds.  This is
 very slow.  You may need to add -username and -password to provide login
 credentials
-- Adding `-sample XXX` allows you to select a number of randomly selected records.  This makes it
+
+-   Adding `-sample XXX` allows you to select a number of randomly selected records.  This makes it
   more reasonable to pull data directly from Eprints.
 
 You can combine multiple options to build more complex queries, such as this
@@ -182,4 +220,3 @@ request for reports from a group:
 ```
 python run_coda_report.py doi_report authors keck_tech_reports.csv -group "Keck Institute for Space Studies" -item technical_report project_report discussion_paper
 ```
-

@@ -1,8 +1,8 @@
 import os,csv,shutil
 import requests
 from progressbar import progressbar
-from datetime import datetime,timezone
-import dataset
+from datetime import datetime
+from py_dataset import dataset
 import zipfile
 
 def download_file(url,fname):
@@ -54,7 +54,7 @@ def get_caltechfeed(feed,autoupdate=False):
     url ='https://feeds.library.caltech.edu/'+feed+'/'
 
     if feed=='authors':
-        fname = 'CaltechAUTHORS.ds.zip' 
+        fname = 'CaltechAUTHORS.ds.zip'
         cname = 'CaltechAUTHORS.ds'
     elif feed=='thesis':
         fname = 'CaltechTHESIS.ds.zip'
@@ -75,8 +75,10 @@ def get_caltechfeed(feed,autoupdate=False):
         os.remove(fname)
     else:
         #We decide whether to update
-    
         datev,err = dataset.read(cname,'captured')
+        if err != '':
+            print(err)
+            exit()
         if datev == {}:
             #No date, collection must be updated
             update = 'Y'
@@ -88,16 +90,14 @@ def get_caltechfeed(feed,autoupdate=False):
             download_file(url,upname)
             with open(upname) as csv_file:
                 reader = csv.reader(csv_file, delimiter=',')
-    
-                header = next(reader)
+                #Drop header
+                next(reader)
                 record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
                 count = 0
-
                 while captured_date < record_date:
                     count = count + 1
                     record_date =datetime.fromisoformat(next(reader)[1]).replace(tzinfo=None)
-
-            if count > 0: 
+            if count > 0:
                 print(str(count)+" Outdated Records")
                 if autoupdate == False:
                     update = input("Do you want to update your local copy (Y or N)? ")

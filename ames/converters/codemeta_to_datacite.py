@@ -1,28 +1,44 @@
+def parse_names(name_block):
+    creators = []
+    for a in name_block:
+        cre = {}
+        cre['creatorName'] = a['familyName']+', '+a['givenName']
+        cre['familyName'] = a['familyName']
+        cre['givenName'] = a['givenName']
+        if '@id' in a:
+            idv = a['@id']
+            split = idv.split('/')
+            idn = split[-1]
+            cre['nameIdentifiers']=[{\
+                'nameIdentifier':idn,'nameIdentifierScheme':'ORCID','schemeURI':'http://orcid.org'}]
+            #Should check for type and remove hard code URI
+        #Pass DataCite metadata
+        if 'nameIdentifiers' in a:
+            cre['nameIdentifiers'] = a['nameIdentifiers']
+        if 'affiliation' in a:
+            cre['affiliations'] = [a['affiliation']]
+            #Should check if can support multiple affiliations
+        creators.append(cre)
+    return creators
+
 def codemeta_to_datacite(metadata):
     datacite = {}
+    creators = []
     if 'author' in metadata:
-        creators = []
-        for a in metadata['author']:
-            cre = {}
-            cre['creatorName'] = a['familyName']+', '+a['givenName']
-            cre['familyName'] = a['familyName']
-            cre['givenName'] = a['givenName']
-            if '@id' in a:
-                idv = a['@id']
-                split = idv.split('/')
-                idn = split[-1]
-                cre['nameIdentifiers']=[{\
-                        'nameIdentifier':idn,'nameIdentifierScheme':'ORCID','schemeURI':'http://orcid.org'}]
-                #Should check for type and remove hard code URI
-            if 'affiliation' in a:
-                cre['affiliations'] = [a['affiliation']]
-                #Should check if can support multiple affiliations
-            creators.append(cre)
+        creators.append(parse_names(metadata['author']))
+    #Not technically codemeta, but DataCite is using
+    if 'authors' in metadata:
+        creators.append(parse_names(metadata['authors']))
+    if 'creator' in metadata:
+        creators.append(parse_names(metadata['creator']))
+    if 'creators' in metadata:
+        creators.append(parse_names(metadata['creators']))
+    if creators != []:
         datacite['creators'] = creators
     if 'license' in metadata:
         #Assuming uri to name conversion, not optimal
         uri = metadata['license']
-        name = uri.split('/')[-1]
+        name = uri.split('/')[-1].split('.html')[0]
         datacite['rightsList'] = [{'rights':name,'rightsURI':uri}]
     if 'keywords' in metadata:
         sub = []
@@ -37,7 +53,7 @@ def codemeta_to_datacite(metadata):
             grant_info = metadata['funding'].split(',')
         if isinstance(metadata['funder'],list):
             count = 0
-            for f in metadata['funder']:
+            for funder in metadata['funder']:
                 entry = {'funderName':funder['name']}
                 if '@id' in funder:
                     element = {}

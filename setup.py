@@ -6,6 +6,7 @@
 
 import io
 import os
+import glob
 import sys,json
 from shutil import rmtree
 
@@ -17,6 +18,12 @@ def read(fname):
     return src
 
 codemeta_json = "codemeta.json"
+
+def package_files(package,directory):
+    os.chdir(package)
+    paths = glob.glob(directory+'/**', recursive=True)
+    os.chdir('..')
+    return paths
 
 # Let's pickup as much metadata as we need from codemeta.json
 with open(codemeta_json, mode = "r", encoding = "utf-8") as f:
@@ -44,14 +51,27 @@ for obj in meta["author"]:
 description = meta['description']
 url = meta['codeRepository']
 download = meta['downloadUrl']
-license = meta['license']
+lic = meta['license']
 name = meta['name']
+
+# Setup for our Go based executable as a "data_file".
+platform = sys.platform
+exec_path = ["exec/Linux/eputil","exec/Linux/epfmt"]
+OS_Classifier = "Operating System :: POSIX :: Linux"
+if platform.startswith("darwin"):
+    exec_path = ["exec/MacOS/eputil","exec/MacOS/epfmt"]
+    platform = "Mac OS X"
+    OS_Classifier = "Operating System :: MacOS :: MacOS X"
+elif platform.startswith("win"):
+    exec_path = ["exec/Win/eputil.exe","exec/Win/epfmt.exe"]
+    platform = "Windows"
+    OS_Classifier = "Operating System :: Microsoft :: Windows :: Windows 10"
 
 REQUIRES_PYTHON = '>=3.7.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'requests','datacite','progressbar2','idutils','caltechdata_api'
+    'requests','datacite','progressbar2','caltechdata_api','py_dataset','pandas'
 ]
 
 # What packages are optional?
@@ -81,6 +101,7 @@ if not version:
 else:
     about['__version__'] = version
 
+files = package_files('ames','exec')
 
 class UploadCommand(Command):
     """Support setup.py upload."""
@@ -106,8 +127,8 @@ class UploadCommand(Command):
         except OSError:
             pass
 
-        self.status('Building Source and Wheel (universal) distribution…')
-        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
+        self.status('Building Source and Wheel distribution…')
+        os.system('{0} setup.py sdist bdist_wheel '.format(sys.executable))
 
         self.status('Uploading the package to PyPI via Twine…')
         os.system('twine upload dist/*')
@@ -135,8 +156,8 @@ setup(
     # },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    include_package_data=True,
-    license=license,
+    package_data={name:files},
+    license=lic,
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
