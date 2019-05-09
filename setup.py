@@ -102,7 +102,6 @@ else:
     about['__version__'] = version
 
 files = package_files('ames','exec')
-print(files)
 
 class UploadCommand(Command):
     """Support setup.py upload."""
