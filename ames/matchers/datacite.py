@@ -54,7 +54,6 @@ def update_datacite_media(username,password,collection,prefix):
 def update_datacite_metadata(collection,token,access):
     '''Access contains username, password, and prefix for DataCite'''
     keys = dataset.keys(collection)
-    
     for a in access:
 
         username = a['username']
