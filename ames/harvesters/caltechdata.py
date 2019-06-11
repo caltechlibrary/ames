@@ -35,6 +35,26 @@ def get_caltechdata(collection,production=True,datacite=False):
 
         dataset.create(collection,rid, metadata)
 
+def get_history(collection,keys):
+    '''Harvest the history of records from CaltechDATA .
+    Always creates collection from scratch'''
+    #Delete existing collection
+    if os.path.isdir(collection):
+        shutil.rmtree(collection)
+    ok = dataset.init(collection)
+    if ok == False:
+        print("Dataset failed to init collection")
+        exit()
+
+    base_url = 'https://data.caltech.edu/records/'
+
+    for k in progressbar(keys):
+        url = base_url + str(k) + '/revisions'
+        response = requests.get(url)
+        revisions = response.json()
+        for num,metadata in enumerate(revisions):
+            dataset.create(collection,str(k)+'-'+str(num),metadata)
+
 def get_multiple_links(input_collection,output_collection):
     keys = dataset.keys(input_collection)
     for k in keys:

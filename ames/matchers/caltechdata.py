@@ -3,6 +3,7 @@ from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
 from ames.harvesters import get_records
 from progressbar import progressbar
+from datetime import datetime
 import idutils
 from py_dataset import dataset
 import requests
@@ -184,6 +185,42 @@ def add_citation(collection,token,production=True):
                 response =\
                 caltechdata_edit(token,k,{'descriptions':description},{},{},production)
                 print(response)
+
+def add_usage(collection,token,usage_collection,production=True):
+    '''Add in usage text in the description field'''
+    keys = dataset.keys(collection)
+    for k in keys:
+        record,err = dataset.read(collection,k)
+        if err != '':
+            print(err)
+            exit()
+        usage,err = dataset.read(usage_collection,k)
+        views = usage['grand-total-unique-investigations']
+        downloads = usage['grand-total-unique-requests']
+        date = datetime.fromisoformat(usage['dataset-dates'][0]['value'])
+        now = datetime.today()
+        first = date.strftime("%B %d, %Y")
+        last = now.strftime("%B %d, %Y")
+        record_doi = record['identifier']['identifier']
+        if views > 1:
+            u_txt = '<br>Unique Views: '+str(views)+\
+                '<br>Unique Downloads: '+str(downloads)+\
+                '<br> between '+first+' and '+last+\
+                '<br><a href="https://data.caltech.edu/stats"'+\
+                '>More info on how stats are collected</a><br>'
+            description = record['descriptions']
+            use_exists = False
+            for d in description:
+                descr_text = d['description']
+                #We always update an existing listing
+                if descr_text.startswith('<br>Unique Views:'):
+                    d['description'] =u_txt 
+                    use_exists = True
+            #Otherwise we add a new one
+            if use_exists == False:
+                description.append({'descriptionType':'Other','description':u_txt})
+            response = caltechdata_edit(token,k,{'descriptions':description},{},{},production)
+            print(response)
 
 def add_thesis_doi(data_collection,thesis_collection,token,production=True):
     '''Add in theis DOI to CaltechDATA records'''
