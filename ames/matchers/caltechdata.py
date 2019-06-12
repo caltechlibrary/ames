@@ -189,6 +189,12 @@ def add_citation(collection,token,production=True):
 def add_usage(collection,token,usage_collection,production=True):
     '''Add in usage text in the description field'''
     keys = dataset.keys(collection)
+    biggest_views = 0
+    biggest_views_record = ''
+    biggest_downloads = 0
+    biggest_downloads_record = ''
+    total_views = 0
+    total_downloads = 0
     for k in keys:
         record,err = dataset.read(collection,k)
         if err != '':
@@ -197,6 +203,14 @@ def add_usage(collection,token,usage_collection,production=True):
         usage,err = dataset.read(usage_collection,k)
         views = usage['grand-total-unique-investigations']
         downloads = usage['grand-total-unique-requests']
+        if views > biggest_views:
+            biggest_views = views
+            biggest_views_record = k
+        if downloads > biggest_downloads:
+            biggest_downloads = downloads
+            biggest_downloads_record = k
+        total_views += views
+        total_downloads += downloads
         date = datetime.fromisoformat(usage['dataset-dates'][0]['value'])
         now = datetime.today()
         first = date.strftime("%B %d, %Y")
@@ -214,14 +228,18 @@ def add_usage(collection,token,usage_collection,production=True):
                 descr_text = d['description']
                 #We always update an existing listing
                 if descr_text.startswith('<br>Unique Views:'):
-                    d['description'] =u_txt 
+                    d['description'] =u_txt
                     use_exists = True
             #Otherwise we add a new one
             if use_exists == False:
                 description.append({'descriptionType':'Other','description':u_txt})
             response = caltechdata_edit(token,k,{'descriptions':description},{},{},production)
             print(response)
-
+    print(f'Most downloads {biggest_downloads} for record {biggest_downloads_record}')
+    print(f'Most views {biggest_views} for record {biggest_views_record}')
+    print(f'Total downloads {total_downloads}')
+    print(f'Total views {total_views}')
+    
 def add_thesis_doi(data_collection,thesis_collection,token,production=True):
     '''Add in theis DOI to CaltechDATA records'''
 
