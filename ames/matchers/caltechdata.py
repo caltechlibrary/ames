@@ -239,7 +239,7 @@ def add_usage(collection,token,usage_collection,production=True):
     print(f'Most views {biggest_views} for record {biggest_views_record}')
     print(f'Total downloads {total_downloads}')
     print(f'Total views {total_views}')
-    
+
 def add_thesis_doi(data_collection,thesis_collection,token,production=True):
     '''Add in theis DOI to CaltechDATA records'''
 
