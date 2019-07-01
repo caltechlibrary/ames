@@ -27,7 +27,7 @@ def get_caltechdata(collection,production=True,datacite=False):
         rid = str(h['id'])
         #Get enriched metadata records (including files)
         if datacite == False:
-            metadata = decustomize_schema(h['metadata'],True,True)
+            metadata = decustomize_schema(h['metadata'],True,True,True)
             metadata['updated'] = h['updated']
         else:
             #Get just DataCite metadata
