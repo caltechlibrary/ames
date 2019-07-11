@@ -26,7 +26,6 @@ def get_records(dot_paths,f_name,d_name,keys,labels=None):
     f, err = dataset.frame(d_name, f_name, keys, dot_paths)
     if err != '':
         log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
-    records = []
     if labels:
         #We need to handle that ._Key will always be returned
         if dot_paths[0] != '._Key':
@@ -39,15 +38,7 @@ def get_records(dot_paths,f_name,d_name,keys,labels=None):
         f, err = dataset.frame(d_name, f_name, keys, dot_paths)
         if err != '':
             log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
-    for entry in f['grid']:
-        item = {}
-        counter = 0
-        for label in f['labels']:
-            if entry[counter] != None:
-                item[label] = entry[counter]
-            counter = counter + 1
-        records.append(item)
-    return records
+    return f['object_list'] 
 
 def get_caltechfeed(feed,autoupdate=False):
 
