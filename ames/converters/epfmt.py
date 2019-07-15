@@ -7,7 +7,7 @@
 #
 import json
 import ames
-import sys,os,inspect
+import sys, os, inspect
 from subprocess import run
 
 
@@ -15,12 +15,13 @@ from subprocess import run
 def get_epfmt_exec():
     platform = sys.platform
     m_path = os.path.dirname(inspect.getfile(ames))
-    path = os.path.join(m_path,"exec/Linux/epfmt")
+    path = os.path.join(m_path, "exec/Linux/epfmt")
     if platform.startswith("darwin"):
-        path = os.path.join(m_path,"exec/MacOS/epfmt")
+        path = os.path.join(m_path, "exec/MacOS/epfmt")
     elif platform.startswith("win"):
-        path = os.path.join(m_path,"exec/Win/epfmt.exe")
+        path = os.path.join(m_path, "exec/Win/epfmt.exe")
     return path
+
 
 #
 # eprint_as_xml takes a Python dict of EPrint content like
@@ -28,12 +29,12 @@ def get_epfmt_exec():
 #
 def eprint_as_xml(eprint_obj):
     src = json.dumps(eprint_obj)
-    #if not isinstance(src, bytes):
+    # if not isinstance(src, bytes):
     #    src = src.encode('utf-8')
     execp = get_epfmt_exec()
-    cmd = [execp, '-xml']
+    cmd = [execp, "-xml"]
     try:
-        p = run(cmd, input = src.encode('utf-8'), capture_output = True)
+        p = run(cmd, input=src.encode("utf-8"), capture_output=True)
     except Exception as e:
         sys.stderr.write(f"{e}\n")
     exit_code = p.returncode
@@ -42,8 +43,9 @@ def eprint_as_xml(eprint_obj):
         return None
     value = p.stdout
     if not isinstance(value, bytes):
-        value = value.encode('utf8')
+        value = value.encode("utf8")
     return value.decode()
+
 
 #
 # eprint_as_json takes a Python Dict of EPrint content
@@ -52,11 +54,11 @@ def eprint_as_xml(eprint_obj):
 def eprint_as_json(eprint_obj):
     src = json.dumps(eprint_obj)
     if not isinstance(src, bytes):
-        src = src.encode('utf-8')
+        src = src.encode("utf-8")
     execp = get_epfmt_exec()
-    cmd = [execp, '-json']
+    cmd = [execp, "-json"]
     try:
-        p = run(cmd, input = src, capture_output = True)
+        p = run(cmd, input=src, capture_output=True)
     except Exception as e:
         sys.stderr.write(f"{e}\n")
     exit_code = p.returncode
@@ -65,6 +67,5 @@ def eprint_as_json(eprint_obj):
         return None
     value = p.stdout
     if not isinstance(value, bytes):
-        value = value.encode('utf8')
+        value = value.encode("utf8")
     return value.decode()
-
