@@ -22,23 +22,19 @@ progressbar(r.iter_content(chunk_size=1024),max_value=(total_length/1024) + 1):
 def get_records(dot_paths,f_name,d_name,keys,labels=None):
     if dataset.has_frame(d_name, f_name):
         dataset.delete_frame(d_name, f_name)
-    print("Gathering data!")
-    f, err = dataset.frame(d_name, f_name, keys, dot_paths)
-    if err != '':
-        log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
     if labels:
-        #We need to handle that ._Key will always be returned
-        if dot_paths[0] != '._Key':
-            dot_paths.insert(0,'._Key')
-            labels.insert(0,'Key')
-        err = dataset.frame_labels(d_name,f_name,labels)
+        f, err = dataset.frame(d_name, f_name, keys, dot_paths, labels)
         if err != '':
-            log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
-        #Reload frame
-        f, err = dataset.frame(d_name, f_name, keys, dot_paths)
+            print(f"ERROR: Can't create {f_name} in {d_name}, {err}")
+    else:
+        #If labels arn't provided, just base on dot path
+        labels = []
+        for d in dot_paths:
+            labels.append(d.split('.')[-1])
+        f, err = dataset.frame(d_name, f_name, keys, dot_paths, labels)
         if err != '':
-            log.fatal(f"ERROR: Can't create {f_name} in {d_name}, {err}")
-    return f['object_list'] 
+            print(f"ERROR: Can't create {f_name} in {d_name}, {err}")
+    return dataset.frame_objects(d_name, f_name)
 
 def get_caltechfeed(feed,autoupdate=False):
 
