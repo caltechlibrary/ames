@@ -166,7 +166,7 @@ Runs reports on Caltech Library repositories.  Current reports:
 
 -   thesis_report: Matches Eprints tsv export for CaltechTHESIS
 
-- thesis_metadata: Matches Eprints metadata tsv export for CaltechTHESIS
+-   thesis_metadata: Matches Eprints metadata tsv export for CaltechTHESIS
 
 -   creator_report: Finds records where an Eprints Creator ID has an ORCID
 but it is not included on all records.  Also lists cases where an author has
