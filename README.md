@@ -164,6 +164,8 @@ Runs reports on Caltech Library repositories.  Current reports:
 
 -   doi_report: Records (optionally filtered by year) and their DOIs.
 
+-   thesis_report: Matches Eprints tsv export for CaltechTHESIS
+
 -   creator_report: Finds records where an Eprints Creator ID has an ORCID
 but it is not included on all records.  Also lists cases where an author has
 two ORCIDS.

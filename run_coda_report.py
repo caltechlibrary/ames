@@ -19,7 +19,7 @@ def is_in_range(year_arg,year):
         return True
     return False
 
-def keep_record(metadata,years,item_type,group):
+def keep_record(metadata,years,item_type=None,group=None):
     keep = True
     
     if years:
@@ -69,6 +69,50 @@ def keep_record(metadata,years,item_type,group):
         else:
             keep = False
     return keep
+
+def thesis_report(file_obj,keys,source,years=None):
+    '''Output a report of information about theses'''
+    file_obj.writerow(["Year","Author","ORCID","Title","Advisor","Type","Option","Persistent URL","DOI"])
+    all_metadata = []
+    dot_paths =\
+        ['.date','.creators.items[0].name.family','.creators.items[0].name.given','.creators.items[0].orcid',
+        '.title','.thesis_advisor.items[0].name.family','.thesis_advisor.items[0].name.given','.thesis_type',
+        '.option_major.items','.official_url','.doi']
+    labels=\
+        ['date','creator_family','creator_given','creator_orcid','title','advisor_family',
+        'advisor_given','thesis_type','option','official_url','doi']
+    if source.split('.')[-1] == 'ds':
+        all_metadata = get_records(dot_paths,'dois',source,keys,labels)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+    for metadata in all_metadata:
+        #Determine if we want the record
+        if keep_record(metadata,years):
+            if 'creator_given' in metadata:
+                creator = metadata['creator_family']+', '+metadata['creator_given']
+            else:
+                creator = metadata['creator_family']
+            if 'advisor_family' in metadata:
+                advisor = metadata['advisor_family']+', '+metadata['advisor_given']
+            else:
+                advisor = ''
+            if 'creator_orcid' in metadata:
+                orcid = metadata['creator_orcid']
+            else:
+                orcid = ''
+            if 'doi' in metadata:
+                doi = metadata['doi']
+            else:
+                doi = ''
+            option = ''
+            for opt in metadata['option']:
+                if option == '':
+                    option = opt
+                else:
+                    option += ', '+opt
+            file_obj.writerow([metadata['date'],creator,orcid,metadata['title'],advisor,
+                metadata['thesis_type'],option,metadata['official_url'],doi])
 
 def doi_report(file_obj,keys,source,years=None,all_records=True,item_type=None,group=None):
     '''Output a report of DOIs '''
@@ -442,6 +486,8 @@ if __name__ == '__main__':
             status_report(file_out,keys,source)
         elif args.report_name == 'doi_report':
             doi_report(file_out,keys,source,years=args.years,all_records=True,item_type=args.item,group=args.group)
+        elif args.report_name == 'thesis_report':
+            thesis_report(file_out,keys,source,args.years)
         elif args.report_name == 'license_report':
             license_report(file_out,keys,source,item_type=args.item)#,rtype='full')
         else:
