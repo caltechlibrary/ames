@@ -6,6 +6,8 @@ from progressbar import progressbar
 from datetime import datetime
 import idutils
 from py_dataset import dataset
+import pandas as pd
+import numpy as np
 import requests
 
 
@@ -17,6 +19,21 @@ def match_cd_refs():
     keys = dataset.keys(collection)
     if "mediaupdate" in keys:
         keys.remove("mediaupdate")
+
+    # Get event data results
+    event_data = "crossref_refs.ds"
+    event_keys = dataset.keys(event_data)
+    event_keys.remove("captured")
+    dot_paths = [".obj_id", ".id", ".subj_id"]
+    print("Getting Event Data Records")
+    (grid, err) = dataset.grid(event_data, event_keys, dot_paths)
+    if err != "":
+        print(err)
+        exit()
+    df = pd.DataFrame(np.array(grid), columns=["obj_id", "id", "subj_id"])
+    grouped = df.groupby(["obj_id"])
+    groups = grouped.groups
+    # Look at all CaltechDATA records
     for k in keys:
         # Collect matched new links for the record
         record_matches = []
@@ -24,28 +41,23 @@ def match_cd_refs():
         metadata, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
-        results, err = dataset.find(
-            "crossref_refs.ds.bleve", "+obj_id:*" + metadata["identifier"]["identifier"]
-        )
-        if err != "":
-            print(f"Unexpected error on find: {err}")
-        for h in results["hits"]:
-            # Trigger for whether we already have this link
-            new = True
-            print(h)
-            if "relatedIdentifiers" in metadata:
-                for m in metadata["relatedIdentifiers"]:
-                    if m["relatedIdentifier"] in h["fields"]["subj_id"]:
-                        new = False
-                    # print(re.match(m['relatedIdentifier'],h['fields']['subj_id']))
-                    # print(m['relatedIdentifier'])
-            if new == True:
-                match = h["fields"]["subj_id"]
-                print(match)
-                print(h["fields"]["obj_id"])
-                inputv = input("Do you approve this link?  Type Y or N: ")
-                if inputv == "Y":
-                    record_matches.append(match)
+        doi = "https://doi.org/" + metadata["identifier"]["identifier"]
+        if doi in groups:
+            hits = grouped.get_group(doi)
+            for index, h in hits.iterrows():
+                # Trigger for whether we already have this link
+                new = True
+                if "relatedIdentifiers" in metadata:
+                    for m in metadata["relatedIdentifiers"]:
+                        if m["relatedIdentifier"] in h["subj_id"]:
+                            new = False
+                if new == True:
+                    match = h["subj_id"]
+                    print(match)
+                    print(h["obj_id"])
+                    inputv = input("Do you approve this link?  Type Y or N: ")
+                    if inputv == "Y":
+                        record_matches.append(match)
         # If we have to update record
         if len(record_matches) > 0:
             ids = []
@@ -55,7 +67,6 @@ def match_cd_refs():
             matches.append([k, record_matches])
             # Now collect identifiers for record
             for match in record_matches:
-                # matches.append([match,k])
                 split = match.split("doi.org/")
                 new_id = {
                     "relatedIdentifier": split[1],
@@ -77,7 +88,7 @@ def match_codemeta():
         if err != "":
             print(f"Unexpected error on read: {err}")
         if "completed" not in existing:
-            print("Processing new record")
+            print("Processing new record ", k)
             if dataset.attachments(collection, k) != "":
                 dataset.detach(collection, k)
 
@@ -101,8 +112,9 @@ def match_codemeta():
                             add = False
                     if add == True:
                         standardized["subjects"].append({"subject": "GitHub"})
-                    response = caltechdata_edit(token, k, standardized, {}, {}, True)
-                    print(response)
+                    print(standardized)
+                    # response = caltechdata_edit(token, k, standardized, {}, {}, True)
+                    # print(response)
                 os.system("rm codemeta.json")
 
             existing["completed"] = "True"

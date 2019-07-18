@@ -31,8 +31,11 @@ def send_simple_message(token, matched):
     name = ""
     for c in metadata["contributors"]:
         if c["contributorType"] == "ContactPerson":
-            email = c["contributorEmail"]
-            name = c["contributorName"]
+            if "contributorEmail" in c:
+                email = c["contributorEmail"]
+                name = c["contributorName"]
+            else:
+                print("Missing email for record ", matched_key)
     # Use dataset version to get datacite metadata
     metadata, err = dataset.read("caltechdata.ds", matched_key)
     if err != "":
@@ -60,7 +63,7 @@ def send_simple_message(token, matched):
                 "to": name + " <" + email + ">, Tom Morrell <tmorrell@caltech.edu>",
                 "subject": "Your CaltechDATA Work has been cited!",
                 "html": '<html> <center> <img src="cid:CaltechDATA_Logo_cropped.png"\
-                      alt="CaltechDATA Logo" width="498" height="139"> </center> \
+                      alt="CaltechDATA Logo" width="249" height="69"> </center> \
                       <p> Dear '
                 + name
                 + ', </p>\
