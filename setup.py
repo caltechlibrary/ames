@@ -79,7 +79,7 @@ REQUIRED = [
     "datacite",
     "progressbar2",
     "caltechdata_api",
-    "py_dataset>=0.0.67",
+    "py_dataset>=0.0.68",
     "pandas",
 ]
 
