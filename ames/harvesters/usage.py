@@ -391,3 +391,32 @@ def makereport(collection, start_date, end_date):
             print(err)
             exit()
         dataset.update(usage_collection, "end-date", {"end-date": end_list[i]})
+
+def build_aggregate(month_collection):
+    if not os.path.isdir(month_collection):
+        ok = dataset.init(month_collection)
+        if ok == False:
+            print("Dataset failed to init collection")
+            exit()
+        # Write date that report was submitted to DataCite
+        dataset.create(month_collection, "reported-date", {"reported-date":'2017-01-31'})
+    
+    existing = dataset.keys(month_collection)
+
+    # Find time periods
+    start = datetime.fromisoformat('2017-01-31')
+    today = datetime.today().date().isoformat()
+    date_list = pd.date_range(start, today, freq="MS").strftime("%Y-%m").to_list()
+
+    for month in date_list:
+        if month not in existing:
+            err = dataset.create(month_collection,month,{'report-datasets':[]})
+            if err != '':
+                print(err)
+
+def aggregate_usage(usage_collection,month_collection):
+    keys = dataset.keys(usage_collection)
+    for k in keys:
+        record = dataset.read(usage_collection,k)
+        print(record)
+        exit()

@@ -112,8 +112,8 @@ def match_codemeta():
                             add = False
                     if add == True:
                         standardized["subjects"].append({"subject": "GitHub"})
-                     response = caltechdata_edit(token, k, standardized, {}, {}, True)
-                     print(response)
+                    response = caltechdata_edit(token, k, standardized, {}, {}, True)
+                    print(response)
                 os.system("rm codemeta.json")
 
             existing["completed"] = "True"

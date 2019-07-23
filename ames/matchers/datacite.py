@@ -102,3 +102,51 @@ def update_datacite_metadata(collection, token, access):
 
                 response = d.metadata_post(xml)
                 print(response)
+
+def submit_report(usage_collection, start_date, end_date, production):
+     # Find time periods
+    datev, err = dataset.read(usage_collection, "reported-date")
+    new_start = datetime.fromisoformat(datev["reported-date"])
+    # Always start at the beginning of a month
+    if new_start.day != 1:
+        new_start = str(new_start.year) + "-" + str(new_start.month) + "-01"
+    today = datetime.today().date().isoformat()
+    start_list = (
+        pd.date_range(new_start, today, freq="MS").strftime("%Y-%m-%d").to_list()
+    )
+    end_list = pd.date_range(new_start, today, freq="M").strftime("%Y-%m-%d").to_list()
+    # If today isn't the last day in the month, add end date
+    if len(start_list) == len(end_list) + 1:
+        end_list.append(today)
+    
+    # Get all usage data
+    dotpaths = ['._Key','.performance[:].period','.performance[:].period']
+    grid,err = dataset.grid()
+
+    for i in range(len(start_list)):
+        end_date = datetime.fromisoformat(end_list[i])
+        print("Collecting usage from ", start_list[i], " to", end_list[i])
+        token_s = "&token_auth=" + token
+        view_url = (
+            view_url_base + "&date=" + start_list[i] + "," + end_list[i] + token_s
+        )
+        dl_url = dl_url_base + "&date=" + start_list[i] + "," + end_list[i] + token_s
+        # Build report structure
+        report = {
+            "report-header": {
+                "report-name": "dataset report",
+                "report-id": "DSR",
+                "release": "rd1",
+                "report-filters": [],
+                "report-attributes": [],
+                "exceptions": [],
+                "created-by": "Caltech Library",
+                "created": today,
+                "reporting-period": {
+                    "begin-date": start_list[i],
+                    "end-date": end_list[i],
+                },
+            },
+            "report-datasets": [],
+        }
+
