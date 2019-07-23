@@ -103,8 +103,9 @@ def update_datacite_metadata(collection, token, access):
                 response = d.metadata_post(xml)
                 print(response)
 
+
 def submit_report(usage_collection, start_date, end_date, production):
-     # Find time periods
+    # Find time periods
     datev, err = dataset.read(usage_collection, "reported-date")
     new_start = datetime.fromisoformat(datev["reported-date"])
     # Always start at the beginning of a month
@@ -118,10 +119,10 @@ def submit_report(usage_collection, start_date, end_date, production):
     # If today isn't the last day in the month, add end date
     if len(start_list) == len(end_list) + 1:
         end_list.append(today)
-    
+
     # Get all usage data
-    dotpaths = ['._Key','.performance[:].period','.performance[:].period']
-    grid,err = dataset.grid()
+    dotpaths = ["._Key", ".performance[:].period", ".performance[:].period"]
+    grid, err = dataset.grid()
 
     for i in range(len(start_list)):
         end_date = datetime.fromisoformat(end_list[i])
@@ -149,4 +150,3 @@ def submit_report(usage_collection, start_date, end_date, production):
             },
             "report-datasets": [],
         }
-
