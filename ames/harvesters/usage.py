@@ -407,7 +407,7 @@ def build_aggregate(month_collection):
     existing = dataset.keys(month_collection)
 
     # Find time periods
-    start = datetime.fromisoformat("2017-01-31")
+    start = datetime.fromisoformat("2017-01-01")
     today = datetime.today().date().isoformat()
     date_list = pd.date_range(start, today, freq="MS").strftime("%Y-%m").to_list()
 
@@ -420,7 +420,100 @@ def build_aggregate(month_collection):
 
 def aggregate_usage(usage_collection, month_collection):
     keys = dataset.keys(usage_collection)
-    for k in keys:
-        record = dataset.read(usage_collection, k)
-        print(record)
-        exit()
+    keys.remove("end-date")
+    for k in progressbar(keys):
+        record, err = dataset.read(usage_collection, k)
+        if err != "":
+            print(err)
+        use = {}
+        views = {}
+        for usage in record["performance"]:
+            split = usage["period"].split("-")
+            month = split[0] + "-" + split[1]
+            for u in usage["instance"]:
+                metric = u["metric-type"]
+                if metric == "unique-dataset-requests":
+                    if month in use:
+                        use[month] += u["count"]
+                    else:
+                        use[month] = u["count"]
+                if metric == "unique-dataset-investigations":
+                    if month in views:
+                        views[month] += u["count"]
+                    else:
+                        views[month] = u["count"]
+        # Strip non-counter stuff
+        record.pop("_Key")
+        record.pop("grand-total-unique-requests")
+        record.pop("grand-total-unique-investigations")
+        for view in views:
+            # print(view)
+            v = views[view]
+            # If we have both views and uses in a given month
+            if view in use:
+                u = use[view]
+                record["performance"] = [
+                    {
+                        "instance": [
+                            {
+                                "count": u,
+                                "metric-type": "unique-dataset-requests",
+                                "access-method": "regular",
+                            },
+                            {
+                                "count": v,
+                                "metric-type": "unique-dataset-investigations",
+                                "access-method": "regular",
+                            },
+                        ]
+                    }
+                ]
+                existing, err = dataset.read(month_collection, view)
+                if err != "":
+                    print(err)
+                existing["report-datasets"].append(record)
+                err = dataset.update(month_collection, view, existing)
+                if err != "":
+                    print(err)
+            else:
+                record["performance"] = [
+                    {
+                        "instance": [
+                            {
+                                "count": v,
+                                "metric-type": "unique-dataset-investigations",
+                                "access-method": "regular",
+                            }
+                        ]
+                    }
+                ]
+                existing, err = dataset.read(month_collection, view)
+                if err != "":
+                    print(err)
+                existing["report-datasets"].append(record)
+                err = dataset.update(month_collection, view, existing)
+                if err != "":
+                    print(err)
+        for use_date in use:
+            # print(use_date)
+            u = use[use_date]
+            # We only worry about use-only records
+            if use_date not in view:
+                record["performance"] = [
+                    {
+                        "instance": [
+                            {
+                                "count": u,
+                                "metric-type": "unique-dataset-requests",
+                                "access-method": "regular",
+                            }
+                        ]
+                    }
+                ]
+                existing, err = dataset.read(month_collection, view)
+                if err != "":
+                    print(err)
+                existing["report-datasets"].append(record)
+                err = dataset.update(month_collection, view, existing)
+                if err != "":
+                    print(err)

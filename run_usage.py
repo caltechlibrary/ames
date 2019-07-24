@@ -36,9 +36,11 @@ if update == True:
     token = os.environ["TINDTOK"]
     add_usage(collection, token, usage_collection, production=True)
 
-#Aggregrate usage into month buckets
+# Aggregrate usage into month buckets
 month_collection = "caltechdata_aggregate.ds"
 build_aggregate(month_collection)
 aggregate_usage(usage_collection, month_collection)
 
-submit_report(usage_collection, start_date, end_date, production=False)
+keys = dataset.keys(month_collection)
+keys.remove("reported-date")
+submit_report(month_collection, keys, production=False)
