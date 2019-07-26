@@ -20,7 +20,7 @@ mapping = file_mapping(collection, mapping_file)
 
 history = False
 
-if history == True:
+if history:
     keys = dataset.keys(collection)
     h_collection = "caltechdata_history.ds"
     get_history(h_collection, keys)
@@ -29,18 +29,21 @@ if history == True:
 update = False
 
 usage_collection = "caltechdata_usage.ds"
-if update == True:
+if update:
     token = os.environ["MATTOK"]
     build_usage(collection, usage_collection)
     get_usage(usage_collection, mapping, token)
     token = os.environ["TINDTOK"]
     add_usage(collection, token, usage_collection, production=True)
 
+aggregate = False
+
 # Aggregrate usage into month buckets
 month_collection = "caltechdata_aggregate.ds"
-build_aggregate(month_collection)
-aggregate_usage(usage_collection, month_collection)
+if aggregate:
+    build_aggregate(month_collection)
+    aggregate_usage(usage_collection, month_collection)
 
 keys = dataset.keys(month_collection)
-keys.remove("reported-date")
-submit_report(month_collection, keys, production=False)
+token = os.environ["DATACITE_TOKEN"]
+submit_report(month_collection, keys, token, production=False)

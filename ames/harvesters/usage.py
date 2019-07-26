@@ -1,4 +1,4 @@
-import os, csv, math
+import os, csv, math, shutil, calendar
 import requests
 import pandas as pd
 from datetime import datetime
@@ -253,158 +253,16 @@ def get_usage(usage_collection, mapping, token):
     dataset.update(usage_collection, "end-date", {"end-date": now})
 
 
-def makereport(collection, start_date, end_date):
-
-    # Find time periods
-    datev, err = dataset.read(usage_collection, "end-date")
-    new_start = datetime.fromisoformat(datev["end-date"])
-    # Always start at the beginning of a month
-    if new_start.day != 1:
-        new_start = str(new_start.year) + "-" + str(new_start.month) + "-01"
-    today = datetime.today().date().isoformat()
-    start_list = (
-        pd.date_range(new_start, today, freq="MS").strftime("%Y-%m-%d").to_list()
-    )
-    end_list = pd.date_range(new_start, today, freq="M").strftime("%Y-%m-%d").to_list()
-    # If today isn't the last day in the month, add end date
-    if len(start_list) == len(end_list) + 1:
-        end_list.append(today)
-
-    for i in range(len(start_list)):
-        end_date = datetime.fromisoformat(end_list[i])
-        print("Collecting usage from ", start_list[i], " to", end_list[i])
-        token_s = "&token_auth=" + token
-        view_url = (
-            view_url_base + "&date=" + start_list[i] + "," + end_list[i] + token_s
-        )
-        dl_url = dl_url_base + "&date=" + start_list[i] + "," + end_list[i] + token_s
-        # Build report structure
-        report = {
-            "report-header": {
-                "report-name": "dataset report",
-                "report-id": "DSR",
-                "release": "rd1",
-                "report-filters": [],
-                "report-attributes": [],
-                "exceptions": [],
-                "created-by": "Caltech Library",
-                "created": today,
-                "reporting-period": {
-                    "begin-date": start_list[i],
-                    "end-date": end_list[i],
-                },
-            },
-            "report-datasets": [],
-        }
-
-        print("Collecting downloads")
-        aggr_downloads = {}
-        for m in progressbar(mapping):
-            record_date = record_dates[mapping[m]]
-            # report_data,err = dataset.read(usage_collection,mapping[m])
-            # record_date = datetime.fromisoformat(report_data['begin-date'])
-            # If the record existed at this date
-            if record_date < end_date:
-                # Handle old URL-might not be needed depending on mapping
-                d_url = m
-                if end_date < datetime.fromisoformat("2017-06-01"):
-                    if "caltechdata.tind.io" not in m:
-                        d_url = (
-                            "https://caltechdata.tind.io"
-                            + m.split("data.caltech.edu")[1]
-                        )
-                url = dl_url + "&downloadUrl=" + d_url
-                response = requests.get(url)
-                if response.status_code != 200:
-                    print(response.text)
-                    print(dl_url)
-                r_data = response.json()
-                recid = mapping[m]
-                if r_data != []:
-                    downloads = r_data[0]["nb_visits"]
-                    if recid in aggr_downloads:
-                        aggr_downloads[recid] += downloads
-                    else:
-                        aggr_downloads[recid] = downloads
-                else:
-                    if recid not in aggr_downloads:
-                        aggr_downloads[recid] = 0
-        print("Collecting views")
-        for k in progressbar(ids):
-            performance = {
-                "period": {"begin-date": start_list[i], "end-date": end_list[i]},
-                "instance": [],
-            }
-            # report_data,err = dataset.read(usage_collection,k)
-            # record_date = datetime.fromisoformat(report_data['begin-date'])
-            record_date = record_dates[k]
-            metadata, err = dataset.read(caltechdata_collection, k)
-            # If the record existed at this date
-            if record_date < end_date:
-                url = view_url + "&pageUrl=https://data.caltech.edu/records/" + k
-                response = requests.get(url)
-                r_data = response.json()
-                if r_data != []:
-                    visits = r_data[0]["nb_visits"]
-                else:
-                    visits = 0
-                entry = {
-                    "count": visits,
-                    "metric-type": "unique-dataset-investigations",
-                    "access-method": "regular",
-                }
-                performance["instance"].append(entry)
-                # Also add downloads to structure
-                if k in aggr_downloads:
-                    entry = {
-                        "count": aggr_downloads[k],
-                        "metric-type": "unique-dataset-requests",
-                        "access-method": "regular",
-                    }
-                performance["instance"].append(entry)
-                # Save to report
-                report_data = {
-                    "dataset-id": [
-                        {"type": "doi", "value": metadata["identifier"]["identifier"]}
-                    ],
-                    "uri": "https://data.caltech.edu/records/" + k,
-                    "publisher": "CaltechDATA",
-                    "platform": "CaltechDATA",
-                    "publisher-id": [{"type": "grid", "value": "grid.20861.3d"}],
-                    "yop": metadata["publicationYear"],
-                    "data-type": metadata["resourceType"][
-                        "resourceTypeGeneral"
-                    ].lower(),
-                    "dataset-dates": [
-                        {"type": "pub-date", "value": record_date.isoformat()}
-                    ],
-                    "dataset-title": metadata["titles"][0]["title"],
-                    "performance": [performance],
-                }
-                report["report-datasets"].append(report_data)
-        rname = start_list[i] + "/" + end_list[i]
-        if dataset.has_key(usage_collection, rname):
-            err = dataset.update(usage_collection, rname, report)
-        else:
-            err = dataset.create(usage_collection, rname, report)
-        if err != "":
-            print(err)
-            exit()
-        dataset.update(usage_collection, "end-date", {"end-date": end_list[i]})
-
-
-def build_aggregate(month_collection):
-    if not os.path.isdir(month_collection):
-        ok = dataset.init(month_collection)
-        if ok == False:
-            print("Dataset failed to init collection")
-            exit()
-        # Write date that report was submitted to DataCite
-        dataset.create(
-            month_collection, "reported-date", {"reported-date": "2017-01-31"}
-        )
-
-    existing = dataset.keys(month_collection)
+def build_aggregate(collection):
+    """Build a collection for usage by month.
+    Always creates collection from scratch"""
+    # Delete existing collection
+    if os.path.isdir(collection):
+        shutil.rmtree(collection)
+    ok = dataset.init(collection)
+    if ok == False:
+        print("Dataset failed to init collection")
+        exit()
 
     # Find time periods
     start = datetime.fromisoformat("2017-01-01")
@@ -412,10 +270,29 @@ def build_aggregate(month_collection):
     date_list = pd.date_range(start, today, freq="MS").strftime("%Y-%m").to_list()
 
     for month in date_list:
-        if month not in existing:
-            err = dataset.create(month_collection, month, {"report-datasets": []})
-            if err != "":
-                print(err)
+        err = dataset.create(collection, month, {"report-datasets": []})
+        if err != "":
+            print(err)
+
+
+def get_month_day_range(date):
+    """
+    From fletom https://gist.github.com/waynemoore/1109153
+    For a date 'date' returns the start and end date for the month of 'date'.
+
+    Month with 31 days:
+    >>> date = datetime.date(2011, 7, 27)
+    >>> get_month_day_range(date)
+    (datetime.date(2011, 7, 1), datetime.date(2011, 7, 31))
+
+    Month with 28 days:
+    >>> date = datetime.date(2011, 2, 15)
+    >>> get_month_day_range(date)
+    (datetime.date(2011, 2, 1), datetime.date(2011, 2, 28))
+    """
+    first_day = date.replace(day=1)
+    last_day = date.replace(day=calendar.monthrange(date.year, date.month)[1])
+    return first_day, last_day
 
 
 def aggregate_usage(usage_collection, month_collection):
@@ -446,73 +323,70 @@ def aggregate_usage(usage_collection, month_collection):
         record.pop("_Key")
         record.pop("grand-total-unique-requests")
         record.pop("grand-total-unique-investigations")
+        # go across months
         for view in views:
-            # print(view)
+            split = view.split("-")
+            date_obj = datetime(int(split[0]), int(split[1]), 1)
+            d_range = get_month_day_range(date_obj)
+            performance = [
+                {
+                    "period": {
+                        "begin-date": d_range[0].date().isoformat(),
+                        "end-date": d_range[1].date().isoformat(),
+                    },
+                    "instance": [],
+                }
+            ]
             v = views[view]
-            # If we have both views and uses in a given month
+            performance[0]["instance"].append(
+                {
+                    "count": v,
+                    "metric-type": "unique-dataset-investigations",
+                    "access-method": "regular",
+                }
+            )
+            # Handle when we have both views and uses in a given month
             if view in use:
                 u = use[view]
-                record["performance"] = [
+                performance[0]["instance"].append(
                     {
-                        "instance": [
-                            {
-                                "count": u,
-                                "metric-type": "unique-dataset-requests",
-                                "access-method": "regular",
-                            },
-                            {
-                                "count": v,
-                                "metric-type": "unique-dataset-investigations",
-                                "access-method": "regular",
-                            },
-                        ]
+                        "count": u,
+                        "metric-type": "unique-dataset-requests",
+                        "access-method": "regular",
                     }
-                ]
-                existing, err = dataset.read(month_collection, view)
-                if err != "":
-                    print(err)
-                existing["report-datasets"].append(record)
-                err = dataset.update(month_collection, view, existing)
-                if err != "":
-                    print(err)
-            else:
-                record["performance"] = [
-                    {
-                        "instance": [
-                            {
-                                "count": v,
-                                "metric-type": "unique-dataset-investigations",
-                                "access-method": "regular",
-                            }
-                        ]
-                    }
-                ]
-                existing, err = dataset.read(month_collection, view)
-                if err != "":
-                    print(err)
-                existing["report-datasets"].append(record)
-                err = dataset.update(month_collection, view, existing)
-                if err != "":
-                    print(err)
+                )
+            existing, err = dataset.read(month_collection, view)
+            if err != "":
+                print(err)
+            record["performance"] = performance
+            existing["report-datasets"].append(record)
+            err = dataset.update(month_collection, view, existing)
+            if err != "":
+                print(err)
         for use_date in use:
             # print(use_date)
             u = use[use_date]
-            # We only worry about use-only records
+            # We only have use-only records left to handle
             if use_date not in view:
-                record["performance"] = [
+                performance = [
                     {
+                        "period": {
+                            "begin-date": d_range[0].date().isoformat(),
+                            "end-date": d_range[1].date().isoformat(),
+                        },
                         "instance": [
                             {
                                 "count": u,
                                 "metric-type": "unique-dataset-requests",
                                 "access-method": "regular",
                             }
-                        ]
+                        ],
                     }
                 ]
                 existing, err = dataset.read(month_collection, view)
                 if err != "":
                     print(err)
+                record["performance"] = performance
                 existing["report-datasets"].append(record)
                 err = dataset.update(month_collection, view, existing)
                 if err != "":

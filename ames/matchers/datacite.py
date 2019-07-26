@@ -1,5 +1,5 @@
 from py_dataset import dataset
-import requests
+import requests, json
 from datacite import DataCiteMDSClient, schema40
 from datetime import date, datetime
 
@@ -104,35 +104,15 @@ def update_datacite_metadata(collection, token, access):
                 print(response)
 
 
-def submit_report(usage_collection, start_date, end_date, production):
-    # Find time periods
-    datev, err = dataset.read(usage_collection, "reported-date")
-    new_start = datetime.fromisoformat(datev["reported-date"])
-    # Always start at the beginning of a month
-    if new_start.day != 1:
-        new_start = str(new_start.year) + "-" + str(new_start.month) + "-01"
-    today = datetime.today().date().isoformat()
-    start_list = (
-        pd.date_range(new_start, today, freq="MS").strftime("%Y-%m-%d").to_list()
-    )
-    end_list = pd.date_range(new_start, today, freq="M").strftime("%Y-%m-%d").to_list()
-    # If today isn't the last day in the month, add end date
-    if len(start_list) == len(end_list) + 1:
-        end_list.append(today)
-
-    # Get all usage data
-    dotpaths = ["._Key", ".performance[:].period", ".performance[:].period"]
-    grid, err = dataset.grid()
-
-    for i in range(len(start_list)):
-        end_date = datetime.fromisoformat(end_list[i])
-        print("Collecting usage from ", start_list[i], " to", end_list[i])
-        token_s = "&token_auth=" + token
-        view_url = (
-            view_url_base + "&date=" + start_list[i] + "," + end_list[i] + token_s
-        )
-        dl_url = dl_url_base + "&date=" + start_list[i] + "," + end_list[i] + token_s
+def submit_report(month_collection, keys, token, production):
+    for k in keys:
+        datasets, err = dataset.read(month_collection, k, clean_object=True)
+        if err != "":
+            print(err)
+        datasets = datasets["report-datasets"]
+        dates = datasets[0]["performance"][0]["period"]
         # Build report structure
+        today = date.today().isoformat()
         report = {
             "report-header": {
                 "report-name": "dataset report",
@@ -144,9 +124,20 @@ def submit_report(usage_collection, start_date, end_date, production):
                 "created-by": "Caltech Library",
                 "created": today,
                 "reporting-period": {
-                    "begin-date": start_list[i],
-                    "end-date": end_list[i],
+                    "begin-date": dates["begin-date"],
+                    "end-date": dates["end-date"],
                 },
             },
-            "report-datasets": [],
+            "report-datasets": datasets,
         }
+        if production:
+            url = "https://api.datacite.org/reports/"
+        else:
+            url = "https://api.test.datacite.org/reports/"
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer %s" % token,
+        }
+        r = requests.post(url, headers=headers, json=report)
+        print(r.json()["report"]["id"])
