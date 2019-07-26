@@ -1,4 +1,4 @@
-import os, json`
+import os, json
 from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
 from ames.harvesters import get_records
