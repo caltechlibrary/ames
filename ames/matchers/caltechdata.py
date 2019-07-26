@@ -1,4 +1,4 @@
-import os, json, re
+import os, jsone
 from caltechdata_api import caltechdata_edit
 from ames import codemeta_to_datacite
 from ames.harvesters import get_records
@@ -241,7 +241,6 @@ def add_usage(collection, token, usage_collection, production=True):
         now = datetime.today()
         first = date.strftime("%B %d, %Y")
         last = now.strftime("%B %d, %Y")
-        record_doi = record["identifier"]["identifier"]
         if views > 1:
             u_txt = (
                 "<br>Unique Views: "

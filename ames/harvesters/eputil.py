@@ -128,7 +128,7 @@ def get_eprints(eprint_url, eprint_id):
     if not isinstance(value, bytes):
         value = value.encode("utf8")
     src = value.decode()
-    if type(src) == str:
+    if isinstance(src,str):
         if src == "":
             return []
         obj = json.loads(src)

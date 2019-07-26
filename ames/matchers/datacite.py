@@ -1,5 +1,5 @@
 from py_dataset import dataset
-import requests, json
+import requests
 from datacite import DataCiteMDSClient, schema40
 from datetime import date, datetime
 
