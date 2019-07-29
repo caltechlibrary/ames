@@ -76,12 +76,16 @@ def keep_record(metadata, years, item_type=None, group=None):
 
 
 def break_up_group(metadata, field, val, row):
-    """Break up arrays into numbers fields in a row"""
+    """Break up a array in 'field' into a single element with number 'val'"""
     if field in metadata:
         if len(metadata[field]) > val:
             row.append(metadata[field][val])
         else:
+            # This many values are not present, add blank cell
             row.append("")
+    else:
+        # Metadata not present, add blank cell
+        row.append("")
     return row
 
 
@@ -201,7 +205,7 @@ def thesis_metadata(file_obj, keys, source, years=None):
             row.append(metadata["keywords"])
             for i in range(4):
                 record = break_up_group(metadata, "advisor_family", i, row)
-                record = break_up_group(metadata, "advisor_group", i, row)
+                record = break_up_group(metadata, "advisor_given", i, row)
                 record = break_up_group(metadata, "advisor_role", i, row)
             row.append(metadata["official_url"])
             if "doi" in metadata:
