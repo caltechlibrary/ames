@@ -104,13 +104,22 @@ def update_datacite_metadata(collection, token, access):
                 print(response)
 
 
-def submit_report(month_collection, keys, token, production):
+def submit_report(
+    month_collection, keys, token, production, prefix=None, org="Caltech Library"
+):
     for k in keys:
         datasets, err = dataset.read(month_collection, k, clean_object=True)
         if err != "":
             print(err)
         datasets = datasets["report-datasets"]
         dates = datasets[0]["performance"][0]["period"]
+        if prefix != None:
+            filtered = []
+            for d in datasets:
+                rec_prefix = d["dataset-id"][0]["value"].split("/")[0]
+                if rec_prefix in prefix:
+                    filtered.append(d)
+            datasets = filtered
         # Build report structure
         today = date.today().isoformat()
         report = {
@@ -121,7 +130,7 @@ def submit_report(month_collection, keys, token, production):
                 "report-filters": [],
                 "report-attributes": [],
                 "exceptions": [],
-                "created-by": "Caltech Library",
+                "created-by": org,
                 "created": today,
                 "reporting-period": {
                     "begin-date": dates["begin-date"],
@@ -140,4 +149,8 @@ def submit_report(month_collection, keys, token, production):
             "Authorization": "Bearer %s" % token,
         }
         r = requests.post(url, headers=headers, json=report)
-        print(r.json()["report"]["id"])
+        if r.status_code != 201:
+            print(r.text)
+            print(report)
+        else:
+            print(r.json()["report"]["id"])
