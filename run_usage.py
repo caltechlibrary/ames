@@ -13,7 +13,7 @@ os.chdir("data")
 production = True
 collection = "caltechdata.ds"
 
-# get_caltechdata(collection, production)
+get_caltechdata(collection, production)
 
 mapping_file = "tindfile_mapping.csv"
 
@@ -47,7 +47,7 @@ if aggregate:
 
 # keys = dataset.keys(month_collection)
 # keys.remove('2019-08')
-# keys = ['2018-07']
+keys = ['2019-08']
 today = datetime.today()
 last_month = today.replace(day=1) - timedelta(days=1)
 keys = [f"{last_month.year}-{last_month.month:02}"]
