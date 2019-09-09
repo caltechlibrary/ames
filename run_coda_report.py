@@ -579,8 +579,6 @@ def file_report(file_obj, keys, source, years=None):
 
 
 def alt_url_report(file_obj, keys, source):
-    creator_ids = []
-    creators = {}
     print(f"Processing {len(keys)} eprint records for alt_url")
     file_obj.writerow(["eprint_id", "alt_url", "related_url", "url_added", "type"])
     if source.split(".")[-1] == "ds":
