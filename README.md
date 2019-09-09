@@ -176,6 +176,8 @@ two ORCIDS.
 
 -   status_report: Reports on any records with an incorrect status in feeds
 
+-   alt_url_report: Reports on records with discontinure alt_url field
+
 -   license_report: Report out the license types in CaltechDATA
 
 #### Report Usage

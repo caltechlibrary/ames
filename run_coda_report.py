@@ -577,6 +577,29 @@ def file_report(file_obj, keys, source, years=None):
     print("Report finished!")
 
 
+def alt_url_report(file_obj, keys, source):
+    creator_ids = []
+    creators = {}
+    print(f"Processing {len(keys)} eprint records for alt_url")
+    file_obj.writerow(["eprint_id", "alt_url", "related_url"])
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".related_url.items", ".alt_url"]
+        labels = ["eprint_id", "items", "alt_url"]
+        all_metadata = get_records(dot_paths, "alt", source, keys, labels)
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "alt_url" in metadata:
+                alt = metadata["alt_url"]
+                related = ""
+                if "items" in metadata:
+                    for i in metadata["items"]:
+                        related = related + i["url"] + " ; "
+                file_obj.writerow([key, alt, related])
+        print("Report finished!")
+    else:
+        print("Not Implemented")
+
+
 def creator_report(file_obj, keys, source, update_only=False):
     creator_ids = []
     creators = {}
@@ -738,6 +761,8 @@ if __name__ == "__main__":
             creator_report(file_out, keys, source, update_only=True)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
+        elif args.report_name == "alt_url_report":
+            alt_url_report(file_out, keys, source)
         elif args.report_name == "doi_report":
             doi_report(
                 file_out,
