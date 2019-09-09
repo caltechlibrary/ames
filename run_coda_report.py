@@ -1,6 +1,7 @@
 import os, argparse, csv
 from py_dataset import dataset
 import random
+from idutils import is_doi, is_arxiv, normalize_doi
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records
 from ames.harvesters import get_eprint_keys, get_eprint
@@ -581,7 +582,7 @@ def alt_url_report(file_obj, keys, source):
     creator_ids = []
     creators = {}
     print(f"Processing {len(keys)} eprint records for alt_url")
-    file_obj.writerow(["eprint_id", "alt_url", "related_url"])
+    file_obj.writerow(["eprint_id", "alt_url", "related_url", "url_added", "type"])
     if source.split(".")[-1] == "ds":
         dot_paths = ["._Key", ".related_url.items", ".alt_url"]
         labels = ["eprint_id", "items", "alt_url"]
@@ -591,10 +592,29 @@ def alt_url_report(file_obj, keys, source):
             if "alt_url" in metadata:
                 alt = metadata["alt_url"]
                 related = ""
+                type_v = "Other"
+                new_url = alt
+                if is_doi(new_url):
+                    type_v = "DOI"
+                    new_url = "https://doi.org/" + normalize_doi(new_url)
+                if is_arxiv(new_url):
+                    type_v = "arXiv"
                 if "items" in metadata:
                     for i in metadata["items"]:
+                        if i["url"] == new_url:
+                            new_url = ""
+                        if is_doi(i["url"]):
+                            norm_rel = normalize_doi(i["url"])
+                            norm = alt
+                            # Make sure both are normalized
+                            if type_v == "DOI":
+                                norm = normalize_doi(norm)
+                            if norm == norm_rel:
+                                new_url = ""
                         related = related + i["url"] + " ; "
-                file_obj.writerow([key, alt, related])
+                if new_url == "":
+                    type_v = ""
+                file_obj.writerow([key, alt, related, new_url, type_v])
         print("Report finished!")
     else:
         print("Not Implemented")
