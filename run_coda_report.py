@@ -1,4 +1,4 @@
-import os, argparse, csv, shutil
+import os, argparse, csv
 from py_dataset import dataset
 import random
 from idutils import is_doi, is_arxiv, normalize_doi
@@ -619,8 +619,6 @@ def alt_url_report(file_obj, keys, source):
 
 
 def creator_search(file_obj, keys, source, search_id):
-    creator_ids = []
-    creators = {}
     print(f"Processing {len(keys)} eprint records for creators")
     if source.split(".")[-1] == "ds":
         dot_paths = ["._Key", ".creators.items"]
