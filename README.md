@@ -172,6 +172,9 @@ Runs reports on Caltech Library repositories.  Current reports:
 but it is not included on all records.  Also lists cases where an author has
 two ORCIDS.
 
+-   creator_search: Export a google sheet with the author lists of all
+    publications associated with an author id. Requires -creator argument
+
 -   file_report: Records that have potential problems with the attached files
 
 -   status_report: Reports on any records with an incorrect status in feeds

@@ -1,4 +1,4 @@
-import os, argparse, csv
+import os, argparse, csv, shutil
 from py_dataset import dataset
 import random
 from idutils import is_doi, is_arxiv, normalize_doi
@@ -618,6 +618,51 @@ def alt_url_report(file_obj, keys, source):
         print("Not Implemented")
 
 
+def creator_search(file_obj, keys, source, search_id):
+    creator_ids = []
+    creators = {}
+    print(f"Processing {len(keys)} eprint records for creators")
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".creators.items"]
+        labels = ["eprint_id", "items"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        matched_keys = []
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "items" in metadata:
+                for item in metadata["items"]:
+                    if "id" in item:
+                        if item["id"] == search_id:
+                            matched_keys.append(key)
+        print(f"Processing {len(matched_keys)} eprint records that match search")
+        dot_paths = ["._Key", ".creators.items", ".official_url"]
+        labels = ["eprint_id", "items", "resolver"]
+        select_metadata = get_records(dot_paths, "dois", source, matched_keys, labels)
+        for metadata in progressbar(select_metadata, redirect_stdout=True):
+            file_obj.writerow([metadata["eprint_id"]])
+            file_obj.writerow([metadata["resolver"]])
+            file_obj.writerow(["family", "given", "id", "orcid"])
+            for item in metadata["items"]:
+                author_record = []
+                if "family" in item["name"]:
+                    author_record.append(item["name"]["family"])
+                else:
+                    author_record.append(" ")
+                if "given" in item["name"]:
+                    author_record.append(item["name"]["given"])
+                else:
+                    author_record.append(" ")
+                if "id" in item:
+                    author_record.append(item["id"])
+                else:
+                    author_record.append(" ")
+                if "orcid" in item:
+                    author_record.append(item["orcid"])
+                else:
+                    author_record.append(" ")
+                file_obj.writerow(author_record)
+
+
 def creator_report(file_obj, keys, source, update_only=False):
     creator_ids = []
     creators = {}
@@ -729,6 +774,7 @@ if __name__ == "__main__":
         nargs="+",
         help='Group from repository (e.g. "Keck Institute for Space Studies")',
     )
+    parser.add_argument("-creator", help="Creator ID: Chen-X")
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
     parser.add_argument("-sample", help="Number of records if you want a random sample")
@@ -777,6 +823,8 @@ if __name__ == "__main__":
             file_report(file_out, keys, source, args.years)
         elif args.report_name == "creator_report":
             creator_report(file_out, keys, source, update_only=True)
+        elif args.report_name == "creator_search":
+            creator_search(file_out, keys, source, args.creator)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
         elif args.report_name == "alt_url_report":
