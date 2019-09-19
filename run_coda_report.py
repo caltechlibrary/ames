@@ -425,12 +425,14 @@ def status_report(file_obj, keys, source):
     """Output a report of items that have a status other than archive
     or have metadata visability other than show.
     Under normal circumstances this should return no records when run on feeds"""
-    file_obj.writerow(["Eprint ID", "Resolver URL", "Status"])
+    file_obj.writerow(["Eprint ID", "Resolver URL", "Status","Local Group"])
 
     all_metadata = []
     if source.split(".")[-1] == "ds":
-        dot_paths = ["._Key", ".eprint_status", ".official_url", ".metadata_visibility"]
-        labels = ["eprint_id", "eprint_status", "official_url", "metadata_visibility"]
+        dot_paths = ["._Key", ".eprint_status",
+                ".official_url",".metadata_visibility",".local_group.items"]
+        labels = ["eprint_id", "eprint_status", "official_url",
+                "metadata_visibility","local_group"]
         all_metadata = get_records(dot_paths, "dois", source, keys, labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -449,7 +451,11 @@ def status_report(file_obj, keys, source):
             status = metadata["metadata_visibility"]
             url = metadata["official_url"]
             print("Record matched: ", url)
-            file_obj.writerow([ep, url, status])
+            group = ''
+            if 'local_group' in metadata:
+                for g in metadata['local_group']:
+                    group = group + g +' '
+            file_obj.writerow([ep, url, status,group])
     print("Report finished!")
 
 
