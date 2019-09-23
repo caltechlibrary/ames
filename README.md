@@ -158,6 +158,16 @@ Matomo `export MATTOK=`
 
 Type `python run_usage.py`.
 
+### Archives Reports
+
+Runs reports on ArchivesSpace.  Current reports:
+
+- accession_report Returns accession records that match a certain subject
+
+Example usage:
+
+python run_archives_report.py accession_report accession.csv -subject "Manuscript Collection"
+
 ### CODA Reports
 
 Runs reports on Caltech Library repositories.  Current reports:
