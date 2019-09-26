@@ -425,14 +425,24 @@ def status_report(file_obj, keys, source):
     """Output a report of items that have a status other than archive
     or have metadata visability other than show.
     Under normal circumstances this should return no records when run on feeds"""
-    file_obj.writerow(["Eprint ID", "Resolver URL", "Status","Local Group"])
+    file_obj.writerow(["Eprint ID", "Resolver URL", "Status", "Local Group"])
 
     all_metadata = []
     if source.split(".")[-1] == "ds":
-        dot_paths = ["._Key", ".eprint_status",
-                ".official_url",".metadata_visibility",".local_group.items"]
-        labels = ["eprint_id", "eprint_status", "official_url",
-                "metadata_visibility","local_group"]
+        dot_paths = [
+            "._Key",
+            ".eprint_status",
+            ".official_url",
+            ".metadata_visibility",
+            ".local_group.items",
+        ]
+        labels = [
+            "eprint_id",
+            "eprint_status",
+            "official_url",
+            "metadata_visibility",
+            "local_group",
+        ]
         all_metadata = get_records(dot_paths, "dois", source, keys, labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -451,11 +461,11 @@ def status_report(file_obj, keys, source):
             status = metadata["metadata_visibility"]
             url = metadata["official_url"]
             print("Record matched: ", url)
-            group = ''
-            if 'local_group' in metadata:
-                for g in metadata['local_group']:
-                    group = group + g +' '
-            file_obj.writerow([ep, url, status,group])
+            group = ""
+            if "local_group" in metadata:
+                for g in metadata["local_group"]:
+                    group = group + g + " "
+            file_obj.writerow([ep, url, status, group])
     print("Report finished!")
 
 
@@ -581,6 +591,27 @@ def file_report(file_obj, keys, source, years=None):
                                     file_obj.writerow(
                                         [ep, "File Name Length", filename, url]
                                     )
+    print("Report finished!")
+
+
+def record_number_report(file_obj, keys, source):
+    """Write out a report of records where the record number doesn't match the
+    resolver URL"""
+    file_obj.writerow(["Eprint ID", "Record Number", "Resolver URL"])
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".id_number", ".official_url"]
+        labels = ["eprint_id", "record_number", "official_url"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+
+    for metadata in all_metadata:
+        ep = metadata["eprint_id"]
+        resolver = metadata["official_url"]
+        number = metadata["record_number"]
+        resolver_tag = resolver.split("/")[-1]
+        if resolver_tag != number:
+            file_obj.writerow([ep, number, resolver])
+
     print("Report finished!")
 
 
@@ -831,6 +862,8 @@ if __name__ == "__main__":
             creator_search(file_out, keys, source, args.creator)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
+        elif args.report_name == "record_number_report":
+            record_number_report(file_out, keys, source)
         elif args.report_name == "alt_url_report":
             alt_url_report(file_out, keys, source)
         elif args.report_name == "doi_report":
