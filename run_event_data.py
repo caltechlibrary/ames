@@ -96,7 +96,8 @@ if __name__ == "__main__":
     if os.path.isdir("data") == False:
         os.mkdir("data")
     os.chdir("data")
-    get_crossref_refs(False)
+    get_crossref_refs('10.14291',False,False)
+    get_crossref_refs('10.22002',True,False)
     get_caltechdata("caltechdata.ds")
     matches = match_cd_refs()
 

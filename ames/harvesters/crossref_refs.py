@@ -3,7 +3,7 @@ import requests
 from py_dataset import dataset
 
 
-def get_crossref_refs(new=True):
+def get_crossref_refs(prefix,done=False,new=True):
     # New=True will download everything from scratch and delete any existing records
 
     collection = "crossref_refs.ds"
@@ -18,7 +18,8 @@ def get_crossref_refs(new=True):
             print("Dataset failed to init collection")
             exit()
 
-    base_url = "https://api.eventdata.crossref.org/v1/events?mailto=data@caltech.edu&source=crossref"
+    base_url =\
+    "https://api.eventdata.crossref.org/v1/events?mailto=data@caltech.edu&source=crossref&obj-id.prefix="+prefix
 
     collected = dataset.has_key(collection, "captured")
 
@@ -86,18 +87,15 @@ def get_crossref_refs(new=True):
                 if err != "":
                     print(f"Unexpected error on write: {err}")
             cursor = records["message"]["next-cursor"]
-
-    date = datetime.date.today().isoformat()
-    record = {"captured": date}
-    if dataset.has_key(collection, "captured"):
-        err = dataset.update(collection, "captured", record)
-        if err != "":
-            print(f"Unexpected error on update: {err}")
-    else:
-        err = dataset.create(collection, "captured", record)
-        if err != "":
-            print(f"Unexpected error on create: {err}")
-    definition = os.path.join(os.path.dirname(__file__), "crossref_refs.json")
-    err = dataset.indexer(collection, collection + ".bleve", definition)
-    if err != "":
-        print(f"Unexpected error on index: {err}")
+    
+    if done:
+        date = datetime.date.today().isoformat()
+        record = {"captured": date}
+        if dataset.has_key(collection, "captured"):
+            err = dataset.update(collection, "captured", record)
+            if err != "":
+                print(f"Unexpected error on update: {err}")
+        else:
+            err = dataset.create(collection, "captured", record)
+            if err != "":
+                print(f"Unexpected error on create: {err}")
