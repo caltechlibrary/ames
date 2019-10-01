@@ -3,7 +3,7 @@ import requests
 from py_dataset import dataset
 
 
-def get_crossref_refs(prefix,done=False,new=True):
+def get_crossref_refs(prefix, done=False, new=True):
     # New=True will download everything from scratch and delete any existing records
 
     collection = "crossref_refs.ds"
@@ -18,8 +18,10 @@ def get_crossref_refs(prefix,done=False,new=True):
             print("Dataset failed to init collection")
             exit()
 
-    base_url =\
-    "https://api.eventdata.crossref.org/v1/events?mailto=data@caltech.edu&source=crossref&obj-id.prefix="+prefix
+    base_url = (
+        "https://api.eventdata.crossref.org/v1/events?mailto=data@caltech.edu&source=crossref&obj-id.prefix="
+        + prefix
+    )
 
     collected = dataset.has_key(collection, "captured")
 
@@ -87,7 +89,7 @@ def get_crossref_refs(prefix,done=False,new=True):
                 if err != "":
                     print(f"Unexpected error on write: {err}")
             cursor = records["message"]["next-cursor"]
-    
+
     if done:
         date = datetime.date.today().isoformat()
         record = {"captured": date}
