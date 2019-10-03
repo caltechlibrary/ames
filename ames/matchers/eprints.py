@@ -23,10 +23,12 @@ def resolver_links(source, keys, outfile=None):
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
             meta = get_eprint(source, eprint_id)
-            new = replace_link(meta)
-            if new:
-                url = source + "/rest/eprint/" + str(eprint_id) + "/official_url.txt"
-                headers = {"content-type": "text/plain"}
-                print(eprint_id)
-                response = requests.put(url, data=new, headers=headers)
-                print(response)
+            #Ignore errors where the record doesn't exist
+            if meta != None:
+                new = replace_link(meta)
+                if new:
+                    url = source + "/rest/eprint/" + str(eprint_id) + "/official_url.txt"
+                    headers = {"content-type": "text/plain"}
+                    print(eprint_id)
+                    response = requests.put(url, data=new, headers=headers)
+                    print(response)
