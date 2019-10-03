@@ -9,3 +9,4 @@ from .datacite import update_datacite_metadata
 from .datacite import update_datacite_media
 from .datacite import submit_report
 from .eprints import resolver_links
+from .eprints import special_characters
