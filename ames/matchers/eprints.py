@@ -25,10 +25,11 @@ def resolver_links(source, keys, outfile=None):
             meta = get_eprint(source, eprint_id)
             #Ignore errors where the record doesn't exist
             if meta != None:
-                new = replace_link(meta)
-                if new:
-                    url = source + "/rest/eprint/" + str(eprint_id) + "/official_url.txt"
-                    headers = {"content-type": "text/plain"}
-                    print(eprint_id)
-                    response = requests.put(url, data=new, headers=headers)
-                    print(response)
+                if meta['eprint_status'] != 'deletion':
+                    new = replace_link(meta)
+                    if new:
+                        url = source + "/rest/eprint/" + str(eprint_id) + "/official_url.txt"
+                        headers = {"content-type": "text/plain"}
+                        print(eprint_id)
+                        response = requests.put(url, data=new, headers=headers)
+                        print(response)
