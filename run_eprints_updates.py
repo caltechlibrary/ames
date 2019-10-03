@@ -40,4 +40,8 @@ if __name__ == "__main__":
             source = source + args.username + ":" + args.password + "@"
         source = source + args.repository + ".library.caltech.edu"
         keys = get_eprint_keys(source)
-        resolver_links(source, keys)
+        new = []
+        for k in keys:
+            if int(k) > 76000:
+                new.append(k)
+        resolver_links(source, new)
