@@ -594,6 +594,39 @@ def file_report(file_obj, keys, source, years=None):
     print("Report finished!")
 
 
+def group_search(file_obj, keys, source, search, years=None):
+    """Search for group name in Additional Information and Funders fields"""
+    file_obj.writerow(["Eprint ID", "Resolver URL"])
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".note", ".date", ".funders.items", ".official_url"]
+        labels = ["eprint_id", "note", "date", "funders", "official_url"]
+        all_metadata = get_records(dot_paths, "group", source, keys, labels)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    for metadata in all_metadata:
+        if "date" in metadata:
+            year = metadata["date"].split("-")[0]
+            if is_in_range(years, year):
+                keep = False
+                if "note" in metadata:
+                    if search in metadata["note"]:
+                        keep = True
+                if "funders" in metadata:
+                    for f in metadata["funders"]:
+                        print(f)
+                        if "agency" in f:
+                            if search in f["agency"]:
+                                keep = True
+                if keep:
+                    ep = metadata["eprint_id"]
+                    url = metadata["official_url"]
+                    file_obj.writerow([ep, url])
+    print("Report finished!")
+
+
 def record_number_report(file_obj, keys, source):
     """Write out a report of records where the record number doesn't match the
     resolver URL"""
@@ -856,6 +889,8 @@ if __name__ == "__main__":
             file_out = csv.writer(fout)
         if args.report_name == "file_report":
             file_report(file_out, keys, source, args.years)
+        elif args.report_name == "group_search":
+            group_search(file_out, keys, source, args.group[0], args.years)
         elif args.report_name == "creator_report":
             creator_report(file_out, keys, source, update_only=True)
         elif args.report_name == "creator_search":
