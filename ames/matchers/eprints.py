@@ -25,7 +25,7 @@ def resolver_links(source, keys, outfile=None):
             meta = get_eprint(source, eprint_id)
             # Ignore errors where the record doesn't exist
             if meta != None:
-                if meta["eprint_status"] != "deletion":
+                if meta["eprint_status"] not in ["deletion","inbox"]:
                     new = replace_string(meta, "official_url", "http://", "https://")
                     if new:
                         url = (
