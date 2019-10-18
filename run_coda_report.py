@@ -627,6 +627,30 @@ def group_search(file_obj, keys, source, search, years=None):
     print("Report finished!")
 
 
+def people_search(file_obj, keys, source, search, years=None):
+    """Search for people by division in CaltechPEOPLE"""
+    file_obj.writerow(["Name", "ORCID", "bio"])
+    all_metadata = []
+    if source == "CaltechPEOPLE.ds":
+        dot_paths = ["._Key", ".directory_info", ".ORCID", ".sort_name"]
+        labels = ["id", "directory_info", "orcid", "name"]
+        all_metadata = get_records(dot_paths, "p_list", source, keys, labels)
+    else:
+        print("The people_search report only works with the CaltechPEOPLE source")
+        exit()
+
+    all_metadata.sort(key=lambda all_metadata: all_metadata["id"])
+
+    for metadata in all_metadata:
+        if 'directory_info' in metadata:
+            directory = metadata['directory_info']
+            if 'division' in directory:
+                if search == directory['division']:
+                    file_obj.writerow([metadata['name'],
+                        metadata['orcid'],directory['bio']])
+    print("Report finished!")
+
+
 def record_number_report(file_obj, keys, source):
     """Write out a report of records where the record number doesn't match the
     resolver URL"""
@@ -842,6 +866,7 @@ if __name__ == "__main__":
         nargs="+",
         help='Group from repository (e.g. "Keck Institute for Space Studies")',
     )
+    parser.add_argument("-division", help="Division name (e.g. Engineering and Applied Science Division)")
     parser.add_argument("-creator", help="Creator ID: Chen-X")
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
@@ -878,7 +903,10 @@ if __name__ == "__main__":
 
     if args.sample != None:
         keys = random.sample(keys, int(args.sample))
-    keys.sort(key=int, reverse=True)
+    
+    #Sort repo items by number
+    if args.repository != 'people':
+        keys.sort(key=int, reverse=True)
 
     print("Running report for ", args.repository)
 
@@ -895,6 +923,8 @@ if __name__ == "__main__":
             creator_report(file_out, keys, source, update_only=True)
         elif args.report_name == "creator_search":
             creator_search(file_out, keys, source, args.creator)
+        elif args.report_name == "people_search":
+            people_search(file_out, keys, source, args.division)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
         elif args.report_name == "record_number_report":

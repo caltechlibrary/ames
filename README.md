@@ -185,6 +185,8 @@ two ORCIDS.
 -   creator_search: Export a google sheet with the author lists of all
     publications associated with an author id. Requires -creator argument
 
+-   people_search: Search across the CaltechPEOPLE collection by division
+
 -   file_report: Records that have potential problems with the attached files
 
 -   status_report: Reports on any records with an incorrect status in feeds
