@@ -91,7 +91,6 @@ def get_caltechfeed(feed, autoupdate=False):
                 reader = csv.reader(csv_file, delimiter=",")
                 # Drop header
                 next(reader)
-                line = next(reader)
                 record_date = datetime.fromisoformat(next(reader)[1]).replace(
                     tzinfo=None
                 )

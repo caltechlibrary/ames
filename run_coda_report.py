@@ -642,12 +642,13 @@ def people_search(file_obj, keys, source, search, years=None):
     all_metadata.sort(key=lambda all_metadata: all_metadata["id"])
 
     for metadata in all_metadata:
-        if 'directory_info' in metadata:
-            directory = metadata['directory_info']
-            if 'division' in directory:
-                if search == directory['division']:
-                    file_obj.writerow([metadata['name'],
-                        metadata['orcid'],directory['bio']])
+        if "directory_info" in metadata:
+            directory = metadata["directory_info"]
+            if "division" in directory:
+                if search == directory["division"]:
+                    file_obj.writerow(
+                        [metadata["name"], metadata["orcid"], directory["bio"]]
+                    )
     print("Report finished!")
 
 
@@ -866,7 +867,10 @@ if __name__ == "__main__":
         nargs="+",
         help='Group from repository (e.g. "Keck Institute for Space Studies")',
     )
-    parser.add_argument("-division", help="Division name (e.g. Engineering and Applied Science Division)")
+    parser.add_argument(
+        "-division",
+        help="Division name (e.g. Engineering and Applied Science Division)",
+    )
     parser.add_argument("-creator", help="Creator ID: Chen-X")
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
@@ -903,9 +907,9 @@ if __name__ == "__main__":
 
     if args.sample != None:
         keys = random.sample(keys, int(args.sample))
-    
-    #Sort repo items by number
-    if args.repository != 'people':
+
+    # Sort repo items by number
+    if args.repository != "people":
         keys.sort(key=int, reverse=True)
 
     print("Running report for ", args.repository)
