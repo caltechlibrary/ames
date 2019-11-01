@@ -46,7 +46,7 @@ if aggregate:
     build_aggregate(month_collection)
     aggregate_usage(usage_collection, month_collection)
 
-#keys = dataset.keys(month_collection)
+# keys = dataset.keys(month_collection)
 today = datetime.today()
 last_month = today.replace(day=1) - timedelta(days=1)
 keys = [f"{last_month.year}-{last_month.month:02}"]
