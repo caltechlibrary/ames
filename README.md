@@ -244,3 +244,7 @@ request for reports from a group:
 ```console
 python run_coda_report.py doi_report authors keck_tech_reports.csv -group "Keck Institute for Space Studies" -item technical_report project_report discussion_paper
 ```
+
+```console
+python run_coda_report.py people_search people chem.csv -division "Chemistry and Chemical Engineering Division"
+```
