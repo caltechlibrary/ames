@@ -756,7 +756,7 @@ def creator_search(file_obj, keys, source, search_id):
                 file_obj.writerow(author_record)
 
 
-def creator_report(file_obj, keys, source, update_only=False):
+def creator_report(file_obj, keys, source, update_only=False, filter_creators=None):
     creator_ids = []
     creators = {}
     print(f"Processing {len(keys)} eprint records for creators")
@@ -778,15 +778,26 @@ def creator_report(file_obj, keys, source, update_only=False):
 
     creator_ids.sort()
     file_obj.writerow(["creator_id", "orcid", "existing_ids", "update_ids"])
+    # Prep dictionary if we have a filter set
+    filter_values = {}
+    if filter_creators:
+        with open("../" + filter_creators, mode="r") as infile:
+            reader = csv.reader(infile)
+            filter_values = {rows[0]: rows[1] for rows in reader}
     for creator_id in creator_ids:
         creator = creators[creator_id]
         # print(creator)
         write = False
-        if update_only:
-            if creator["orcids"] and creator["update_ids"]:
+        if filter_creators:
+            if creator_id in filter_values:
+                # If we have a creator on our filter list, always include it
                 write = True
         else:
-            write = True
+            if update_only:
+                if creator["orcids"] and creator["update_ids"]:
+                    write = True
+                else:
+                    write = True
         if write == True:
             orcid = "|".join(creator["orcids"])
             eprint_ids = "|".join(creator["eprint_ids"])
@@ -795,7 +806,15 @@ def creator_report(file_obj, keys, source, update_only=False):
                 # All items will need to be updated if there are multiple orcids
                 update_ids = update_ids + "|" + eprint_ids
                 eprint_ids = ""
-            file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
+            if filter_creators:
+                correct_orcid = filter_values[creator_id]
+                if correct_orcid != orcid:
+                    print(
+                        f"ORCID Mismatch for {creator_id} between {orcid} and {correct_orcid}"
+                    )
+                file_obj.writerow([creator_id, correct_orcid, eprint_ids, update_ids])
+            else:
+                file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
     print("Report finished!")
 
 
@@ -871,7 +890,10 @@ if __name__ == "__main__":
         "-division",
         help="Division name (e.g. Engineering and Applied Science Division)",
     )
-    parser.add_argument("-creator", help="Creator ID: Chen-X")
+    parser.add_argument(
+        "-creator",
+        help="A Creator ID like Chen-X, or a csv file with the creator id in the first column",
+    )
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
     parser.add_argument("-sample", help="Number of records if you want a random sample")
@@ -924,7 +946,10 @@ if __name__ == "__main__":
         elif args.report_name == "group_search":
             group_search(file_out, keys, source, args.group[0], args.years)
         elif args.report_name == "creator_report":
-            creator_report(file_out, keys, source, update_only=True)
+            if args.creator:
+                creator_report(file_out, keys, source, filter_creators=args.creator)
+            else:
+                creator_report(file_out, keys, source, update_only=True)
         elif args.report_name == "creator_search":
             creator_search(file_out, keys, source, args.creator)
         elif args.report_name == "people_search":
