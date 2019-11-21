@@ -1,10 +1,12 @@
 import requests
+import re
 from progressbar import progressbar
 from ames.harvesters import get_eprint
 from ames.harvesters import get_records
 
 
 def replace_string(metadata, field, from_str, to_str):
+    """Replace part of a string in given metadata field"""
     new = None
     if from_str in metadata[field]:
         new = metadata[field].replace(from_str, to_str)
@@ -40,6 +42,21 @@ def resolver_links(source, keys, outfile=None):
                         print(response)
 
 
+def replace_character(metadata, field, replacements):
+    """replace characters based on a dictionary"""
+    new = None
+    for rep in replacements:
+        # Using re to catch cases like _221, which look weird partially converted
+        if re.match(rf".*{re.escape(rep)}[^0-9]", metadata[field]):
+            if new:
+                new = re.sub(rf"{re.escape(rep)}(?=[^0-9])", replacements[rep], new)
+            else:
+                new = re.sub(
+                    rf"{re.escape(rep)}(?=[^0-9])", replacements[rep], metadata[field]
+                )
+    return new
+
+
 def special_characters(source, keys, outfile=None):
     if source.split(".")[-1] == "ds":
         dot_paths = [".eprint_id", ".title", ".abstract"]
@@ -54,10 +71,42 @@ def special_characters(source, keys, outfile=None):
                 "Updated Abstract",
             ]
         )
+        replacements = {
+            "_0": "₀",
+            "_1": "₁",
+            "_2": "₂",
+            "_3": "₃",
+            "_4": "₄",
+            "_5": "₅",
+            "_6": "₆",
+            "_7": "₇",
+            "_8": "₈",
+            "_9": "₉",
+            "_+": "₊",
+            "_-": "₋",
+            "_a": "ₐ",
+            "_e": "ₑ",
+            "_o": "ₒ",
+            "_x": "ₓ",
+            "^0": "⁰",
+            "^1": "¹",
+            "^2": "²",
+            "^3": "³",
+            "^4": "⁴",
+            "^5": "⁵",
+            "^6": "⁶",
+            "^7": "⁷",
+            "^8": "⁸",
+            "^9": "⁹",
+            "^+": "⁺",
+            "^-": "⁻",
+            "^n": "ⁿ",
+            "^i": "ⁱ",
+        }
         for meta in all_metadata:
-            newtitle = replace_string(meta, "title", "_2", "₂")
+            newtitle = replace_character(meta, "title", replacements)
             if "abstract" in meta:
-                newabstract = replace_string(meta, "abstract", "_2", "₂")
+                newabstract = replace_character(meta, "abstract", replacements)
             else:
                 newabstract = None
             if newtitle or newabstract:
