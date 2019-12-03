@@ -756,6 +756,45 @@ def creator_search(file_obj, keys, source, search_id):
                 file_obj.writerow(author_record)
 
 
+def creator_quote_report(file_obj, keys, source):
+    print(f"Processing {len(keys)} eprint records for creators")
+    file_obj.writerow(
+        [
+            "eprints_id",
+            "old_id",
+            "new_id",
+            "old_family",
+            "new_family",
+            "old_given",
+            "new_given",
+        ]
+    )
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".creators.items"]
+        labels = ["eprint_id", "items"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "items" in metadata:
+                for item in metadata["items"]:
+                    if "id" in item:
+                        if "’" in item["id"]:
+                            new = item["id"].replace("’", "'")
+                            file_obj.writerow([key, item["id"], new])
+                    if "name" in item:
+                        name = item["name"]
+                        if "family" in name:
+                            if "’" in name["family"]:
+                                new = name["family"].replace("’", "'")
+                                file_obj.writerow([key, "", "", name["family"], new])
+                        if "given" in name:
+                            if "’" in name["given"]:
+                                new = name["given"].replace("’", "'")
+                                file_obj.writerow(
+                                    [key, "", "", "", "", name["given"], new]
+                                )
+
+
 def creator_report(file_obj, keys, source, update_only=False, filter_creators=None):
     creator_ids = []
     creators = {}
@@ -952,6 +991,8 @@ if __name__ == "__main__":
                 creator_report(file_out, keys, source, update_only=True)
         elif args.report_name == "creator_search":
             creator_search(file_out, keys, source, args.creator)
+        elif args.report_name == "creator_quote":
+            creator_quote_report(file_out, keys, source)
         elif args.report_name == "people_search":
             people_search(file_out, keys, source, args.division)
         elif args.report_name == "status_report":
