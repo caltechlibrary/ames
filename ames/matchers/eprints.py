@@ -1,5 +1,6 @@
 import requests
 import re
+from datetime import datetime
 from progressbar import progressbar
 from ames.harvesters import get_eprint
 from ames.harvesters import get_records
@@ -40,6 +41,17 @@ def resolver_links(source, keys, outfile=None):
                         print(eprint_id)
                         response = requests.put(url, data=new, headers=headers)
                         print(response)
+
+
+def update_date(source, recid):
+    url = source + "/rest/eprint/" + str(recid) + "/lastmod.txt"
+    now = datetime.utcnow()
+
+    dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+    print(dt_string)
+    headers = {"content-type": "text/plain"}
+    response = requests.put(url, data=dt_string, headers=headers)
+    print(response)
 
 
 def replace_character(metadata, field, replacements):

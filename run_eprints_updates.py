@@ -2,7 +2,7 @@ import os, argparse, csv
 from py_dataset import dataset
 from ames.harvesters import get_caltechfeed
 from ames.harvesters import get_eprint_keys
-from ames.matchers import resolver_links, special_characters
+from ames.matchers import resolver_links, special_characters, update_date
 
 if __name__ == "__main__":
     if os.path.isdir("data") == False:
@@ -17,6 +17,7 @@ if __name__ == "__main__":
         "repository",
         help="options: thesis, authors; others including test only work if using eprints source)",
     )
+    parser.add_argument("-recid", help="Eprints recid")
     parser.add_argument(
         "-test",
         help="Uses feeds data and writes report of what would be changed, but makes no changes. Provide output file name",
@@ -44,5 +45,9 @@ if __name__ == "__main__":
         file_out = None
     if args.update_type == "resolver":
         resolver_links(source, keys, file_out)
+    elif args.update_type == "update_date":
+        update_date(source, args.recid)
     elif args.update_type == "special_characters":
         special_characters(source, keys, file_out)
+    else:
+        print(f"Report {args.update_type} not known")

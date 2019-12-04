@@ -168,6 +168,16 @@ Example usage:
 
 python run_archives_report.py accession_report accession.csv -subject "Manuscript Collection"
 
+### Update Eprints
+
+Perform update options using the Eprints API. Supports url updates to https for
+resolver field, special character updates, and adjusting the item modified date
+(which also regenerates the public view of the page).
+
+Example usage:
+
+python run_eprints_updates.py update_date authors -recid 83420 -user tmorrell -password 
+
 ### CODA Reports
 
 Runs reports on Caltech Library repositories.  Current reports:
