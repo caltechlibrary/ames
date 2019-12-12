@@ -25,6 +25,12 @@ if __name__ == "__main__":
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
 
+    parser.add_argument(
+            "-keylist", 
+            help="A file containing EPrint IDs, one per line."
+    )
+
+
     args = parser.parse_args()
 
     if args.test:
@@ -47,6 +53,18 @@ if __name__ == "__main__":
         resolver_links(source, keys, file_out)
     elif args.update_type == "update_date":
         update_date(source, args.recid)
+    elif args.update_type == "batch_update_date":
+        keys = []
+        k_name = args.keylist.strip()
+        # Check if this is in the data directory or where we started.
+        if os.path.exists(k_name) == False:
+            k_name = os.path.join("..", k_name)
+        with open(k_name) as f:
+            keys = f.readlines()
+            for key in keys:
+                key = key.strip()
+                print(f"Updating date for {key} ", end = '')
+                update_date(source, key)
     elif args.update_type == "special_characters":
         special_characters(source, keys, file_out)
     else:
