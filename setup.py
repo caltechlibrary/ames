@@ -77,6 +77,7 @@ REQUIRES_PYTHON = ">=3.7.0"
 REQUIRED = [
     "requests",
     "datacite",
+    "idutils",
     "progressbar2",
     "caltechdata_api>=0.1.3",
     "py_dataset>=0.0.68",
