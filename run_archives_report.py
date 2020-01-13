@@ -105,6 +105,42 @@ def get_agents(aspace):
         agents[agent.uri] = agent.title
     return agents
 
+def write_line(file_obj, json, fields):
+    row = []
+    for field in fields:
+        if field in json:
+            row.append(json[field])
+        else:
+            row.append('')
+    print(row)
+    file_obj.writerow(row)
+
+def write_blocks(file_obj, json):
+    row = []
+    if 'dates' in file_obj:
+        if len(file_obj['dates']>1:
+            print('Multiple dates')
+            exit()
+        else:
+            
+
+
+def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
+    fields = ['title','id_0','id_1','accession_date','content_description',
+            'provenance','general_note','restrictions_apply','publish','access_restrictions',
+            'access_restrictions_note','use_restrictions']
+    for acc in repo.accessions:
+        if acc.extents:
+            for ext in acc.extents:
+                ext = ext.json()
+                if 'physical_details' in ext:
+                    physical = ext['physical_details']
+                    if 'FORMAT' in physical:
+                        types = ['Cassette','DAT','CD','CDR']
+                        formt = physical.split('FORMAT: ')[1].split(';')[0]
+                        if formt in types:
+                            write_line(file_obj,acc.json(),fields)                         
+
 
 def accession_report(file_obj, repo, aspace, subject=None, years=None):
     print(f"Requesting agents")
@@ -139,7 +175,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a report on ArchiveSpace")
     parser.add_argument("report_name", help="report name (options: accession_report)")
     parser.add_argument("output", help="output file name")
-    # parser.add_argument("-years", help="format: 1939 or 1939-1940")
+    parser.add_argument("-years", help="format: 1939 or 1939-1940")
     parser.add_argument("-subject", help="Return items that match subject")
 
     args = parser.parse_args()
@@ -165,5 +201,7 @@ if __name__ == "__main__":
             file_out = csv.writer(fout)
         if args.report_name == "accession_report":
             accession_report(file_out, repo, aspace, args.subject, args.years)
+        if args.report_name == "format_report":
+            accession_format_report(file_out, repo, aspace, args.subject, args.years)
         else:
             print(args.report_name, " report type is not known")
