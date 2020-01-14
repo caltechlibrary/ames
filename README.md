@@ -162,8 +162,8 @@ Type `python run_usage.py`.
 
 Runs reports on ArchivesSpace.  Current reports:
 
-- accession_report: Returns accession records that match a certain subject
-- format_report: Returns large report on accessions with certain media formats
+-   accession_report: Returns accession records that match a certain subject
+-   format_report: Returns large report on accessions with certain media formats
 
 Example usage:
 
