@@ -105,41 +105,114 @@ def get_agents(aspace):
         agents[agent.uri] = agent.title
     return agents
 
-def write_line(file_obj, json, fields):
+
+def make_line(json, fields):
+    """Return specific fields from a json object"""
     row = []
     for field in fields:
         if field in json:
             row.append(json[field])
         else:
-            row.append('')
-    print(row)
-    file_obj.writerow(row)
+            row.append("")
+    return row
 
-def write_blocks(file_obj, json):
+
+def add_blocks(json):
+    """Return content from within blocks in json accession record"""
     row = []
-    if 'dates' in file_obj:
-        if len(file_obj['dates']>1:
-            print('Multiple dates')
+    if len(json["dates"]) > 0:
+        if len(json["dates"]) > 1:
+            print("Multiple dates")
             exit()
         else:
-            
+            date = json["dates"][0]
+            fields = ["expression", "begin", "end", "date_type", "label"]
+            row = make_line(date, fields)
+    else:
+        row = ["", "", "", "", ""]
+    if "extents" in json:
+        if len(json["extents"]) > 1:
+            print("Multiple extents")
+            exit()
+        else:
+            date = json["extents"][0]
+            fields = ["number", "physical_details"]
+            row = row + make_line(date, fields)
+    else:
+        row = row + ["", ""]
+    if "linked_agents" in json:
+        agent_str = ""
+        for agent in json["linked_agents"]:
+            if agent_str == "":
+                agent_str = agent["ref"]
+            else:
+                agent_str = agent_str + ";" + agent["ref"]
+        row.append(agent_str)
+    else:
+        row.append("")
+    if "subjects" in json:
+        subj_str = ""
+        for subj in json["subjects"]:
+            if subj_str == "":
+                subj_str = subj["ref"]
+            else:
+                subj_str = subj_str + ";" + subj["ref"]
+        row.append(subj_str)
+    else:
+        row.append("")
+    if "user_defined" in json:
+        user = json["user_defined"]
+        fields = ["text_2", "text_3", "text_4"]
+        row = row + make_line(user, fields)
+    else:
+        row = row + ["", "", ""]
+    return row
 
 
 def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
-    fields = ['title','id_0','id_1','accession_date','content_description',
-            'provenance','general_note','restrictions_apply','publish','access_restrictions',
-            'access_restrictions_note','use_restrictions']
-    for acc in repo.accessions:
+    fields = [
+        "title",
+        "id_0",
+        "id_1",
+        "accession_date",
+        "content_description",
+        "provenance",
+        "general_note",
+        "restrictions_apply",
+        "publish",
+        "access_restrictions",
+        "access_restrictions_note",
+        "use_restrictions",
+    ]
+    extras = [
+        "expression",
+        "begin",
+        "end",
+        "date_type",
+        "label",
+        "number",
+        "physical_details",
+        "agents",
+        "subjects",
+        "text_2",
+        "text_3",
+        "text_4",
+    ]
+    file_obj.writerow(fields + extras)
+    for acc in progressbar(repo.accessions):
         if acc.extents:
             for ext in acc.extents:
                 ext = ext.json()
-                if 'physical_details' in ext:
-                    physical = ext['physical_details']
-                    if 'FORMAT' in physical:
-                        types = ['Cassette','DAT','CD','CDR']
-                        formt = physical.split('FORMAT: ')[1].split(';')[0]
+                if "physical_details" in ext:
+                    physical = ext["physical_details"]
+                    if "FORMAT" in physical:
+                        types = ["Cassette", "DAT", "CD", "CDR"]
+                        formt = physical.split("FORMAT: ")[1].split(";")[0]
                         if formt in types:
-                            write_line(file_obj,acc.json(),fields)                         
+                            json = acc.json()
+                            row = make_line(json, fields)
+                            row = row + add_blocks(json)
+                            file_obj.writerow(row)
 
 
 def accession_report(file_obj, repo, aspace, subject=None, years=None):

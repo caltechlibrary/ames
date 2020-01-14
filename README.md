@@ -125,7 +125,7 @@ It also can update metadata with DataCite.
 You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=`
 
-#### Metadata ChecksUsage
+#### Metadata Checks Usage
 
 Type `python run_caltechdata_checks.py`.
 
@@ -162,7 +162,8 @@ Type `python run_usage.py`.
 
 Runs reports on ArchivesSpace.  Current reports:
 
-- accession_report Returns accession records that match a certain subject
+- accession_report: Returns accession records that match a certain subject
+- format_report: Returns large report on accessions with certain media formats
 
 Example usage:
 
