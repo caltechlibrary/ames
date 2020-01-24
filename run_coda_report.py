@@ -217,6 +217,20 @@ def thesis_metadata(file_obj, keys, source, years=None):
             file_obj.writerow(row)
 
 
+def thesis_list(file_obj, keys, source):
+    all_metadata = []
+    dot_paths = [".full_text_status", "._Key", ".doi"]
+    labels = ["full_text_status", "key", "doi"]
+    if source.split(".")[-1] == "ds":
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+    for metadata in all_metadata:
+        # Determine if we want the record
+        if "full_text_status" in metadata:
+            if metadata["full_text_status"] == "public":
+                if "doi" not in metadata:
+                    file_obj.writerow([metadata["key"]])
+
+
 def thesis_report(file_obj, keys, source, years=None):
     """Output a report of information about theses"""
     file_obj.writerow(
@@ -1013,6 +1027,8 @@ if __name__ == "__main__":
             )
         elif args.report_name == "thesis_report":
             thesis_report(file_out, keys, source, args.years)
+        elif args.report_name == "thesis_list":
+            thesis_list(file_out, keys, source)
         elif args.report_name == "thesis_metadata":
             thesis_metadata(file_out, keys, source, args.years)
         elif args.report_name == "license_report":
