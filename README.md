@@ -125,7 +125,7 @@ It also can update metadata with DataCite.
 You need to set environmental variables with your token to access
 CaltechDATA `export TINDTOK=`
 
-#### Metadata ChecksUsage
+#### Metadata Checks Usage
 
 Type `python run_caltechdata_checks.py`.
 
@@ -158,6 +158,27 @@ Matomo `export MATTOK=`
 
 Type `python run_usage.py`.
 
+### Archives Reports
+
+Runs reports on ArchivesSpace.  Current reports:
+
+-   accession_report: Returns accession records that match a certain subject
+-   format_report: Returns large report on accessions with certain media formats
+
+Example usage:
+
+python run_archives_report.py accession_report accession.csv -subject "Manuscript Collection"
+
+### Update Eprints
+
+Perform update options using the Eprints API. Supports url updates to https for
+resolver field, special character updates, and adjusting the item modified date
+(which also regenerates the public view of the page).
+
+Example usage:
+
+python run_eprints_updates.py update_date authors -recid 83420 -user tmorrell -password 
+
 ### CODA Reports
 
 Runs reports on Caltech Library repositories.  Current reports:
@@ -172,9 +193,19 @@ Runs reports on Caltech Library repositories.  Current reports:
 but it is not included on all records.  Also lists cases where an author has
 two ORCIDS.
 
+-   creator_search: Export a google sheet with the author lists of all
+    publications associated with an author id. Requires -creator argument
+
+-   people_search: Search across the CaltechPEOPLE collection by division
+
 -   file_report: Records that have potential problems with the attached files
 
 -   status_report: Reports on any records with an incorrect status in feeds
+
+-   record_number_report: Reports on records where the record number and resolver
+URL don't match
+
+-   alt_url_report: Reports on records with discontinure alt_url field
 
 -   license_report: Report out the license types in CaltechDATA
 
@@ -223,4 +254,8 @@ request for reports from a group:
 
 ```console
 python run_coda_report.py doi_report authors keck_tech_reports.csv -group "Keck Institute for Space Studies" -item technical_report project_report discussion_paper
+```
+
+```console
+python run_coda_report.py people_search people chem.csv -division "Chemistry and Chemical Engineering Division"
 ```

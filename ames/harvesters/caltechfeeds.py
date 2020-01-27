@@ -53,6 +53,9 @@ def get_caltechfeed(feed, autoupdate=False):
     elif feed == "caltechdata":
         fname = "CaltechDATA.ds.zip"
         cname = "CaltechDATA.ds"
+    elif feed == "people":
+        fname = "CaltechPEOPLE.ds.zip"
+        cname = "CaltechPEOPLE.ds"
     else:
         raise Exception("Feed {} is not known".format(feed))
 

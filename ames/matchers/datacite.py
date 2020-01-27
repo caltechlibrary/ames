@@ -1,5 +1,6 @@
 from py_dataset import dataset
 import requests
+from progressbar import progressbar
 from datacite import DataCiteMDSClient, schema40
 from datetime import date, datetime
 
@@ -23,19 +24,15 @@ def update_datacite_media(username, password, collection, prefix):
     if result == True:
         update, err = dataset.read(collection, "mediaupdate")
         update = date.fromisoformat(update["mediaupdate"])
-        dataset.update(collection, "mediaupdate", {"mediaupdate": today})
         keys.remove("mediaupdate")
     else:
         # Arbitrary old date - everything will be updated
         update = date(2011, 1, 1)
-        dataset.create(collection, "mediaupdate", {"mediaupdate": today})
-    for k in keys:
-        print(k)
+    for k in progressbar(keys, redirect_stdout=True):
         existing, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
         record_update = datetime.fromisoformat(existing["updated"]).date()
-        print(record_update)
         if record_update > update:
             if "electronic_location_and_access" in existing:
                 doi = existing["identifier"]["identifier"]
@@ -43,13 +40,32 @@ def update_datacite_media(username, password, collection, prefix):
                 if record_prefix == prefix:
                     delete_datacite_media(username, password, doi)
                     for file_met in existing["electronic_location_and_access"]:
-                        if file_met["electronic_name"][0].split(".")[-1] == "nc":
-                            url = "https://mds.datacite.org/media/" + doi
+                        url = "https://mds.datacite.org/media/" + doi
+                        headers = {"Content-Type": "application/txt;charset=UTF-8"}
+                        extension = file_met["electronic_name"][0].split(".")[-1]
+                        data = {}
+                        if extension == "nc":
                             data = (
                                 "application/x-netcdf="
                                 + file_met["uniform_resource_identifier"]
                             )
-                            headers = {"Content-Type": "application/txt;charset=UTF-8"}
+                        elif extension == "mp4":
+                            data = (
+                                "video/mp4=" + file_met["uniform_resource_identifier"]
+                            )
+                        elif extension == "mj2":
+                            data = (
+                                "video/mj2=" + file_met["uniform_resource_identifier"]
+                            )
+                        elif extension == "avi":
+                            data = (
+                                "video/avi=" + file_met["uniform_resource_identifier"]
+                            )
+                        elif extension == "mov":
+                            data = (
+                                "video/quicktime=" + file_met["uniform_resource_identifier"]
+                            )
+                        if data != {}:
                             print(data)
                             r = requests.post(
                                 url,

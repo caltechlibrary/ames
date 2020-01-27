@@ -364,10 +364,12 @@ def aggregate_usage(usage_collection, month_collection):
             if err != "":
                 print(err)
         for use_date in use:
-            # print(use_date)
-            u = use[use_date]
             # We only have use-only records left to handle
-            if use_date not in view:
+            if use_date not in views:
+                u = use[use_date]
+                split = use_date.split("-")
+                date_obj = datetime(int(split[0]), int(split[1]), 1)
+                d_range = get_month_day_range(date_obj)
                 performance = [
                     {
                         "period": {

@@ -1,6 +1,7 @@
 import os
 from ames.harvesters import get_caltechdata
 from ames.matchers import add_citation
+from ames.matchers import update_citation
 
 if os.path.isdir("data") == False:
     os.mkdir("data")
@@ -12,4 +13,4 @@ production = True
 collection = "caltechdata.ds"
 
 get_caltechdata(collection, production)
-add_citation(collection, token, production)
+update_citation(collection, token, production)

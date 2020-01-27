@@ -167,6 +167,69 @@ def fix_multiple_links(input_collection, token):
                 if response == "Y":
                     response = caltechdata_edit(token, k, new_metadata, {}, {}, True)
                     print(response)
+        if "alternateIdentifiers" in record:
+            idtypes = []
+            alt_ids = []
+            repeat = False
+            for idv in record["alternateIdentifiers"]:
+                if idv["alternateIdentifierType"] not in idtypes:
+                    # If we haven't seen id type before, save it
+                    alt_ids.append(idv)
+                    idtypes.append(idv["alternateIdentifierType"])
+                else:
+                    repeat = True
+                    print("Will Delete Repeated ID ", idv["alternateIdentifier"])
+            if repeat == True:
+                new_metadata = {"alternateIdentifiers": alt_ids}
+                response = caltechdata_edit(token, k, new_metadata, {}, {}, True)
+                print(response)
+
+
+def update_citation(collection, token, production=True):
+    """Update example citation text in the description field"""
+    keys = dataset.keys(collection)
+    for k in keys:
+        record, err = dataset.read(collection, k)
+        if err != "":
+            print(err)
+            exit()
+        description = record["descriptions"]
+        for d in description:
+            descr_text = d["description"]
+            if descr_text.startswith("<br>Cite this record as:"):
+                record_doi = record["identifier"]["identifier"]
+                citation_link = (
+                    "https://data.datacite.org/text/x-bibliography;style=apa/"
+                )
+                citation = requests.get(citation_link + record_doi).text
+                doi_url = "https://doi.org/" + record_doi.lower()
+                if doi_url in citation:
+                    # Check that we have a citation and not a server error,
+                    # otherwise wait till next time
+                    d["description"] = citation_text(citation, doi_url, record_doi)
+        response = caltechdata_edit(
+            token, k, {"descriptions": description}, {}, {}, production
+        )
+        print(response)
+
+
+def citation_text(citation, doi_url, record_doi):
+    """Format citation text"""
+    citation = citation.replace(
+        doi_url, '<a href="' + doi_url + '">' + doi_url + "</a>"
+    )
+    # Replace link text with HTML link
+    n_txt = (
+        "<br>Cite this record as:<br>"
+        + citation
+        + '<br> or choose a <a href="https://crosscite.org/?doi='
+        + record_doi
+        + '"> different citation style.</a><br>'
+        + '<a href="https://data.datacite.org/application/x-bibtex/'
+        + record_doi
+        + '">Download Citation</a><br>'
+    )
+    return n_txt
 
 
 def add_citation(collection, token, production=True):
@@ -191,20 +254,7 @@ def add_citation(collection, token, production=True):
             if doi_url in citation:
                 # Check that we have a citation and not a server error,
                 # otherwise wait till next time
-                citation = citation.replace(
-                    doi_url, '<a href="' + doi_url + '">' + doi_url + "</a>"
-                )
-                # Replace link text with HTML link
-                n_txt = (
-                    "<br>Cite this record as:<br>"
-                    + citation
-                    + '<br> or choose a <a href="https://crosscite.org/?doi='
-                    + record_doi
-                    + '"> different citation style.</a><br>'
-                    + '<a href="https://data.datacite.org/application/x-bibtex/'
-                    + record_doi
-                    + '">Download Citation</a><br>'
-                )
+                n_txt = citation_text(citation, doi_url, record_doi)
                 description.append({"descriptionType": "Other", "description": n_txt})
                 response = caltechdata_edit(
                     token, k, {"descriptions": description}, {}, {}, production

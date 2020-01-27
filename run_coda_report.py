@@ -1,6 +1,7 @@
 import os, argparse, csv
 from py_dataset import dataset
 import random
+from idutils import is_doi, is_arxiv, normalize_doi
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records
 from ames.harvesters import get_eprint_keys, get_eprint
@@ -216,6 +217,20 @@ def thesis_metadata(file_obj, keys, source, years=None):
             file_obj.writerow(row)
 
 
+def thesis_list(file_obj, keys, source):
+    all_metadata = []
+    dot_paths = [".full_text_status", "._Key", ".doi"]
+    labels = ["full_text_status", "key", "doi"]
+    if source.split(".")[-1] == "ds":
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+    for metadata in all_metadata:
+        # Determine if we want the record
+        if "full_text_status" in metadata:
+            if metadata["full_text_status"] == "public":
+                if "doi" not in metadata:
+                    file_obj.writerow([metadata["key"]])
+
+
 def thesis_report(file_obj, keys, source, years=None):
     """Output a report of information about theses"""
     file_obj.writerow(
@@ -424,12 +439,24 @@ def status_report(file_obj, keys, source):
     """Output a report of items that have a status other than archive
     or have metadata visability other than show.
     Under normal circumstances this should return no records when run on feeds"""
-    file_obj.writerow(["Eprint ID", "Resolver URL", "Status"])
+    file_obj.writerow(["Eprint ID", "Resolver URL", "Status", "Local Group"])
 
     all_metadata = []
     if source.split(".")[-1] == "ds":
-        dot_paths = ["._Key", ".eprint_status", ".official_url", ".metadata_visibility"]
-        labels = ["eprint_id", "eprint_status", "official_url", "metadata_visibility"]
+        dot_paths = [
+            "._Key",
+            ".eprint_status",
+            ".official_url",
+            ".metadata_visibility",
+            ".local_group.items",
+        ]
+        labels = [
+            "eprint_id",
+            "eprint_status",
+            "official_url",
+            "metadata_visibility",
+            "local_group",
+        ]
         all_metadata = get_records(dot_paths, "dois", source, keys, labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -448,7 +475,11 @@ def status_report(file_obj, keys, source):
             status = metadata["metadata_visibility"]
             url = metadata["official_url"]
             print("Record matched: ", url)
-            file_obj.writerow([ep, url, status])
+            group = ""
+            if "local_group" in metadata:
+                for g in metadata["local_group"]:
+                    group = group + g + " "
+            file_obj.writerow([ep, url, status, group])
     print("Report finished!")
 
 
@@ -577,7 +608,208 @@ def file_report(file_obj, keys, source, years=None):
     print("Report finished!")
 
 
-def creator_report(file_obj, keys, source, update_only=False):
+def group_search(file_obj, keys, source, search, years=None):
+    """Search for group name in Additional Information and Funders fields"""
+    file_obj.writerow(["Eprint ID", "Resolver URL"])
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".note", ".date", ".funders.items", ".official_url"]
+        labels = ["eprint_id", "note", "date", "funders", "official_url"]
+        all_metadata = get_records(dot_paths, "group", source, keys, labels)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    for metadata in all_metadata:
+        if "date" in metadata:
+            year = metadata["date"].split("-")[0]
+            if is_in_range(years, year):
+                keep = False
+                if "note" in metadata:
+                    if search in metadata["note"]:
+                        keep = True
+                if "funders" in metadata:
+                    for f in metadata["funders"]:
+                        print(f)
+                        if "agency" in f:
+                            if search in f["agency"]:
+                                keep = True
+                if keep:
+                    ep = metadata["eprint_id"]
+                    url = metadata["official_url"]
+                    file_obj.writerow([ep, url])
+    print("Report finished!")
+
+
+def people_search(file_obj, keys, source, search, years=None):
+    """Search for people by division in CaltechPEOPLE"""
+    file_obj.writerow(["Name", "ORCID", "bio"])
+    all_metadata = []
+    if source == "CaltechPEOPLE.ds":
+        dot_paths = ["._Key", ".directory_info", ".ORCID", ".sort_name"]
+        labels = ["id", "directory_info", "orcid", "name"]
+        all_metadata = get_records(dot_paths, "p_list", source, keys, labels)
+    else:
+        print("The people_search report only works with the CaltechPEOPLE source")
+        exit()
+
+    all_metadata.sort(key=lambda all_metadata: all_metadata["id"])
+
+    for metadata in all_metadata:
+        if "directory_info" in metadata:
+            directory = metadata["directory_info"]
+            if "division" in directory:
+                if search == directory["division"]:
+                    file_obj.writerow(
+                        [metadata["name"], metadata["orcid"], directory["bio"]]
+                    )
+    print("Report finished!")
+
+
+def record_number_report(file_obj, keys, source):
+    """Write out a report of records where the record number doesn't match the
+    resolver URL"""
+    file_obj.writerow(["Eprint ID", "Record Number", "Resolver URL"])
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".id_number", ".official_url"]
+        labels = ["eprint_id", "record_number", "official_url"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+
+    for metadata in all_metadata:
+        ep = metadata["eprint_id"]
+        resolver = metadata["official_url"]
+        number = metadata["record_number"]
+        resolver_tag = resolver.split("/")[-1]
+        if resolver_tag != number:
+            file_obj.writerow([ep, number, resolver])
+
+    print("Report finished!")
+
+
+def alt_url_report(file_obj, keys, source):
+    print(f"Processing {len(keys)} eprint records for alt_url")
+    file_obj.writerow(["eprint_id", "alt_url", "related_url", "url_added", "type"])
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".related_url.items", ".alt_url"]
+        labels = ["eprint_id", "items", "alt_url"]
+        all_metadata = get_records(dot_paths, "alt", source, keys, labels)
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "alt_url" in metadata:
+                alt = metadata["alt_url"]
+                related = ""
+                type_v = "Other"
+                new_url = alt
+                if is_doi(new_url):
+                    type_v = "DOI"
+                    new_url = "https://doi.org/" + normalize_doi(new_url)
+                if is_arxiv(new_url):
+                    type_v = "arXiv"
+                if "items" in metadata:
+                    for i in metadata["items"]:
+                        if i["url"] == new_url:
+                            new_url = ""
+                        if is_doi(i["url"]):
+                            norm_rel = normalize_doi(i["url"])
+                            norm = alt
+                            # Make sure both are normalized
+                            if type_v == "DOI":
+                                norm = normalize_doi(norm)
+                            if norm == norm_rel:
+                                new_url = ""
+                        related = related + i["url"] + " ; "
+                if new_url == "":
+                    type_v = ""
+                file_obj.writerow([key, alt, related, new_url, type_v])
+        print("Report finished!")
+    else:
+        print("Not Implemented")
+
+
+def creator_search(file_obj, keys, source, search_id):
+    print(f"Processing {len(keys)} eprint records for creators")
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".creators.items"]
+        labels = ["eprint_id", "items"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        matched_keys = []
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "items" in metadata:
+                for item in metadata["items"]:
+                    if "id" in item:
+                        if item["id"] == search_id:
+                            matched_keys.append(key)
+        print(f"Processing {len(matched_keys)} eprint records that match search")
+        dot_paths = ["._Key", ".creators.items", ".official_url"]
+        labels = ["eprint_id", "items", "resolver"]
+        select_metadata = get_records(dot_paths, "dois", source, matched_keys, labels)
+        for metadata in progressbar(select_metadata, redirect_stdout=True):
+            file_obj.writerow([metadata["eprint_id"]])
+            file_obj.writerow([metadata["resolver"]])
+            file_obj.writerow(["family", "given", "id", "orcid"])
+            for item in metadata["items"]:
+                author_record = []
+                if "family" in item["name"]:
+                    author_record.append(item["name"]["family"])
+                else:
+                    author_record.append(" ")
+                if "given" in item["name"]:
+                    author_record.append(item["name"]["given"])
+                else:
+                    author_record.append(" ")
+                if "id" in item:
+                    author_record.append(item["id"])
+                else:
+                    author_record.append(" ")
+                if "orcid" in item:
+                    author_record.append(item["orcid"])
+                else:
+                    author_record.append(" ")
+                file_obj.writerow(author_record)
+
+
+def creator_quote_report(file_obj, keys, source):
+    print(f"Processing {len(keys)} eprint records for creators")
+    file_obj.writerow(
+        [
+            "eprints_id",
+            "old_id",
+            "new_id",
+            "old_family",
+            "new_family",
+            "old_given",
+            "new_given",
+        ]
+    )
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".creators.items"]
+        labels = ["eprint_id", "items"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "items" in metadata:
+                for item in metadata["items"]:
+                    if "id" in item:
+                        if "’" in item["id"]:
+                            new = item["id"].replace("’", "'")
+                            file_obj.writerow([key, item["id"], new])
+                    if "name" in item:
+                        name = item["name"]
+                        if "family" in name:
+                            if "’" in name["family"]:
+                                new = name["family"].replace("’", "'")
+                                file_obj.writerow([key, "", "", name["family"], new])
+                        if "given" in name:
+                            if "’" in name["given"]:
+                                new = name["given"].replace("’", "'")
+                                file_obj.writerow(
+                                    [key, "", "", "", "", name["given"], new]
+                                )
+
+
+def creator_report(file_obj, keys, source, update_only=False, filter_creators=None):
     creator_ids = []
     creators = {}
     print(f"Processing {len(keys)} eprint records for creators")
@@ -599,15 +831,26 @@ def creator_report(file_obj, keys, source, update_only=False):
 
     creator_ids.sort()
     file_obj.writerow(["creator_id", "orcid", "existing_ids", "update_ids"])
+    # Prep dictionary if we have a filter set
+    filter_values = {}
+    if filter_creators:
+        with open("../" + filter_creators, mode="r") as infile:
+            reader = csv.reader(infile)
+            filter_values = {rows[0]: rows[1] for rows in reader}
     for creator_id in creator_ids:
         creator = creators[creator_id]
         # print(creator)
         write = False
-        if update_only:
-            if creator["orcids"] and creator["update_ids"]:
+        if filter_creators:
+            if creator_id in filter_values:
+                # If we have a creator on our filter list, always include it
                 write = True
         else:
-            write = True
+            if update_only:
+                if creator["orcids"] and creator["update_ids"]:
+                    write = True
+                else:
+                    write = True
         if write == True:
             orcid = "|".join(creator["orcids"])
             eprint_ids = "|".join(creator["eprint_ids"])
@@ -616,7 +859,15 @@ def creator_report(file_obj, keys, source, update_only=False):
                 # All items will need to be updated if there are multiple orcids
                 update_ids = update_ids + "|" + eprint_ids
                 eprint_ids = ""
-            file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
+            if filter_creators:
+                correct_orcid = filter_values[creator_id]
+                if correct_orcid != orcid:
+                    print(
+                        f"ORCID Mismatch for {creator_id} between {orcid} and {correct_orcid}"
+                    )
+                file_obj.writerow([creator_id, correct_orcid, eprint_ids, update_ids])
+            else:
+                file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
     print("Report finished!")
 
 
@@ -688,6 +939,14 @@ if __name__ == "__main__":
         nargs="+",
         help='Group from repository (e.g. "Keck Institute for Space Studies")',
     )
+    parser.add_argument(
+        "-division",
+        help="Division name (e.g. Engineering and Applied Science Division)",
+    )
+    parser.add_argument(
+        "-creator",
+        help="A Creator ID like Chen-X, or a csv file with the creator id in the first column",
+    )
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
     parser.add_argument("-sample", help="Number of records if you want a random sample")
@@ -723,7 +982,10 @@ if __name__ == "__main__":
 
     if args.sample != None:
         keys = random.sample(keys, int(args.sample))
-    keys.sort(key=int, reverse=True)
+
+    # Sort repo items by number
+    if args.repository != "people":
+        keys.sort(key=int, reverse=True)
 
     print("Running report for ", args.repository)
 
@@ -734,10 +996,25 @@ if __name__ == "__main__":
             file_out = csv.writer(fout)
         if args.report_name == "file_report":
             file_report(file_out, keys, source, args.years)
+        elif args.report_name == "group_search":
+            group_search(file_out, keys, source, args.group[0], args.years)
         elif args.report_name == "creator_report":
-            creator_report(file_out, keys, source, update_only=True)
+            if args.creator:
+                creator_report(file_out, keys, source, filter_creators=args.creator)
+            else:
+                creator_report(file_out, keys, source, update_only=True)
+        elif args.report_name == "creator_search":
+            creator_search(file_out, keys, source, args.creator)
+        elif args.report_name == "creator_quote":
+            creator_quote_report(file_out, keys, source)
+        elif args.report_name == "people_search":
+            people_search(file_out, keys, source, args.division)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
+        elif args.report_name == "record_number_report":
+            record_number_report(file_out, keys, source)
+        elif args.report_name == "alt_url_report":
+            alt_url_report(file_out, keys, source)
         elif args.report_name == "doi_report":
             doi_report(
                 file_out,
@@ -750,6 +1027,8 @@ if __name__ == "__main__":
             )
         elif args.report_name == "thesis_report":
             thesis_report(file_out, keys, source, args.years)
+        elif args.report_name == "thesis_list":
+            thesis_list(file_out, keys, source)
         elif args.report_name == "thesis_metadata":
             thesis_metadata(file_out, keys, source, args.years)
         elif args.report_name == "license_report":
