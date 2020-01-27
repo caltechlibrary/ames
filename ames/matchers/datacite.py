@@ -61,6 +61,10 @@ def update_datacite_media(username, password, collection, prefix):
                             data = (
                                 "video/avi=" + file_met["uniform_resource_identifier"]
                             )
+                        elif extension == "mov":
+                            data = (
+                                "video/quicktime=" + file_met["uniform_resource_identifier"]
+                            )
                         if data != {}:
                             print(data)
                             r = requests.post(
