@@ -240,6 +240,13 @@ def accession_report(file_obj, repo, aspace, subject=None, years=None):
                 file_obj.writerow([acc.title, idv, acc.accession_date, agent])
 
 
+def accession_report(file_obj, repo, aspace):
+    print(f"Requesting agents")
+    agents = get_agents(aspace)
+    for agent in agents:
+        print(agent)
+
+
 if __name__ == "__main__":
     if os.path.isdir("data") == False:
         os.mkdir("data")
@@ -276,5 +283,7 @@ if __name__ == "__main__":
             accession_report(file_out, repo, aspace, args.subject, args.years)
         if args.report_name == "format_report":
             accession_format_report(file_out, repo, aspace, args.subject, args.years)
+        if args.report_name == "agent_report":
+            agent_report(file_out, repo, aspace)
         else:
             print(args.report_name, " report type is not known")
