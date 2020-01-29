@@ -4,6 +4,7 @@ from py_dataset import dataset
 from progressbar import progressbar
 from asnake.client import ASnakeClient
 from asnake.aspace import ASpace
+from ames.harvesters import get_records, get_caltechfeed
 
 
 def is_in_range(year_arg, year):
@@ -240,11 +241,58 @@ def accession_report(file_obj, repo, aspace, subject=None, years=None):
                 file_obj.writerow([acc.title, idv, acc.accession_date, agent])
 
 
-def accession_report(file_obj, repo, aspace):
+def agent_report(file_obj, repo, aspace):
+    dot_paths = [
+        "._Key",
+        ".directory_info",
+        ".ORCID",
+        ".sort_name",
+        ".ArchivesSpace_ID",
+        ".family",
+        ".given",
+    ]
+    labels = ["id", "directory_info", "orcid", "name", "as", "family", "given"]
+    source = get_caltechfeed("people")
+    keys = dataset.keys(source)
+    keys.remove("captured")
+
+    all_metadata = get_records(dot_paths, "p_list", source, keys, labels)
+
+    all_metadata.sort(key=lambda all_metadata: all_metadata["id"])
+
+    to_match = {}
+    already_matched = []
+
+    for metadata in all_metadata:
+        if "as" in metadata:
+            if metadata["as"] != "":
+                file_obj.writerow([metadata["as"], metadata["id"], metadata["name"]])
+                already_matched.append(metadata["as"])
+            else:
+                to_match[metadata["name"]] = metadata
+
     print(f"Requesting agents")
-    agents = get_agents(aspace)
-    for agent in agents:
-        print(agent)
+    for agent in progressbar(aspace.agents):
+        if agent.agent_type == "agent_person":
+            name = agent.display_name.sort_name
+            uid = int(agent.uri.split("/")[-1])
+            if uid not in already_matched:
+                if name in to_match:
+                    person = to_match[name]
+                    file_obj.writerow(
+                        [
+                            uid,
+                            person["id"],
+                            person["name"],
+                            "ADD ASPACE ID TO CaltechPEOPLE",
+                        ]
+                    )
+                    to_match.pop(name)
+                else:
+                    file_obj.writerow([uid, "", name, "Not in CaltechPEOPLE"])
+
+    for name in to_match:
+        file_obj.writerow(["", to_match[name]["id"], name, "ADD to Aspace"])
 
 
 if __name__ == "__main__":
