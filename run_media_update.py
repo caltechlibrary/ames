@@ -10,7 +10,7 @@ user = "CALTECH.LIBRARY"
 
 os.chdir("data")
 
-collection = "caltechdata.ds"
+collection = "caltechdata_formedia.ds"
 
 get_caltechdata(collection)
 update_datacite_media(user, password, collection, prefix)

@@ -34,7 +34,9 @@ def get_caltechdata(collection, production=True, datacite=False):
             # Get just DataCite metadata
             metadata = decustomize_schema(h["metadata"])
 
-        dataset.create(collection, rid, metadata)
+        err = dataset.create(collection, rid, metadata)
+        if err != '':
+            print(err)
 
 
 def get_history(collection, keys):

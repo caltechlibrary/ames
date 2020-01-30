@@ -10,7 +10,8 @@ CaltechDATA_Logo_cropped.png
 build/
 dist/
 ames.egg-info/
-run_codemeta.sh
+*.sh
+*.log
 # Test files
 *.csv
 updates

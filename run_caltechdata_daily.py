@@ -9,7 +9,7 @@ os.chdir("data")
 token = os.environ["TINDTOK"]
 
 production = True
-collection = "caltechdata.ds"
+collection = "caltechdata_forthesis.ds"
 
 get_caltechdata(collection, production)
 thesis_collection = get_caltechfeed("thesis", autoupdate=True)
