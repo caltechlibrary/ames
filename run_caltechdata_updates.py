@@ -13,4 +13,4 @@ production = True
 collection = "caltechdata.ds"
 
 get_caltechdata(collection, production)
-update_citation(collection, token, production)
+add_citation(collection, token, production)
