@@ -198,10 +198,9 @@ def update_citation(collection, token, production=True):
             descr_text = d["description"]
             if descr_text.startswith("<br>Cite this record as:"):
                 record_doi = record["identifier"]["identifier"]
-                citation_link = (
-                    "https://data.datacite.org/text/x-bibliography;style=apa/"
-                )
-                citation = requests.get(citation_link + record_doi).text
+                headers = {'Accept': 'text/x-bibliography; style=apa'}
+                citation_link = "https://doi.org/"
+                citation = requests.get(citation_link + record_doi, headers=headers).text
                 doi_url = "https://doi.org/" + record_doi.lower()
                 if doi_url in citation:
                     # Check that we have a citation and not a server error,
@@ -248,8 +247,9 @@ def add_citation(collection, token, production=True):
                 cite_exists = True
         if cite_exists == False:
             record_doi = record["identifier"]["identifier"]
-            citation_link = "https://data.datacite.org/text/x-bibliography;style=apa/"
-            citation = requests.get(citation_link + record_doi).text
+            headers = {'Accept': 'text/x-bibliography; style=apa'}
+            citation_link = "https://doi.org/"
+            citation = requests.get(citation_link + record_doi, headers=headers).text
             doi_url = "https://doi.org/" + record_doi.lower()
             if doi_url in citation:
                 # Check that we have a citation and not a server error,
