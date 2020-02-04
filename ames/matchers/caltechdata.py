@@ -250,7 +250,7 @@ def add_citation(collection, token, production=True):
             headers = {'Accept': 'text/x-bibliography; style=apa'}
             citation_link = "https://doi.org/"
             citation = requests.get(citation_link + record_doi, headers=headers).text
-            doi_url = "https://doi.org/" + record_doi.lower()
+            doi_url = "https://doi.org/" + record_doi
             if doi_url in citation:
                 # Check that we have a citation and not a server error,
                 # otherwise wait till next time
