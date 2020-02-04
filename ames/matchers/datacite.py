@@ -1,5 +1,6 @@
 from py_dataset import dataset
 import requests
+from os import path
 from progressbar import progressbar
 from datacite import DataCiteMDSClient, schema40
 from datetime import date, datetime
@@ -19,12 +20,10 @@ def delete_datacite_media(username, password, doi):
 
 def update_datacite_media(username, password, collection, prefix):
     keys = dataset.keys(collection)
-    result = dataset.has_key(collection, "mediaupdate")
-    today = date.today().isoformat()
-    if result == True:
-        update, err = dataset.read(collection, "mediaupdate")
-        update = date.fromisoformat(update["mediaupdate"])
-        keys.remove("mediaupdate")
+
+    if path.exists("mediaupdate"):
+        with open('mediaupdate', 'r') as infile:
+            update = date.fromisoformat(infile.read())
     else:
         # Arbitrary old date - everything will be updated
         update = date(2011, 1, 1)
