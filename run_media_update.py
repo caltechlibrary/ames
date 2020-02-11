@@ -21,6 +21,7 @@ user = "TIND.CALTECH"
 
 update_datacite_media(user, password, collection, prefix)
 
-# Save date in collection
+# Save date in file
 today = date.today().isoformat()
-dataset.update(collection, "mediaupdate", {"mediaupdate": today})
+with open('mediaupdate', 'w') as outfile:
+    outfile.write(today)
