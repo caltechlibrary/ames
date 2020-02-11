@@ -643,7 +643,7 @@ def group_search(file_obj, keys, source, search, years=None):
 
 def people_search(file_obj, keys, source, search, years=None):
     """Search for people by division in CaltechPEOPLE"""
-    file_obj.writerow(["Name", "ORCID", "bio"])
+    file_obj.writerow(["Name", "CaltechPEOPLE ID", "ORCID", "bio"])
     all_metadata = []
     if source == "CaltechPEOPLE.ds":
         dot_paths = ["._Key", ".directory_info", ".ORCID", ".sort_name"]
@@ -661,7 +661,7 @@ def people_search(file_obj, keys, source, search, years=None):
             if "division" in directory:
                 if search == directory["division"]:
                     file_obj.writerow(
-                        [metadata["name"], metadata["orcid"], directory["bio"]]
+                        [metadata["name"], metadata["id"],metadata["orcid"], directory["bio"]]
                     )
     print("Report finished!")
 
