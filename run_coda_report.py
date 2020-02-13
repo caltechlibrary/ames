@@ -217,6 +217,26 @@ def thesis_metadata(file_obj, keys, source, years=None):
             file_obj.writerow(row)
 
 
+def thesis_search(file_obj, keys, source, search):
+    all_metadata = []
+    dot_paths = [".option_major.items", ".option_minor.items", "._Key", ".thesis_type"]
+    labels = ["major", "minor", "key", "thesis_type"]
+    if source.split(".")[-1] == "ds":
+        all_metadata = get_records(dot_paths, "recs", source, keys, labels)
+    for metadata in all_metadata:
+        # Determine if we want the record
+        update = False
+        for opt in metadata["major"]:
+            if opt in search:
+                update = True
+        if "minor" in metadata:
+            for opt in metadata["minor"]:
+                if opt in search:
+                    update = True
+        if update:
+            file_obj.writerow([metadata["key"], metadata["thesis_type"]])
+
+
 def thesis_list(file_obj, keys, source):
     all_metadata = []
     dot_paths = [".full_text_status", "._Key", ".doi"]
@@ -661,7 +681,12 @@ def people_search(file_obj, keys, source, search, years=None):
             if "division" in directory:
                 if search == directory["division"]:
                     file_obj.writerow(
-                        [metadata["name"], metadata["id"],metadata["orcid"], directory["bio"]]
+                        [
+                            metadata["name"],
+                            metadata["id"],
+                            metadata["orcid"],
+                            directory["bio"],
+                        ]
                     )
     print("Report finished!")
 
@@ -944,6 +969,9 @@ if __name__ == "__main__":
         help="Division name (e.g. Engineering and Applied Science Division)",
     )
     parser.add_argument(
+        "-option", nargs="+", help='Thesis option (e.g. "astronomy" or "astrophys")',
+    )
+    parser.add_argument(
         "-creator",
         help="A Creator ID like Chen-X, or a csv file with the creator id in the first column",
     )
@@ -1031,6 +1059,8 @@ if __name__ == "__main__":
             thesis_list(file_out, keys, source)
         elif args.report_name == "thesis_metadata":
             thesis_metadata(file_out, keys, source, args.years)
+        elif args.report_name == "thesis_search":
+            thesis_search(file_out, keys, source, args.option)
         elif args.report_name == "license_report":
             license_report(
                 file_out, keys, source, item_type=args.item
