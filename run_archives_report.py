@@ -266,10 +266,14 @@ def agent_report(file_obj, repo, aspace):
     for metadata in all_metadata:
         if "as" in metadata:
             if metadata["as"] != "":
-                file_obj.writerow([metadata["as"], metadata["id"], metadata["name"]])
+                # file_obj.writerow([metadata["as"], metadata["id"], metadata["name"]])
                 already_matched.append(metadata["as"])
             else:
                 to_match[metadata["name"]] = metadata
+    print(len(already_matched) + " agents already in CaltechPEOPLE")
+
+    aspace_url = "https://collections.archives.caltech.edu/agents/people/"
+    feeds_url = "https://feeds.library.caltech.edu/people/"
 
     print(f"Requesting agents")
     for agent in progressbar(aspace.agents):
@@ -281,18 +285,19 @@ def agent_report(file_obj, repo, aspace):
                     person = to_match[name]
                     file_obj.writerow(
                         [
-                            uid,
-                            person["id"],
                             person["name"],
-                            "ADD ASPACE ID TO CaltechPEOPLE",
+                            uid,
+                            aspace_url + uid,
+                            person["id"],
+                            feeds_url + preson["id"],
                         ]
                     )
                     to_match.pop(name)
-                else:
-                    file_obj.writerow([uid, "", name, "Not in CaltechPEOPLE"])
+                # else:
+                #    file_obj.writerow([uid, "", name, "Not in CaltechPEOPLE"])
 
-    for name in to_match:
-        file_obj.writerow(["", to_match[name]["id"], name, "ADD to Aspace"])
+    # for name in to_match:
+    #    file_obj.writerow(["", to_match[name]["id"], name, "ADD to Aspace"])
 
 
 if __name__ == "__main__":
@@ -301,7 +306,9 @@ if __name__ == "__main__":
     os.chdir("data")
 
     parser = argparse.ArgumentParser(description="Run a report on ArchiveSpace")
-    parser.add_argument("report_name", help="report name (options: accession_report)")
+    parser.add_argument(
+        "report_name", help="report name (options:accession_report, agent_report)"
+    )
     parser.add_argument("output", help="output file name")
     parser.add_argument("-years", help="format: 1939 or 1939-1940")
     parser.add_argument("-subject", help="Return items that match subject")
