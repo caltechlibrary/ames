@@ -896,6 +896,56 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
     print("Report finished!")
 
 
+def funder_report(file_obj, keys, source, filter_funders=None):
+    funders = {}
+    # Dictionary keyed by funder name
+    # Data structure includes grants, count, ids
+    print(f"Processing {len(keys)} eprint records for funders")
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".funders.items"]
+        labels = ["eprint_id", "items"]
+        print("Getting metadata")
+        all_metadata = get_records(dot_paths, "funders", source, keys, labels)
+        print(len(all_metadata))
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            if "items" in metadata:
+                eprint_id = metadata["eprint_id"]
+                for item in metadata["items"]:
+                    if "agency" in item:
+                        agency = item["agency"]
+                        if agency in funders:
+                            record = funders[agency]
+                            record["count"] = record["count"] + 1
+                            record["eprint_ids"].append(eprint_id)
+                            if "grant_number" in item:
+                                record["grants"].append(item["grant_number"])
+                            funders[agency] = record
+                        else:
+                            record = {"count": 1}
+                            record["eprint_ids"] = [eprint_id]
+                            if "grant_number" in item:
+                                record["grants"] = [item["grant_number"]]
+                            else:
+                                record["grants"] = []
+                            funders[agency] = record
+                    else:
+                        print(item, eprint_id)
+    file_obj.writerow(["funder name", "count"])
+    for funder in funders:
+        write = False
+        if filter_funders != None:
+            if filter_funders in funder:
+                write = True
+        else:
+            write = True
+        if write:
+            data = funders[funder]
+            grant_t = "|".join(data["grants"])
+            eprint_t = "|".join(data["eprint_ids"])
+            file_obj.writerow([funder, data["count"]])
+    print("Report finished!")
+
+
 def find_creators(items, eprint_id, creators, creator_ids):
     """Take a item list and return creators"""
     for item in items:
@@ -965,8 +1015,8 @@ if __name__ == "__main__":
         help='Group from repository (e.g. "Keck Institute for Space Studies")',
     )
     parser.add_argument(
-        "-division",
-        help="Division name (e.g. Engineering and Applied Science Division)",
+        "-search",
+        help="Search term for report such as Division name (e.g. Engineering and Applied Science Division) or `Foundation` for funder name",
     )
     parser.add_argument(
         "-option", nargs="+", help='Thesis option (e.g. "astronomy" or "astrophys")',
@@ -1031,12 +1081,14 @@ if __name__ == "__main__":
                 creator_report(file_out, keys, source, filter_creators=args.creator)
             else:
                 creator_report(file_out, keys, source, update_only=True)
+        elif args.report_name == "funder_report":
+            funder_report(file_out, keys, source, args.search)
         elif args.report_name == "creator_search":
             creator_search(file_out, keys, source, args.creator)
         elif args.report_name == "creator_quote":
             creator_quote_report(file_out, keys, source)
         elif args.report_name == "people_search":
-            people_search(file_out, keys, source, args.division)
+            people_search(file_out, keys, source, args.search)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
         elif args.report_name == "record_number_report":
