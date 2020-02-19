@@ -287,9 +287,9 @@ def agent_report(file_obj, repo, aspace):
                         [
                             person["name"],
                             uid,
-                            aspace_url + uid,
+                            aspace_url + str(uid),
                             person["id"],
-                            feeds_url + preson["id"],
+                            feeds_url + person["id"],
                         ]
                     )
                     to_match.pop(name)
