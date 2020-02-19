@@ -270,7 +270,7 @@ def agent_report(file_obj, repo, aspace):
                 already_matched.append(metadata["as"])
             else:
                 to_match[metadata["name"]] = metadata
-    print(len(already_matched) + " agents already in CaltechPEOPLE")
+    print(f"{len(already_matched)} agents already in CaltechPEOPLE")
 
     aspace_url = "https://collections.archives.caltech.edu/agents/people/"
     feeds_url = "https://feeds.library.caltech.edu/people/"
