@@ -286,7 +286,7 @@ def agent_report(file_name, repo, aspace):
                         metadata["as"],
                         aspace_url + str(metadata["as"]),
                         metadata["id"],
-                        feeds_url + person["id"],
+                        feeds_url + metadata["id"],
                     ]
                 )
                 already_matched.append(metadata["as"])
