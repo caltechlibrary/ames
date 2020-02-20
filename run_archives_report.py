@@ -284,7 +284,7 @@ def agent_report(file_name, repo, aspace):
                     [
                         metadata["name"],
                         metadata["as"],
-                        aspace_url + metadata["as"],
+                        aspace_url + str(metadata["as"]),
                         metadata["id"],
                         feeds_url + person["id"],
                     ]
