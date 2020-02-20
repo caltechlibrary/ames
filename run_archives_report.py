@@ -266,10 +266,10 @@ def agent_report(file_name, repo, aspace):
     fnew_caltechpeople = fname + "_newcaltechpeople.csv"
     fnew_aspace = fname + "_newaspace.csv"
 
-    caltechpeople = csv.writer(open(fcaltechpeople, "w"))
-    matched = csv.writer(open(fmatched, "w"))
-    new_caltechpeople = csv.writer(open(fnew_caltechpeople, "w"))
-    new_aspace = csv.writer(open(fnew_aspace, "w"))
+    caltechpeople = csv.writer(open(fcaltechpeople, "w", encoding='utf-8-sig'))
+    matched = csv.writer(open(fmatched, "w",encoding='utf-8-sig'))
+    new_caltechpeople = csv.writer(open(fnew_caltechpeople, "w",encoding='utf-8-sig'))
+    new_aspace = csv.writer(open(fnew_aspace, "w",encoding='utf-8-sig'))
 
     to_match = {}
     already_matched = []
@@ -352,7 +352,7 @@ if __name__ == "__main__":
         print(repo)
         exit()
 
-    with open("../" + args.output, "w", newline="\n", encoding="utf-8") as fout:
+    with open("../" + args.output, "w", newline="\n", encoding="utf-8-sig") as fout:
         if args.output.split(".")[-1] == "tsv":
             file_out = csv.writer(fout, delimiter="\t")
         else:
