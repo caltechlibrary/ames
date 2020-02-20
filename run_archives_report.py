@@ -263,15 +263,18 @@ def agent_report(file_name, repo, aspace):
     fname = file_name.split(".")[0]
     fcaltechpeople = fname + "_caltechpeople.csv"
     fmatched = fname + "_matched.csv"
+    fgenmatched = fname + "_genmatched.csv"
     fnew_caltechpeople = fname + "_newcaltechpeople.csv"
     fnew_aspace = fname + "_newaspace.csv"
 
-    caltechpeople = csv.writer(open(fcaltechpeople, "w", encoding='utf-8-sig'))
-    matched = csv.writer(open(fmatched, "w",encoding='utf-8-sig'))
-    new_caltechpeople = csv.writer(open(fnew_caltechpeople, "w",encoding='utf-8-sig'))
-    new_aspace = csv.writer(open(fnew_aspace, "w",encoding='utf-8-sig'))
+    caltechpeople = csv.writer(open(fcaltechpeople, "w"))
+    matched = csv.writer(open(fmatched, "w"))
+    genmatched = csv.writer(open(fgenmatched, "w"))
+    new_caltechpeople = csv.writer(open(fnew_caltechpeople, "w"))
+    new_aspace = csv.writer(open(fnew_aspace, "w"))
 
     to_match = {}
+    gen_match = {}
     already_matched = []
 
     aspace_url = "https://collections.archives.caltech.edu/agents/people/"
@@ -292,11 +295,13 @@ def agent_report(file_name, repo, aspace):
                 already_matched.append(metadata["as"])
             else:
                 to_match[metadata["name"]] = metadata
+                gen_match[metadata["family"]] = metadata
     print(f"{len(already_matched)} agents already in CaltechPEOPLE")
 
     print(f"Requesting agents")
     for agent in progressbar(aspace.agents):
         if agent.agent_type == "agent_person":
+            print(agent)
             name = agent.display_name.sort_name
             uid = int(agent.uri.split("/")[-1])
             if uid not in already_matched:
@@ -352,7 +357,7 @@ if __name__ == "__main__":
         print(repo)
         exit()
 
-    with open("../" + args.output, "w", newline="\n", encoding="utf-8-sig") as fout:
+    with open("../" + args.output, "w", newline="\n") as fout:
         if args.output.split(".")[-1] == "tsv":
             file_out = csv.writer(fout, delimiter="\t")
         else:
