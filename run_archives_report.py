@@ -314,7 +314,7 @@ def agent_report(file_name, repo, aspace):
                     to_match.pop(name)
                 else:
                     new_caltechpeople.writerow(
-                        [person["name"], uid, aspace_url + str(uid),]
+                        [name, uid, aspace_url + str(uid),]
                     )
 
     for name in to_match:
