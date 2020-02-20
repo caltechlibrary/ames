@@ -241,7 +241,7 @@ def accession_report(file_obj, repo, aspace, subject=None, years=None):
                 file_obj.writerow([acc.title, idv, acc.accession_date, agent])
 
 
-def agent_report(file_obj, repo, aspace):
+def agent_report(file_name, repo, aspace):
     dot_paths = [
         "._Key",
         ".directory_info",
@@ -260,20 +260,39 @@ def agent_report(file_obj, repo, aspace):
 
     all_metadata.sort(key=lambda all_metadata: all_metadata["id"])
 
+    fname = file_name.split(".")[0]
+    fcaltechpeople = fname + "_caltechpeople.csv"
+    fmatched = fname + "_matched.csv"
+    fnew_caltechpeople = fname + "_newcaltechpeople.csv"
+    fnew_aspace = fname + "_newaspace.csv"
+
+    caltechpeople = csv.writer(open(fcaltechpeople, "w"))
+    matched = csv.writer(open(fmatched, "w"))
+    new_caltechpeople = csv.writer(open(fnew_caltechpeople, "w"))
+    new_aspace = csv.writer(open(fnew_aspace, "w"))
+
     to_match = {}
     already_matched = []
+
+    aspace_url = "https://collections.archives.caltech.edu/agents/people/"
+    feeds_url = "https://feeds.library.caltech.edu/people/"
 
     for metadata in all_metadata:
         if "as" in metadata:
             if metadata["as"] != "":
-                # file_obj.writerow([metadata["as"], metadata["id"], metadata["name"]])
+                caltechpeople.writerow(
+                    [
+                        metadata["name"],
+                        metadata["as"],
+                        aspace_url + metadata["as"],
+                        metadata["id"],
+                        feeds_url + person["id"],
+                    ]
+                )
                 already_matched.append(metadata["as"])
             else:
                 to_match[metadata["name"]] = metadata
     print(f"{len(already_matched)} agents already in CaltechPEOPLE")
-
-    aspace_url = "https://collections.archives.caltech.edu/agents/people/"
-    feeds_url = "https://feeds.library.caltech.edu/people/"
 
     print(f"Requesting agents")
     for agent in progressbar(aspace.agents):
@@ -283,7 +302,7 @@ def agent_report(file_obj, repo, aspace):
             if uid not in already_matched:
                 if name in to_match:
                     person = to_match[name]
-                    file_obj.writerow(
+                    matched.writerow(
                         [
                             person["name"],
                             uid,
@@ -293,11 +312,15 @@ def agent_report(file_obj, repo, aspace):
                         ]
                     )
                     to_match.pop(name)
-                # else:
-                #    file_obj.writerow([uid, "", name, "Not in CaltechPEOPLE"])
+                else:
+                    new_caltechpeople.writerow(
+                        [person["name"], uid, aspace_url + str(uid),]
+                    )
 
-    # for name in to_match:
-    #    file_obj.writerow(["", to_match[name]["id"], name, "ADD to Aspace"])
+    for name in to_match:
+        new_aspace.writerow(
+            [name, to_match[name]["id"], feeds_url + to_match[name]["id"]]
+        )
 
 
 if __name__ == "__main__":
@@ -338,7 +361,6 @@ if __name__ == "__main__":
             accession_report(file_out, repo, aspace, args.subject, args.years)
         if args.report_name == "format_report":
             accession_format_report(file_out, repo, aspace, args.subject, args.years)
-        if args.report_name == "agent_report":
-            agent_report(file_out, repo, aspace)
-        else:
-            print(args.report_name, " report type is not known")
+
+    if args.report_name == "agent_report":
+        agent_report(args.output, repo, aspace)
