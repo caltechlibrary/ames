@@ -292,6 +292,7 @@ def agent_report(file_name, repo, aspace):
         if agent.agent_type == "agent_person":
             primaty_name = agent.display_name.primary_name
             name = agent.display_name.sort_name
+            published = agent.publish
             uid = int(agent.uri.split("/")[-1])
             if uid not in already_matched:
                 if name in to_match:
@@ -303,12 +304,13 @@ def agent_report(file_name, repo, aspace):
                             aspace_url + str(uid),
                             person["id"],
                             feeds_url + person["id"],
+                            published,
                         ]
                     )
                     to_match.pop(name)
                 else:
                     new_caltechpeople.writerow(
-                        [name, uid, aspace_url + str(uid),]
+                        [name, uid, aspace_url + str(uid), published]
                     )
             else:
                 metadata = already_matched[uid]
@@ -319,6 +321,7 @@ def agent_report(file_name, repo, aspace):
                         aspace_url + str(metadata["as"]),
                         metadata["id"],
                         feeds_url + metadata["id"],
+                        published,
                     ]
                 )
 
