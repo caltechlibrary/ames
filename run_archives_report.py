@@ -275,7 +275,7 @@ def agent_report(file_name, repo, aspace):
 
     to_match = {}
     gen_match = {}
-    already_matched = []
+    already_matched = {}
 
     aspace_url = "https://collections.archives.caltech.edu/agents/people/"
     feeds_url = "https://feeds.library.caltech.edu/people/"
@@ -283,16 +283,7 @@ def agent_report(file_name, repo, aspace):
     for metadata in all_metadata:
         if "as" in metadata:
             if metadata["as"] != "":
-                caltechpeople.writerow(
-                    [
-                        metadata["name"],
-                        metadata["as"],
-                        aspace_url + str(metadata["as"]),
-                        metadata["id"],
-                        feeds_url + metadata["id"],
-                    ]
-                )
-                already_matched.append(metadata["as"])
+                already_matched[metadata["as"]] = metadata
             else:
                 to_match[metadata["name"]] = metadata
                 gen_match[metadata["family"]] = metadata
@@ -301,7 +292,7 @@ def agent_report(file_name, repo, aspace):
     print(f"Requesting agents")
     for agent in progressbar(aspace.agents):
         if agent.agent_type == "agent_person":
-            print(agent)
+            primaty_name = agent.display_name.primary_name
             name = agent.display_name.sort_name
             uid = int(agent.uri.split("/")[-1])
             if uid not in already_matched:
@@ -317,10 +308,34 @@ def agent_report(file_name, repo, aspace):
                         ]
                     )
                     to_match.pop(name)
+                elif primary_name in gen_match:
+                    person = to_match[name]
+                    matched.writerow(
+                        [
+                            person["name"],
+                            uid,
+                            aspace_url + str(uid),
+                            person["id"],
+                            feeds_url + person["id"],
+                        ]
+                    )
+                    to_match.pop(name)
                 else:
                     new_caltechpeople.writerow(
                         [name, uid, aspace_url + str(uid),]
                     )
+            else:
+                metadata = already_matched[uid]
+                caltechpeople.writerow(
+                    [
+                        metadata["name"],
+                        metadata["as"],
+                        aspace_url + str(metadata["as"]),
+                        metadata["id"],
+                        feeds_url + metadata["id"],
+                    ]
+                )
+
 
     for name in to_match:
         new_aspace.writerow(
