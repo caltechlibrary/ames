@@ -263,13 +263,11 @@ def agent_report(file_name, repo, aspace):
     fname = file_name.split(".")[0]
     fcaltechpeople = fname + "_caltechpeople.csv"
     fmatched = fname + "_matched.csv"
-    fgenmatched = fname + "_genmatched.csv"
     fnew_caltechpeople = fname + "_newcaltechpeople.csv"
     fnew_aspace = fname + "_newaspace.csv"
 
     caltechpeople = csv.writer(open(fcaltechpeople, "w"))
     matched = csv.writer(open(fmatched, "w"))
-    genmatched = csv.writer(open(fgenmatched, "w"))
     new_caltechpeople = csv.writer(open(fnew_caltechpeople, "w"))
     new_aspace = csv.writer(open(fnew_aspace, "w"))
 
@@ -308,18 +306,6 @@ def agent_report(file_name, repo, aspace):
                         ]
                     )
                     to_match.pop(name)
-                elif primary_name in gen_match:
-                    person = to_match[name]
-                    matched.writerow(
-                        [
-                            person["name"],
-                            uid,
-                            aspace_url + str(uid),
-                            person["id"],
-                            feeds_url + person["id"],
-                        ]
-                    )
-                    to_match.pop(name)
                 else:
                     new_caltechpeople.writerow(
                         [name, uid, aspace_url + str(uid),]
@@ -335,7 +321,6 @@ def agent_report(file_name, repo, aspace):
                         feeds_url + metadata["id"],
                     ]
                 )
-
 
     for name in to_match:
         new_aspace.writerow(
