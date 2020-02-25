@@ -10,12 +10,13 @@ def delete_datacite_media(username, password, doi):
     # Delete existing media entries in a datacite record
     url = "https://api.datacite.org/dois/" + doi + "/media"
     r = requests.get(url).json()
-    for m in r["data"]:
-        idv = m["id"]
-        headers = {"Content-Type": "text/plain"}
-        url = "https://mds.datacite.org/doi/" + doi + "/media/" + idv
-        req = requests.delete(url, auth=(username, password), headers=headers)
-        print(req)
+    if 'data' in r:
+        for m in r["data"]:
+            idv = m["id"]
+            headers = {"Content-Type": "text/plain"}
+            url = "https://mds.datacite.org/doi/" + doi + "/media/" + idv
+            req = requests.delete(url, auth=(username, password), headers=headers)
+            print(req)
 
 
 def update_datacite_media(username, password, collection, prefix):
