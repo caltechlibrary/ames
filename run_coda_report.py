@@ -862,6 +862,7 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
         with open("../" + filter_creators, mode="r") as infile:
             reader = csv.reader(infile)
             filter_values = {rows[0]: rows[1] for rows in reader}
+    to_check = {}
     for creator_id in creator_ids:
         creator = creators[creator_id]
         # print(creator)
@@ -891,8 +892,28 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
                         f"ORCID Mismatch for {creator_id} between {orcid} and {correct_orcid}"
                     )
                 file_obj.writerow([creator_id, correct_orcid, eprint_ids, update_ids])
+                to_check[creator_id] = correct_orcid
             else:
                 file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
+                to_check[creator_id] = orcid
+    print("Checking against CaltechPEOPLE")
+    source = get_caltechfeed("people")
+    keys = dataset.keys(source)
+    keys.remove("captured")
+    for person in to_check:
+        orcid = to_check[person]
+        if dataset.has_key(source, person) == False:
+            print(f"{person} {orcid} not in CaltechPEOPLE")
+        else:
+            caltechperson, err = dataset.read(source, person)
+            if err != "":
+                print(err)
+            if caltechperson["ORCID"] == "":
+                print(f"Add {orcid} to {person}")
+            elif caltechperson["ORCID"] != orcid:
+                print(
+                    f'CaltechPERSON ORCID { caltechperson["ORCID"]} not the same as {orcid} given in report for {person}'
+                )
     print("Report finished!")
 
 
