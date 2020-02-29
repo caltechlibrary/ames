@@ -661,13 +661,19 @@ def group_search(file_obj, keys, source, search, years=None):
     print("Report finished!")
 
 
-def people_search(file_obj, keys, source, search, years=None):
+def people_search(file_obj, keys, source, names=None, division=None, years=None):
     """Search for people by division in CaltechPEOPLE"""
-    file_obj.writerow(["Name", "CaltechPEOPLE ID", "ORCID", "bio"])
     all_metadata = []
     if source == "CaltechPEOPLE.ds":
-        dot_paths = ["._Key", ".directory_info", ".ORCID", ".sort_name"]
-        labels = ["id", "directory_info", "orcid", "name"]
+        dot_paths = [
+            "._Key",
+            ".directory_info",
+            ".ORCID",
+            ".sort_name",
+            ".AUTHORS",
+            ".CaltechAUTHORS",
+        ]
+        labels = ["id", "directory_info", "orcid", "name", "authors_id", "authors"]
         all_metadata = get_records(dot_paths, "p_list", source, keys, labels)
     else:
         print("The people_search report only works with the CaltechPEOPLE source")
@@ -675,19 +681,49 @@ def people_search(file_obj, keys, source, search, years=None):
 
     all_metadata.sort(key=lambda all_metadata: all_metadata["id"])
 
+    ids = set()
+
     for metadata in all_metadata:
-        if "directory_info" in metadata:
-            directory = metadata["directory_info"]
-            if "division" in directory:
-                if search == directory["division"]:
-                    file_obj.writerow(
-                        [
-                            metadata["name"],
-                            metadata["id"],
-                            metadata["orcid"],
-                            directory["bio"],
-                        ]
-                    )
+        if division:
+            if "directory_info" in metadata:
+                directory = metadata["directory_info"]
+                if "division" in directory:
+                    if division == directory["division"]:
+                        file_obj.writerow(
+                            [
+                                metadata["name"],
+                                metadata["id"],
+                                metadata["orcid"],
+                                directory["bio"],
+                            ]
+                        )
+        if names:
+            if "authors_id" in metadata:
+                if metadata["authors_id"] in names:
+                    if "authors" in metadata:
+                        for key in metadata["authors"]:
+                            ids.add(key)
+    if names:
+        if years:
+            in_range = []
+            dot_paths = ["._Key", ".date"]
+            labels = ["eprint_id", "date"]
+            keys = dataset.keys("CaltechAUTHORS.ds")
+            all_metadata = get_records(
+                dot_paths, "dois", "CaltechAUTHORS.ds", keys, labels
+            )
+
+            for metadata in all_metadata:
+                if "date" in metadata:
+                    year = metadata["date"].split("-")[0]
+                    if is_in_range(years, year):
+                        in_range.append(metadata["eprint_id"])
+            for idv in ids:
+                if idv in in_range:
+                    file_obj.writerow([idv])
+        else:
+            for idv in ids:
+                file_obj.writerow([idv])
     print("Report finished!")
 
 
@@ -1109,7 +1145,14 @@ if __name__ == "__main__":
         elif args.report_name == "creator_quote":
             creator_quote_report(file_out, keys, source)
         elif args.report_name == "people_search":
-            people_search(file_out, keys, source, args.search)
+            names = None
+            if "csv" in args.creator:
+                names = []
+                with open("../" + args.creator, mode="r") as infile:
+                    reader = csv.reader(infile)
+                    for row in reader:
+                        names.append(row[0])
+            people_search(file_out, keys, source, names, args.search, args.years)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
         elif args.report_name == "record_number_report":
