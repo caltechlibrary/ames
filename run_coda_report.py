@@ -670,7 +670,7 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
             ".directory_info",
             ".ORCID",
             ".sort_name",
-            ".AUTHORS",
+            ".Authors_ID",
             ".CaltechAUTHORS",
         ]
         labels = ["id", "directory_info", "orcid", "name", "authors_id", "authors"]
@@ -704,26 +704,27 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
                         for key in metadata["authors"]:
                             ids.add(key)
     if names:
-        if years:
-            in_range = []
-            dot_paths = ["._Key", ".date"]
-            labels = ["eprint_id", "date"]
-            keys = dataset.keys("CaltechAUTHORS.ds")
-            all_metadata = get_records(
-                dot_paths, "dois", "CaltechAUTHORS.ds", keys, labels
-            )
+        in_range = []
+        dot_paths = ["._Key", ".date", ".local_group.items"]
+        labels = ["eprint_id", "date", "group"]
+        keys = dataset.keys("CaltechAUTHORS.ds")
+        all_metadata = get_records(dot_paths, "dois", "CaltechAUTHORS.ds", keys, labels)
 
-            for metadata in all_metadata:
+        for metadata in all_metadata:
+            to_do = True
+            if "group" in metadata:
+                for g in metadata["group"]:
+                    if g == "Astronomy Department":
+                        to_do = False
+            if years:
                 if "date" in metadata:
                     year = metadata["date"].split("-")[0]
-                    if is_in_range(years, year):
-                        in_range.append(metadata["eprint_id"])
-            for idv in ids:
-                if idv in in_range:
-                    file_obj.writerow([idv])
-        else:
-            for idv in ids:
-                file_obj.writerow([idv])
+                    if is_in_range(years, year) == False:
+                        to_do = False
+            if to_do:
+                metadata_id = metadata["eprint_id"]
+                if metadata_id in ids:
+                    file_obj.writerow([metadata_id])
     print("Report finished!")
 
 
