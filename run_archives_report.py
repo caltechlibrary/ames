@@ -207,13 +207,13 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
                 if "physical_details" in ext:
                     physical = ext["physical_details"]
                     if "FORMAT" in physical:
-                        types = ["Cassette", "DAT", "CD", "CDR"]
-                        formt = physical.split("FORMAT: ")[1].split(";")[0]
-                        if formt in types:
-                            json = acc.json()
-                            row = make_line(json, fields)
-                            row = row + add_blocks(json)
-                            file_obj.writerow(row)
+                        #types = ["Cassette", "DAT", "CD", "CDR"]
+                        #formt = physical.split("FORMAT: ")[1].split(";")[0]
+                        #if formt in types:
+                        json = acc.json()
+                        row = make_line(json, fields)
+                        row = row + add_blocks(json)
+                        file_obj.writerow(row)
 
 
 def accession_report(file_obj, repo, aspace, subject=None, years=None):
