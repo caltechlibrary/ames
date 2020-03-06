@@ -4,34 +4,25 @@ import pandas as pd
 from datetime import datetime
 from progressbar import progressbar
 from py_dataset import dataset
+from ames.harvesters import get_records
 
 
-def file_mapping(source_collection, mapping_file):
-    """Return a dictionary that maps /tindfiles/serve urls to records.
-    Expects either an existing csv file dictionary or a file name
-    to save a new dictionary."""
+def file_mapping(source_collection):
+    """Return a dictionary that maps /tindfiles/serve urls to records."""
 
-    available = os.path.isfile(mapping_file)
-    # If we have an existing file
-    if available == True:
-        mapping = {}
-        reader = csv.reader(open(mapping_file))
-        for row in reader:
-            mapping[row[0]] = row[1]
-    else:
-        mapping = {}
+    mapping = {}
 
+    dot_paths = [".electronic_location_and_access", "._Key"]
     keys = dataset.keys(source_collection)
-    for k in keys:
+    metadata = get_records(dot_paths, "files", source_collection, keys)
+
+    for record in metadata:
         # Handle history records where the key is the item and revision
+        k = record["_Key"]
         if "-" in k:
             rec_id = k.split("-")[0]
         else:
             rec_id = k
-        record, err = dataset.read(source_collection, k)
-        if err != "":
-            print(err)
-            exit()
 
         # Ignore embargoed records
         if "electronic_location_and_access" in record:
@@ -40,10 +31,6 @@ def file_mapping(source_collection, mapping_file):
                 # name = filev['electronic_name'][0]
                 if url not in mapping:
                     mapping[url] = rec_id
-
-    with open(mapping_file, "w") as f:
-        w = csv.writer(f)
-        w.writerows(mapping.items())
 
     return mapping
 

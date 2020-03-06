@@ -3,6 +3,7 @@ import requests
 from caltechdata_api import decustomize_schema
 from py_dataset import dataset
 from progressbar import progressbar
+from datetime import date, datetime
 
 
 def get_caltechdata(collection, production=True, datacite=False):
@@ -35,29 +36,49 @@ def get_caltechdata(collection, production=True, datacite=False):
             metadata = decustomize_schema(h["metadata"])
 
         err = dataset.create(collection, rid, metadata)
-        if err != '':
+        if err != "":
             print(err)
 
 
-def get_history(collection, keys):
-    """Harvest the history of records from CaltechDATA .
-    Always creates collection from scratch"""
-    # Delete existing collection
-    if os.path.isdir(collection):
-        shutil.rmtree(collection)
-    ok = dataset.init(collection)
-    if ok == False:
-        print("Dataset failed to init collection")
-        exit()
+def get_history(collection, caltechdata_collection, caltechdata_keys):
+    """Harvest the history of records from CaltechDATA."""
+
+    keys_to_update = []
+    if os.path.exists("historyupdate"):
+        with open("historyupdate", "r") as infile:
+            update = date.fromisoformat(infile.read())
+    else:
+        # Arbitrary old date - everything will be updated
+        update = date(2011, 1, 1)
+    for k in progressbar(caltechdata_keys, redirect_stdout=True):
+        existing, err = dataset.read(caltechdata_collection, k)
+        if err != "":
+            print(f"Unexpected error on read: {err}")
+        record_update = datetime.fromisoformat(existing["updated"]).date()
+        if record_update > update:
+            keys_to_update.append(k)
+
+    if not os.path.isdir(collection):
+        ok = dataset.init(collection)
+        if ok == False:
+            print("Dataset failed to init collection")
+            exit()
 
     base_url = "https://data.caltech.edu/records/"
 
-    for k in progressbar(keys):
+    for k in progressbar(keys_to_update):
         url = base_url + str(k) + "/revisions"
         response = requests.get(url)
         revisions = response.json()
         for num, metadata in enumerate(revisions):
-            dataset.create(collection, str(k) + "-" + str(num), metadata)
+            key = f"{k}-{num}"
+            if dataset.has_key(collection, key) == False:
+                dataset.create(collection, key, metadata)
+
+    # Save date in file
+    today = date.today().isoformat()
+    with open("historyupdate", "w") as outfile:
+        outfile.write(today)
 
 
 def get_multiple_links(input_collection, output_collection):

@@ -116,7 +116,7 @@ def special_characters(source, keys, outfile=None):
             "^i": "ⁱ",
             "’": "'",
             "“": '"',
-            "”": '"'
+            "”": '"',
         }
         for meta in all_metadata:
             newtitle = replace_character(meta, "title", replacements)

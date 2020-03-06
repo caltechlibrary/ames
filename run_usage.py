@@ -17,16 +17,15 @@ files = True
 
 if files:
     get_caltechdata(collection, production)
-    mapping_file = "tindfile_mapping.csv"
-    mapping = file_mapping(collection, mapping_file)
+    mapping = file_mapping(collection)
 
 history = True
 
 if history:
     keys = dataset.keys(collection)
     h_collection = "caltechdata_history.ds"
-    get_history(h_collection, keys)
-    mapping = file_mapping(h_collection, mapping_file)
+    get_history(h_collection, collection, keys)
+    mapping = file_mapping(h_collection)
 
 update = True
 
