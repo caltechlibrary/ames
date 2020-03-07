@@ -123,8 +123,7 @@ def add_blocks(json):
     row = []
     if len(json["dates"]) > 0:
         if len(json["dates"]) > 1:
-            print("Multiple dates")
-            exit()
+            print("Skipping multiple dates")
         else:
             date = json["dates"][0]
             fields = ["expression", "begin", "end", "date_type", "label"]
@@ -133,8 +132,7 @@ def add_blocks(json):
         row = ["", "", "", "", ""]
     if "extents" in json:
         if len(json["extents"]) > 1:
-            print("Multiple extents")
-            exit()
+            print("Skipping multiple extents")
         else:
             date = json["extents"][0]
             fields = ["number", "physical_details"]
