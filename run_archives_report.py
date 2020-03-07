@@ -200,6 +200,7 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
         "text_4",
     ]
     file_obj.writerow(fields + extras)
+    format_types = set()
     for acc in progressbar(repo.accessions):
         if acc.extents:
             for ext in acc.extents:
@@ -208,12 +209,14 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
                     physical = ext["physical_details"]
                     if "FORMAT" in physical:
                         #types = ["Cassette", "DAT", "CD", "CDR"]
-                        #formt = physical.split("FORMAT: ")[1].split(";")[0]
+                        formt = physical.split("FORMAT: ")[1].split(";")[0]
+                        format_types.add(formt)
                         #if formt in types:
                         json = acc.json()
                         row = make_line(json, fields)
                         row = row + add_blocks(json)
                         file_obj.writerow(row)
+    print(format_types)
 
 
 def accession_report(file_obj, repo, aspace, subject=None, years=None):
