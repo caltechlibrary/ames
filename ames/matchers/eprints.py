@@ -70,6 +70,41 @@ def replace_character(metadata, field, replacements):
 
 
 def special_characters(source, keys, outfile=None):
+    replacements = {
+        "_0": "₀",
+        "_1": "₁",
+        "_2": "₂",
+        "_3": "₃",
+        "_4": "₄",
+        "_5": "₅",
+        "_6": "₆",
+        "_7": "₇",
+        "_8": "₈",
+        "_9": "₉",
+        "_+": "₊",
+        "_-": "₋",
+        "_a": "ₐ",
+        "_e": "ₑ",
+        "_o": "ₒ",
+        "_x": "ₓ",
+        "^0": "⁰",
+        "^1": "¹",
+        "^2": "²",
+        "^3": "³",
+        "^4": "⁴",
+        "^5": "⁵",
+        "^6": "⁶",
+        "^7": "⁷",
+        "^8": "⁸",
+        "^9": "⁹",
+        "^+": "⁺",
+        "^-": "⁻",
+        "^n": "ⁿ",
+        "^i": "ⁱ",
+        "’": "'",
+        "“": '"',
+        "”": '"',
+    }
     if source.split(".")[-1] == "ds":
         dot_paths = [".eprint_id", ".title", ".abstract"]
         labels = ["eprint_id", "title", "abstract"]
@@ -83,53 +118,20 @@ def special_characters(source, keys, outfile=None):
                 "Updated Abstract",
             ]
         )
-        replacements = {
-            "_0": "₀",
-            "_1": "₁",
-            "_2": "₂",
-            "_3": "₃",
-            "_4": "₄",
-            "_5": "₅",
-            "_6": "₆",
-            "_7": "₇",
-            "_8": "₈",
-            "_9": "₉",
-            "_+": "₊",
-            "_-": "₋",
-            "_a": "ₐ",
-            "_e": "ₑ",
-            "_o": "ₒ",
-            "_x": "ₓ",
-            "^0": "⁰",
-            "^1": "¹",
-            "^2": "²",
-            "^3": "³",
-            "^4": "⁴",
-            "^5": "⁵",
-            "^6": "⁶",
-            "^7": "⁷",
-            "^8": "⁸",
-            "^9": "⁹",
-            "^+": "⁺",
-            "^-": "⁻",
-            "^n": "ⁿ",
-            "^i": "ⁱ",
-            "’": "'",
-            "“": '"',
-            "”": '"',
-        }
         for meta in all_metadata:
+            eprint_id = meta["eprint_id"]
             newtitle = replace_character(meta, "title", replacements)
             if "abstract" in meta:
                 newabstract = replace_character(meta, "abstract", replacements)
             else:
                 newabstract = None
-            if newtitle or newabstract:
-                row = [meta["eprint_id"]]
-                if newtitle:
-                    row += [meta["title"], newtitle]
-                else:
-                    row += [" ", " "]
-                if newabstract:
-                    row += [meta["abstract"], newabstract]
-                outfile.writerow(row)
+            if outfile:
+                if newtitle or newabstract:
+                    row = [eprint_id]
+                    if newtitle:
+                        row += [meta["title"], newtitle]
+                    else:
+                        row += [" ", " "]
+                    if newabstract:
+                        row += [meta["abstract"], newabstract]
+                    outfile.writerow(row)
