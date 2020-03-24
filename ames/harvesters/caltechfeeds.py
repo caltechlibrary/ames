@@ -26,16 +26,16 @@ def get_records(dot_paths, f_name, d_name, keys, labels=None):
     if dataset.has_frame(d_name, f_name):
         dataset.delete_frame(d_name, f_name)
     if labels:
-        f, err = dataset.frame(d_name, f_name, keys, dot_paths, labels)
-        if err != "":
+        if not dataset.frame_create(d_name, f_name, keys, dot_paths, labels):
+            err = dataset.error_message()
             print(f"ERROR: Can't create {f_name} in {d_name}, {err}")
     else:
         # If labels arn't provided, just base on dot path
         labels = []
         for d in dot_paths:
             labels.append(d.split(".")[-1])
-        f, err = dataset.frame(d_name, f_name, keys, dot_paths, labels)
-        if err != "":
+        if not dataset.frame_create(d_name, f_name, keys, dot_paths, labels):
+            err = dataset.error_message()
             print(f"ERROR: Can't create {f_name} in {d_name}, {err}")
     return dataset.frame_objects(d_name, f_name)
 
