@@ -39,8 +39,7 @@ def build_usage(caltechdata_collection, usage_collection):
     """Build collection of records that contain CaltechDATA usage
     information"""
     if not os.path.isdir(usage_collection):
-        ok = dataset.init(usage_collection)
-        if ok == False:
+        if not dataset.init(usage_collection):
             print("Dataset failed to init collection")
             exit()
         # Write date to start collecting statistics for new collection
@@ -87,8 +86,8 @@ def build_usage(caltechdata_collection, usage_collection):
                 "grand-total-unique-investigations": 0,
                 "grand-total-unique-requests": 0,
             }
-            err = dataset.create(usage_collection, k, record_data)
-            if err != "":
+            if not dataset.create(usage_collection, k, record_data):
+                err = dataset.error_message()
                 print(err)
                 exit()
 
@@ -246,8 +245,7 @@ def build_aggregate(collection):
     # Delete existing collection
     if os.path.isdir(collection):
         shutil.rmtree(collection)
-    ok = dataset.init(collection)
-    if ok == False:
+    if not dataset.init(collection):
         print("Dataset failed to init collection")
         exit()
 
@@ -257,8 +255,8 @@ def build_aggregate(collection):
     date_list = pd.date_range(start, today, freq="MS").strftime("%Y-%m").to_list()
 
     for month in date_list:
-        err = dataset.create(collection, month, {"report-datasets": []})
-        if err != "":
+        if not dataset.create(collection, month, {"report-datasets": []}):
+            err = dataset.error_message()
             print(err)
 
 
@@ -347,8 +345,8 @@ def aggregate_usage(usage_collection, month_collection):
                 print(err)
             record["performance"] = performance
             existing["report-datasets"].append(record)
-            err = dataset.update(month_collection, view, existing)
-            if err != "":
+            if not dataset.update(month_collection, view, existing):
+                err = dataset.error_message()
                 print(err)
         for use_date in use:
             # We only have use-only records left to handle
@@ -377,6 +375,6 @@ def aggregate_usage(usage_collection, month_collection):
                     print(err)
                 record["performance"] = performance
                 existing["report-datasets"].append(record)
-                err = dataset.update(month_collection, view, existing)
-                if err != "":
+                if not dataset.update(month_collection, view, existing):
+                    err = dataset.error_message()
                     print(err)
