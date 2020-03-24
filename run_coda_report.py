@@ -420,10 +420,10 @@ def doi_report(
                     author = metadata["creators"]["items"][0]["id"]
                 else:
                     author = ""
-                    print("Record " + ep + " is missing author id")
+                    print(f"Record {ep} is missing author id")
 
             if "title" not in metadata:
-                print("Record " + ep + " is missing Title")
+                print(f"Record {ep} is missing Title")
                 exit()
             title = metadata["title"]
             url = metadata["official_url"]
