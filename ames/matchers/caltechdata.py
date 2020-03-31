@@ -37,10 +37,7 @@ def match_cd_refs():
         err = dataset.error_message()
         print(f'Failed to create frame {f_name} in {event_data}, {err}')
         exit()
-    (grid, err) = dataset.frame_grid(event_data, f_name)
-    if err != "":
-        print(err)
-        exit()
+    grid = dataset.frame_grid(event_data, f_name)
     df = pd.DataFrame(np.array(grid), columns=["obj_id", "id", "subj_id"])
     grouped = df.groupby(["obj_id"])
     groups = grouped.groups

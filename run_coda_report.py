@@ -1147,12 +1147,13 @@ if __name__ == "__main__":
             creator_quote_report(file_out, keys, source)
         elif args.report_name == "people_search":
             names = None
-            if "csv" in args.creator:
-                names = []
-                with open("../" + args.creator, mode="r") as infile:
-                    reader = csv.reader(infile)
-                    for row in reader:
-                        names.append(row[0])
+            if args.creator:
+                if "csv" in args.creator:
+                    names = []
+                    with open("../" + args.creator, mode="r") as infile:
+                        reader = csv.reader(infile)
+                        for row in reader:
+                            names.append(row[0])
             people_search(file_out, keys, source, names, args.search, args.years)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
