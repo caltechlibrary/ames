@@ -112,9 +112,9 @@ def special_characters(source, keys, outfile=None):
         outfile.writerow(
             [
                 "eprints_id",
-                "Current Title",
+                # "Current Title",
                 "Updated Title",
-                "Current Abstract",
+                # "Current Abstract",
                 "Updated Abstract",
             ]
         )
@@ -129,9 +129,9 @@ def special_characters(source, keys, outfile=None):
                 if newtitle or newabstract:
                     row = [eprint_id]
                     if newtitle:
-                        row += [meta["title"], newtitle]
+                        row += [newtitle]  # [meta["title"], newtitle]
                     else:
                         row += [" ", " "]
                     if newabstract:
-                        row += [meta["abstract"], newabstract]
+                        row += [newabstract]  # [meta["abstract"], newabstract]
                     outfile.writerow(row)
