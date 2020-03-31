@@ -26,16 +26,16 @@ def match_cd_refs():
     event_keys.remove("captured")
     f_name = "match_cd_refs"
     dot_paths = [".obj_id", ".id", ".subj_id"]
-    labels = [ "obj_id", "id", "subj_id" ]
+    labels = ["obj_id", "id", "subj_id"]
     print("Getting Event Data Records")
     if dataset.has_frame(event_data, f_name):
         if not dataset.frame_reframe(event_data, f_name, event_keys):
             err = dataset.error_message()
-            print(f'Failed to reframe {f_name} in {event_data}, {err}')
+            print(f"Failed to reframe {f_name} in {event_data}, {err}")
             exit()
     elif not dataset.frame_create(event_data, f_name, event_keys, dot_paths, labels):
         err = dataset.error_message()
-        print(f'Failed to create frame {f_name} in {event_data}, {err}')
+        print(f"Failed to create frame {f_name} in {event_data}, {err}")
         exit()
     grid = dataset.frame_grid(event_data, f_name)
     df = pd.DataFrame(np.array(grid), columns=["obj_id", "id", "subj_id"])

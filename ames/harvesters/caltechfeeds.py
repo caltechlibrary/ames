@@ -7,9 +7,9 @@ import zipfile
 
 
 def download_file(url, fname):
-    print('Here')
+    print("Here")
     r = requests.get(url + fname, stream=True)
-    print('Done')
+    print("Done")
     if r.status_code == 403:
         print("403: File not available.")
     else:
