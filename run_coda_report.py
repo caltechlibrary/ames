@@ -684,25 +684,31 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
     ids = set()
 
     for metadata in all_metadata:
-        if division:
-            if "directory_info" in metadata:
-                directory = metadata["directory_info"]
-                if "division" in directory:
-                    if division == directory["division"]:
-                        file_obj.writerow(
-                            [
-                                metadata["name"],
-                                metadata["id"],
-                                metadata["orcid"],
-                                directory["bio"],
-                            ]
-                        )
         if names:
             if "authors_id" in metadata:
                 if metadata["authors_id"] in names:
                     if "authors" in metadata:
                         for key in metadata["authors"]:
                             ids.add(key)
+        elif "directory_info" in metadata:
+            directory = metadata["directory_info"]
+            keep = True
+            if "division" in directory:
+                if division:
+                    if division != directory["division"]:
+                        keep = False
+                if keep:
+                    file_obj.writerow(
+                            [
+                                metadata["name"],
+                                metadata["id"],
+                                metadata["orcid"],
+                                directory["directory_person_type"],
+                                directory["title"],
+                                directory["division"],
+                                directory["bio"],
+                            ]
+                        )
     if names:
         in_range = []
         dot_paths = ["._Key", ".date", ".local_group.items"]
