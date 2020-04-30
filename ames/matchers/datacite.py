@@ -123,7 +123,7 @@ def update_datacite_metadata(collection, token, access):
 
 
 def submit_report(
-    month_collection, keys, token, production, prefix=None, org="Caltech Library"
+    month_collection, keys, token, production, prefix=None, org="Caltech_Library"
 ):
     for k in keys:
         datasets, err = dataset.read(month_collection, k, clean_object=True)
