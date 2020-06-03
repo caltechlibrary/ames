@@ -247,8 +247,7 @@ def thesis_list(file_obj, keys, source):
         # Determine if we want the record
         if "full_text_status" in metadata:
             if metadata["full_text_status"] == "public":
-                if "doi" not in metadata:
-                    file_obj.writerow([metadata["key"]])
+                file_obj.writerow([metadata["key"]])
 
 
 def thesis_report(file_obj, keys, source, years=None):
@@ -630,11 +629,13 @@ def file_report(file_obj, keys, source, years=None):
 
 def group_search(file_obj, keys, source, search, years=None):
     """Search for group name in Additional Information and Funders fields"""
-    file_obj.writerow(["Eprint ID", "Resolver URL"])
+    file_obj.writerow(["Eprint ID", "Resolver URL","Groups"])
     all_metadata = []
     if source.split(".")[-1] == "ds":
-        dot_paths = ["._Key", ".note", ".date", ".funders.items", ".official_url"]
-        labels = ["eprint_id", "note", "date", "funders", "official_url"]
+        dot_paths = ["._Key", ".note", ".date", ".funders.items",
+                ".official_url",".local_group.items"]
+        labels = ["eprint_id", "note", "date", "funders",
+        "official_url","groups"]
         all_metadata = get_records(dot_paths, "group", source, keys, labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -650,14 +651,21 @@ def group_search(file_obj, keys, source, search, years=None):
                         keep = True
                 if "funders" in metadata:
                     for f in metadata["funders"]:
-                        print(f)
                         if "agency" in f:
                             if search in f["agency"]:
                                 keep = True
+                if "groups" in metadata:
+                    for f in metadata["groups"]:
+                        if search in f:
+                            keep = True
                 if keep:
                     ep = metadata["eprint_id"]
                     url = metadata["official_url"]
-                    file_obj.writerow([ep, url])
+                    if "groups" in metadata:
+                        groups = metadata["groups"]
+                    else:
+                        groups = ''
+                    file_obj.writerow([ep, url,groups])
     print("Report finished!")
 
 
@@ -1098,7 +1106,6 @@ if __name__ == "__main__":
     if args.source == "feeds":
         source = get_caltechfeed(args.repository)
         keys = dataset.keys(source)
-        keys.remove("captured")
     elif args.source == "eprints":
         if args.username:
             source = "https://" + args.username + ":" + args.password + "@"

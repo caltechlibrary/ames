@@ -38,6 +38,7 @@ def get_crossref_refs(prefix, done=False, new=True):
             url = base_url + "&cursor=" + cursor
         print(url)
         r = requests.get(url)
+        print(r.text)
         records = r.json()
         if records["status"] == "failed":
             print(records)

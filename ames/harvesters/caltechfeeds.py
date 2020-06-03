@@ -69,22 +69,19 @@ def get_caltechfeed(feed, autoupdate=False):
         os.remove(fname)
     else:
         # We decide whether to update
-        datev, err = dataset.read(cname, "captured")
-        if err != "":
-            print(err)
-            exit()
+        datev = dataset.get_when(cname)
         if datev == {}:
             # No date, collection must be updated
             update = "Y"
         else:
-            captured_date = datetime.fromisoformat(datev["captured"])
+            print(datev)
+            captured_date = datetime.fromisoformat(datev)
             print(
                 "Local Collection "
                 + feed
                 + " last updated on "
                 + captured_date.isoformat()
             )
-
             upname = "updated.csv"
             download_file(url, upname)
             with open(upname) as csv_file:
@@ -97,9 +94,14 @@ def get_caltechfeed(feed, autoupdate=False):
                 count = 0
                 while captured_date < record_date:
                     count = count + 1
-                    record_date = datetime.fromisoformat(next(reader)[1]).replace(
+                    try:
+                        date = next(reader)[1]
+                        record_date = datetime.fromisoformat(date).replace(
                         tzinfo=None
-                    )
+                        )
+                    except StopIteration:
+                        print("All records are out of date")
+                        break
             if count > 0:
                 print(str(count) + " Outdated Records")
                 if autoupdate == False:
