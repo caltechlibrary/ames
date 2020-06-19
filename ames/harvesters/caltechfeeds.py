@@ -88,14 +88,15 @@ def get_caltechfeed(feed, autoupdate=False):
                 reader = csv.reader(csv_file, delimiter=",")
                 # Drop header
                 next(reader)
-                record_date = datetime.fromisoformat(next(reader)[1]).replace(
+                date = next(reader)[1].replace('^M','')
+                record_date = datetime.fromisoformat(date).replace(
                     tzinfo=None
                 )
                 count = 0
                 while captured_date < record_date:
                     count = count + 1
                     try:
-                        date = next(reader)[1]
+                        date = next(reader)[1].replace('^M','')
                         record_date = datetime.fromisoformat(date).replace(
                         tzinfo=None
                         )

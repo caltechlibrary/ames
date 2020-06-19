@@ -676,9 +676,9 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
         dot_paths = [
             "._Key",
             ".directory_info",
-            ".ORCID",
+            ".orcid",
             ".sort_name",
-            ".Authors_ID",
+            ".authors_id",
             ".CaltechAUTHORS",
         ]
         labels = ["id", "directory_info", "orcid", "name", "authors_id", "authors"]
@@ -706,11 +706,20 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
                     if division != directory["division"]:
                         keep = False
                 if keep:
+                    if 'orcid' in metadata:
+                        orcid = metadata['orcid']
+                    else:
+                        orcid = ''
+                    if 'authors_id' in metadata:
+                        authors = metadata['authors_id']
+                    else:
+                        authors = ''
                     file_obj.writerow(
                             [
                                 metadata["name"],
                                 metadata["id"],
-                                metadata["orcid"],
+                                authors,
+                                orcid,
                                 directory["directory_person_type"],
                                 directory["title"],
                                 directory["division"],
