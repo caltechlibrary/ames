@@ -22,9 +22,13 @@ def download_file(url, fname):
         return fname
 
 
-def get_records(dot_paths, f_name, d_name, keys, labels=None):
+def get_records(dot_paths, f_name, d_name, keys, labels=None, clear=True):
     if dataset.has_frame(d_name, f_name):
-        dataset.delete_frame(d_name, f_name)
+        if clear:
+            dataset.delete_frame(d_name, f_name)
+        else:
+            dataset.frame_refresh(d_name, f_name)
+            return dataset.frame_objects(d_name, f_name)
     if labels:
         if not dataset.frame_create(d_name, f_name, keys, dot_paths, labels):
             err = dataset.error_message()
