@@ -92,18 +92,14 @@ def get_caltechfeed(feed, autoupdate=False):
                 reader = csv.reader(csv_file, delimiter=",")
                 # Drop header
                 next(reader)
-                date = next(reader)[1].replace('^M','')
-                record_date = datetime.fromisoformat(date).replace(
-                    tzinfo=None
-                )
+                date = next(reader)[1].replace("^M", "")
+                record_date = datetime.fromisoformat(date).replace(tzinfo=None)
                 count = 0
                 while captured_date < record_date:
                     count = count + 1
                     try:
-                        date = next(reader)[1].replace('^M','')
-                        record_date = datetime.fromisoformat(date).replace(
-                        tzinfo=None
-                        )
+                        date = next(reader)[1].replace("^M", "")
+                        record_date = datetime.fromisoformat(date).replace(tzinfo=None)
                     except StopIteration:
                         print("All records are out of date")
                         break

@@ -53,27 +53,31 @@ def build_usage(caltechdata_collection, usage_collection):
             rdate = None
             submitted = None
             issued = None
-            for date in metadata["dates"]:
-                if date["dateType"] == "Submitted":
-                    rdate = date["date"]
-                if date["dateType"] == "Updated":
-                    submitted = date["date"]
-                if date["dateType"] == "Issued":
-                    issued = date["date"]
-            if rdate == None:
-                if submitted != None:
-                    rdate = submitted
-                else:
-                    rdate = issued
+            if "dates" in metadata:
+                doi = metadata["identifier"]["identifier"]
+                for date in metadata["dates"]:
+                    if date["dateType"] == "Submitted":
+                        rdate = date["date"]
+                    if date["dateType"] == "Updated":
+                        submitted = date["date"]
+                    if date["dateType"] == "Issued":
+                        issued = date["date"]
+                if rdate == None:
+                    if submitted != None:
+                        rdate = submitted
+                    else:
+                        rdate = issued
+            else:
+                # Dummy values for junk records
+                rdate = "2020-04-01"
+                doi = ""
             # Dataset is the only supported type in the spec and we are
             # following the dataset standards for usage
             # All dates are the date added to CaltechDATA, which is
             # the apropriate 'publication' date even if content was available
             # earlier
             record_data = {
-                "dataset-id": [
-                    {"type": "doi", "value": metadata["identifier"]["identifier"]}
-                ],
+                "dataset-id": [{"type": "doi", "value": doi}],
                 "uri": "https://data.caltech.edu/records/" + k,
                 "publisher": "CaltechDATA",
                 "platform": "CaltechDATA",
