@@ -998,7 +998,7 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
     if filter_creators:
         with open("../" + filter_creators, mode="r") as infile:
             reader = csv.reader(infile)
-            filter_values = {rows[0]: rows[1] for rows in reader}
+            filter_values = {rows[0].strip(): rows[1].strip() for rows in reader}
     to_check = {}
     for creator_id in creator_ids:
         creator = creators[creator_id]
@@ -1034,20 +1034,36 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
                 file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
                 to_check[creator_id] = orcid
     print("Checking against CaltechPEOPLE")
-    source = get_caltechfeed("people")
-    keys = dataset.keys(source)
-    keys.remove("captured")
+    psource = get_caltechfeed("people")
+    keys = dataset.keys(psource)
     for person in to_check:
         orcid = to_check[person]
-        if dataset.has_key(source, person) == False:
-            print(f"{person} {orcid} not in CaltechPEOPLE")
+        if dataset.has_key(psource, person) == False:
+            # Pick a Eprints record to get name
+            records = creators[person]["update_ids"]
+            existing = creators[person]["eprint_ids"]
+            if len(records) > 0:
+                record = records[0]
+            elif len(existing) > 0:
+                record = existing[0]
+            else:
+                print(f"Don't have records for {person}")
+            dot_paths = ["._Key", ".creators.items"]
+            labels = ["eprint_id", "items"]
+            metadata = get_records(dot_paths, "crea", source, [record], labels)
+            for item in metadata[0]["items"]:
+                if "id" in item:
+                    if item["id"] == person:
+                        family = item["name"]["family"]
+                        given = item["name"]["given"]
+                        print(f"{family},{given},{orcid},,{person}")
         else:
-            caltechperson, err = dataset.read(source, person)
+            caltechperson, err = dataset.read(psource, person)
             if err != "":
                 print(err)
-            if caltechperson["ORCID"] == "":
-                print(f"Add {orcid} to {person}")
-            elif caltechperson["ORCID"] != orcid:
+            if "orcid" not in caltechperson:
+                print(f"{person},{orcid}")
+            elif caltechperson["orcid"] != orcid:
                 print(
                     f'CaltechPERSON ORCID { caltechperson["ORCID"]} not the same as {orcid} given in report for {person}'
                 )
