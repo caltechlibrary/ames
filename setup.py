@@ -19,6 +19,14 @@ def read(fname):
     return src
 
 
+def read_requirements():
+    """Parse requirements from requirements.txt."""
+    reqs_path = os.path.join(".", "requirements.txt")
+    with open(reqs_path, "r") as f:
+        requirements = [line.rstrip() for line in f]
+    return requirements
+
+
 codemeta_json = "codemeta.json"
 
 
@@ -82,7 +90,7 @@ REQUIRED = [
     "caltechdata_api>=0.1.3",
     "py_dataset>=0.1.4",
     "pandas",
-    "ArchivesSnake"
+    "ArchivesSnake",
 ]
 
 # What packages are optional?
@@ -164,7 +172,7 @@ setup(
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
-    install_requires=REQUIRED,
+    install_requires=read_requirements(),
     extras_require=EXTRAS,
     package_data={name: files},
     license=lic,
