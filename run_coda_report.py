@@ -528,12 +528,18 @@ def license_report(file_obj, keys, source, item_type=None, rtype="summary"):
                 if item_type != None:
                     # Restrict to a specific item type
                     if metadata["resourceType"]["resourceTypeGeneral"] in item_type:
-                        lic = metadata["rightsList"][0]["rights"]
+                        if 'rightsList' in metadata:
+                            lic = metadata["rightsList"][0]["rights"]
+                        else:
+                            lic = None
                     else:
                         lic = None
                 # Otherwise we always save license
                 else:
-                    lic = metadata["rightsList"]["rights"]
+                    if 'rightsList' in metadata:
+                        lic = metadata["rightsList"][0]["rights"]
+                    else:
+                        lic = None
 
                 if lic != None:
                     if lic in licenses:
@@ -1065,7 +1071,7 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
                 print(f"{person},{orcid}")
             elif caltechperson["orcid"] != orcid:
                 print(
-                    f'CaltechPERSON ORCID { caltechperson["ORCID"]} not the same as {orcid} given in report for {person}'
+                    f'CaltechPERSON ORCID { caltechperson["orcid"]} not the same as {orcid} given in report for {person}'
                 )
     print("Report finished!")
 

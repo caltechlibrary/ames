@@ -193,33 +193,25 @@ def fix_multiple_links(input_collection, token):
                 print(response)
 
 
-def update_citation(collection, token, production=True):
+def update_citation(record, rid, token, production=True):
     """Update example citation text in the description field"""
-    keys = dataset.keys(collection)
-    for k in keys:
-        record, err = dataset.read(collection, k)
-        if err != "":
-            print(err)
-            exit()
-        description = record["descriptions"]
-        for d in description:
-            descr_text = d["description"]
-            if descr_text.startswith("<br>Cite this record as:"):
-                record_doi = record["identifier"]["identifier"]
-                headers = {"Accept": "text/x-bibliography; style=apa"}
-                citation_link = "https://doi.org/"
-                citation = requests.get(
-                    citation_link + record_doi, headers=headers
-                ).text
-                doi_url = "https://doi.org/" + record_doi.lower()
-                if doi_url in citation:
-                    # Check that we have a citation and not a server error,
-                    # otherwise wait till next time
-                    d["description"] = citation_text(citation, doi_url, record_doi)
-        response = caltechdata_edit(
-            token, k, {"descriptions": description}, {}, {}, production
-        )
-        print(response)
+    description = record["descriptions"]
+    for d in description:
+        descr_text = d["description"]
+        if descr_text.startswith("<br>Cite this record as:"):
+            record_doi = record["identifier"]["identifier"]
+            headers = {"Accept": "text/x-bibliography; style=apa"}
+            citation_link = "https://doi.org/"
+            citation = requests.get(citation_link + record_doi, headers=headers).text
+            doi_url = "https://doi.org/" + record_doi.lower()
+            if doi_url in citation.lower():
+                # Check that we have a citation and not a server error,
+                # otherwise wait till next time
+                d["description"] = citation_text(citation, doi_url, record_doi)
+    response = caltechdata_edit(
+        token, rid, {"descriptions": description}, {}, {}, production
+    )
+    print(response)
 
 
 def citation_text(citation, doi_url, record_doi):
@@ -231,7 +223,7 @@ def citation_text(citation, doi_url, record_doi):
     n_txt = (
         "<br>Cite this record as:<br>"
         + citation
-        + '<br> or choose a <a href="https://crosscite.org/?doi='
+        + '<br> or choose a <a href="https://citation.crosscite.org/?doi='
         + record_doi
         + '"> different citation style.</a><br>'
         + '<a href="https://data.datacite.org/application/x-bibtex/'
