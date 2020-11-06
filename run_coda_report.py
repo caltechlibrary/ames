@@ -950,7 +950,7 @@ def new_creator_report(file_obj, keys, source):
                         if author_given == existing_given:
                             creators.append(existing)
                             crossref_needed = False
-                        if author_given.replace(".", "") == existing_given.replace(
+                        elif author_given.replace(".", "") == existing_given.replace(
                             ".", ""
                         ):
                             creators.append(existing)
