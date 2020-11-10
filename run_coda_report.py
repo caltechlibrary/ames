@@ -248,22 +248,55 @@ def thesis_list(file_obj, keys, source, search):
         ".creators.items[0].name.family",
         ".creators.items[0].name.given",
         ".date",
+        ".thesis_type",
     ]
-    labels = ["full_text_status", "status", "key", "doi", "family", "given", "date"]
+    labels = [
+        "full_text_status",
+        "status",
+        "key",
+        "doi",
+        "family",
+        "given",
+        "date",
+        "type",
+    ]
     if source.split(".")[-1] == "ds":
         all_metadata = get_records(dot_paths, "data", source, keys, labels)
+    all_metadata.sort(key=lambda all_metadata: all_metadata["family"])
+    all_metadata.sort(key=lambda all_metadata: all_metadata["date"])
+    phd = []
+    eng = []
+    masters = []
     for metadata in all_metadata:
         # Determine if we want the record
         if metadata["status"] == "archive":
             if "full_text_status" in metadata:
                 if metadata["full_text_status"] == search:
-                    file_obj.writerow(
-                        [
-                            metadata["key"],
-                            metadata["date"],
-                            metadata["family"] + "," + metadata["given"],
-                        ]
-                    )
+                    if metadata["type"] == "masters":
+                        write_thesis(masters, metadata)
+                    if metadata["type"] == "phd":
+                        write_thesis(phd, metadata)
+                    if metadata["type"] == "engd":
+                        write_thesis(eng, metadata)
+    file_obj.writerow(["PHD"])
+    for line in phd:
+        file_obj.writerow(line)
+    file_obj.writerow(["Engineers"])
+    for line in eng:
+        file_obj.writerow(line)
+    file_obj.writerow(["Masters"])
+    for line in masters:
+        file_obj.writerow(line)
+
+
+def write_thesis(struct, metadata):
+    struct.append(
+        [
+            metadata["date"],
+            metadata["family"] + "," + metadata["given"],
+            metadata["key"],
+        ]
+    )
 
 
 def thesis_report(file_obj, keys, source, years=None):
