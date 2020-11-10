@@ -238,17 +238,32 @@ def thesis_search(file_obj, keys, source, search):
             file_obj.writerow([metadata["key"], metadata["thesis_type"]])
 
 
-def thesis_list(file_obj, keys, source):
+def thesis_list(file_obj, keys, source, search):
     all_metadata = []
-    dot_paths = [".full_text_status", "._Key", ".doi"]
-    labels = ["full_text_status", "key", "doi"]
+    dot_paths = [
+        ".full_text_status",
+        ".eprint_status",
+        "._Key",
+        ".doi",
+        ".creators.items[0].name.family",
+        ".creators.items[0].name.given",
+        ".date",
+    ]
+    labels = ["full_text_status", "status", "key", "doi", "family", "given", "date"]
     if source.split(".")[-1] == "ds":
-        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        all_metadata = get_records(dot_paths, "data", source, keys, labels)
     for metadata in all_metadata:
         # Determine if we want the record
-        if "full_text_status" in metadata:
-            if metadata["full_text_status"] == "public":
-                file_obj.writerow([metadata["key"]])
+        if metadata["status"] == "archive":
+            if "full_text_status" in metadata:
+                if metadata["full_text_status"] == search:
+                    file_obj.writerow(
+                        [
+                            metadata["key"],
+                            metadata["date"],
+                            metadata["family"] + "," + metadata["given"],
+                        ]
+                    )
 
 
 def thesis_report(file_obj, keys, source, years=None):
@@ -528,7 +543,7 @@ def license_report(file_obj, keys, source, item_type=None, rtype="summary"):
                 if item_type != None:
                     # Restrict to a specific item type
                     if metadata["resourceType"]["resourceTypeGeneral"] in item_type:
-                        if 'rightsList' in metadata:
+                        if "rightsList" in metadata:
                             lic = metadata["rightsList"][0]["rights"]
                         else:
                             lic = None
@@ -536,7 +551,7 @@ def license_report(file_obj, keys, source, item_type=None, rtype="summary"):
                         lic = None
                 # Otherwise we always save license
                 else:
-                    if 'rightsList' in metadata:
+                    if "rightsList" in metadata:
                         lic = metadata["rightsList"][0]["rights"]
                     else:
                         lic = None
@@ -1304,7 +1319,7 @@ if __name__ == "__main__":
         elif args.report_name == "thesis_report":
             thesis_report(file_out, keys, source, args.years)
         elif args.report_name == "thesis_list":
-            thesis_list(file_out, keys, source)
+            thesis_list(file_out, keys, source, args.search)
         elif args.report_name == "thesis_metadata":
             thesis_metadata(file_out, keys, source, args.years)
         elif args.report_name == "thesis_search":

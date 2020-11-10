@@ -1,5 +1,5 @@
-import os, json, requests
-from caltechdata_api import caltechdata_edit, decustomize_schema
+import os, requests
+from caltechdata_api import decustomize_schema
 from ames.matchers import update_citation
 
 # Get access token from TIND sed as environment variable with source token.bash
