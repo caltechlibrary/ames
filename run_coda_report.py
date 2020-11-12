@@ -252,26 +252,6 @@ def thesis_doi(keys, source):
     print(f"{count} archived theses without DOIs")
 
 
-def thesis_search(file_obj, keys, source, search):
-    all_metadata = []
-    dot_paths = [".option_major.items", ".option_minor.items", "._Key", ".thesis_type"]
-    labels = ["major", "minor", "key", "thesis_type"]
-    if source.split(".")[-1] == "ds":
-        all_metadata = get_records(dot_paths, "recs", source, keys, labels)
-    for metadata in all_metadata:
-        # Determine if we want the record
-        update = False
-        for opt in metadata["major"]:
-            if opt in search:
-                update = True
-        if "minor" in metadata:
-            for opt in metadata["minor"]:
-                if opt in search:
-                    update = True
-        if update:
-            file_obj.writerow([metadata["key"], metadata["thesis_type"]])
-
-
 def thesis_list(file_obj, keys, source, search):
     all_metadata = []
     dot_paths = [
