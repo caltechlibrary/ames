@@ -6,21 +6,7 @@ from idutils import is_doi, is_arxiv, normalize_doi
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records
 from ames.harvesters import get_eprint_keys, get_eprint
-
-
-def is_in_range(year_arg, year):
-    # Is a given year in the range of a year argument YEAR-YEAR or YEAR?
-    if year_arg != None:
-        split = year_arg.split("-")
-        if len(split) == 2:
-            if int(year) >= int(split[0]) and int(year) <= int(split[1]):
-                return True
-        else:
-            if year == split[0]:
-                return True
-    else:
-        return True
-    return False
+from ames.utils import is_in_range
 
 
 def keep_record(metadata, years, item_type=None, group=None):

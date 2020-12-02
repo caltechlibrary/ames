@@ -2,8 +2,10 @@ import requests
 import re
 from datetime import datetime
 from progressbar import progressbar
+from py_dataset import dataset
 from ames.harvesters import get_eprint
 from ames.harvesters import get_records
+from ames.utils import is_in_range
 
 
 def replace_string(metadata, field, from_str, to_str):
@@ -16,6 +18,7 @@ def replace_string(metadata, field, from_str, to_str):
 
 def resolver_links(source, keys, outfile=None):
     if source.split(".")[-1] == "ds":
+        # This generates report
         dot_paths = [".eprint_id", ".official_url"]
         labels = ["eprint_id", "official_url"]
         all_metadata = get_records(dot_paths, "official", source, keys, labels)
@@ -24,6 +27,7 @@ def resolver_links(source, keys, outfile=None):
             if new:
                 outfile.writerow([meta["eprint_id"], meta["official_url"], new])
     else:
+        # This makes changes
         for eprint_id in progressbar(keys, redirect_stdout=True):
             meta = get_eprint(source, eprint_id)
             # Ignore errors where the record doesn't exist
@@ -41,6 +45,113 @@ def resolver_links(source, keys, outfile=None):
                         print(eprint_id)
                         response = requests.put(url, data=new, headers=headers)
                         print(response)
+
+
+def thesis_match(metadata):
+    if metadata["type"] == "masters":
+        return True
+    if metadata["type"] == "phd":
+        return True
+    if metadata["type"] == "engd":
+        return True
+    else:
+        return False
+
+
+def release_files(source, base_url, outfile=None):
+    if source.split(".")[-1] == "ds":
+        # This generates report
+        dot_paths = [
+            ".eprint_id",
+            ".documents",
+            ".date",
+            ".eprint_status",
+            ".creators.items[0].name.family",
+            ".thesis_type",
+            ".full_text_status",
+        ]
+        labels = [
+            "eprint_id",
+            "documents",
+            "date",
+            "status",
+            "family",
+            "type",
+            "full_text",
+        ]
+        keys = dataset.keys(source)
+        all_metadata = get_records(dot_paths, "official", source, keys, labels)
+        all_metadata.sort(key=lambda all_metadata: all_metadata["family"])
+        all_metadata.sort(key=lambda all_metadata: all_metadata["date"])
+        for meta in all_metadata:
+            year = meta["date"].split("-")[0]
+            if is_in_range("2004-2005", year):
+                if thesis_match(meta):
+                    files = []
+                    fnames = []
+                    count = 0
+                    for document in meta["documents"]:
+                        count = count + 1
+                        if document["security"] == "validuser":
+                            files.append(count)
+                            fnames.append(document["main"])
+                    if len(files) > 0:
+                        eprint_id = meta["eprint_id"]
+                        print(eprint_id)
+                        outfile.writerow(
+                            [
+                                year,
+                                meta["family"],
+                                eprint_id,
+                                meta["status"],
+                                meta["full_text"],
+                                files,
+                                fnames,
+                            ]
+                        )
+                        mixed = False
+                        for filen in files:
+                            new = "public"
+                            # Doc status
+                            url = (
+                                base_url
+                                + "/rest/eprint/"
+                                + str(eprint_id)
+                                + "/full_text_status.txt"
+                            )
+                            response = requests.get(url)
+                            eprint_status = response.text
+                            if eprint_status == "restricted":
+                                response = requests.put(url, data=new, headers=headers)
+                                print(response)
+                            elif eprint_status == "mixed":
+                                print("mixed, skipping")
+                                mixed = True
+                            elif eprint_status != "public":
+                                print(eprint_status)
+                                print(url)
+                                exit()
+                            url = (
+                                base_url
+                                + "/rest/eprint/"
+                                + str(eprint_id)
+                                + "/documents/"
+                                + str(filen)
+                                + "/security.txt"
+                            )
+                            headers = {"content-type": "text/plain"}
+                            response = requests.get(url)
+                            live_status = response.text
+                            if not mixed:
+                                if live_status == "validuser":
+                                    response = requests.put(
+                                        url, data=new, headers=headers
+                                    )
+                                    print(response)
+                                elif live_status != "public":
+                                    print(live_status)
+                                    print(url)
+                                    exit()
 
 
 def update_date(source, recid):
