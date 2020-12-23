@@ -66,6 +66,11 @@ def update_datacite_media(username, password, collection, prefix):
                                 "video/quicktime="
                                 + file_met["uniform_resource_identifier"]
                             )
+                        elif extension == "gz":
+                            data = (
+                                "application/gzip="
+                                + file_met["uniform_resource_identifier"]
+                            )
                         if data != {}:
                             print(doi)
                             print(data)
