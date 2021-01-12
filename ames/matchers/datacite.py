@@ -33,7 +33,8 @@ def update_datacite_media(username, password, collection, prefix):
         if err != "":
             print(f"Unexpected error on read: {err}")
         record_update = datetime.fromisoformat(existing["updated"]).date()
-        if record_update > update:
+        # Subtraction to get window to grab records that were updated between runs
+        if record_update > update - datetime.timedelta(days=2):
             if "electronic_location_and_access" in existing:
                 doi = existing["identifier"]["identifier"]
                 record_prefix = doi.split("/")[0]
