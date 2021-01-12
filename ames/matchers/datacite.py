@@ -3,7 +3,7 @@ import requests
 from os import path
 from progressbar import progressbar
 from datacite import DataCiteMDSClient, schema40
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 
 def delete_datacite_media(username, password, doi):
@@ -34,7 +34,7 @@ def update_datacite_media(username, password, collection, prefix):
             print(f"Unexpected error on read: {err}")
         record_update = datetime.fromisoformat(existing["updated"]).date()
         # Subtraction to get window to grab records that were updated between runs
-        if record_update > update - datetime.timedelta(days=2):
+        if record_update > update - timedelta(days=2):
             if "electronic_location_and_access" in existing:
                 doi = existing["identifier"]["identifier"]
                 record_prefix = doi.split("/")[0]
