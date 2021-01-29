@@ -65,6 +65,7 @@ def update_datacite_media(username, password, collection, prefix):
                                     "video/mp4="
                                     + "https://www.cellstructureatlas.org/videos/"
                                     + filename
+                                    + ".mp4"
                                 )
                             else:
                                 data = (
