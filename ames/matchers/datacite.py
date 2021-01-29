@@ -32,6 +32,14 @@ def update_datacite_media(username, password, collection, prefix):
         existing, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
+        atlas = False
+        subjects = existing["subjects"]
+        for subject in subjects:
+            if (
+                subject["subject"].strip()
+                == "Atlas of Bacterial and Archaeal Cell Structure"
+            ):
+                atlas = True
         record_update = datetime.fromisoformat(existing["updated"]).date()
         # Subtraction to get window to grab records that were updated between runs
         if record_update > update - timedelta(days=2):
@@ -44,6 +52,7 @@ def update_datacite_media(username, password, collection, prefix):
                         url = "https://mds.datacite.org/media/" + doi
                         headers = {"Content-Type": "application/txt;charset=UTF-8"}
                         extension = file_met["electronic_name"][0].split(".")[-1]
+                        filename = file_met["electronic_name"][0].split(".")[0]
                         data = {}
                         if extension == "nc":
                             data = (
@@ -51,9 +60,17 @@ def update_datacite_media(username, password, collection, prefix):
                                 + file_met["uniform_resource_identifier"]
                             )
                         elif extension == "mp4":
-                            data = (
-                                "video/mp4=" + file_met["uniform_resource_identifier"]
-                            )
+                            if atlas:
+                                data = (
+                                    "video/mp4="
+                                    + filename
+                                    + "https://www.cellstructureatlas.org/videos/"
+                                )
+                            else:
+                                data = (
+                                    "video/mp4="
+                                    + file_met["uniform_resource_identifier"]
+                                )
                         elif extension == "mj2":
                             data = (
                                 "video/mj2=" + file_met["uniform_resource_identifier"]

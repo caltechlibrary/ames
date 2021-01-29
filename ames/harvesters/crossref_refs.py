@@ -33,9 +33,9 @@ def get_crossref_refs(prefix, done=False, new=True):
                 print("error on read: " + err)
             date = date["captured"]
             print(date)
-            url = base_url + "&from-collected-date=" + date + "&cursor=" + cursor
-        else:
-            url = base_url + "&cursor=" + cursor
+            url = base_url + "&from-collected-date=" + date
+        if cursor != "":
+            url = url + "&cursor=" + cursor
         print(url)
         r = requests.get(url)
         print(r.text)
