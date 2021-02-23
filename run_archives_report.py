@@ -107,11 +107,13 @@ def get_agents(aspace):
     return agents
 
 
-def make_line(json, fields):
+def make_line(json, fields, agents):
     """Return specific fields from a json object"""
     row = []
     for field in fields:
         if field in json:
+            if field == 'agent':
+                row.append(agents[json[field].linked_agents[0].ref]
             row.append(json[field])
         else:
             row.append("")
@@ -199,6 +201,8 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
     ]
     file_obj.writerow(fields + extras)
     format_types = set()
+    print(f"Requesting agents")
+    agents = get_agents(aspace)
     for acc in progressbar(repo.accessions):
         if acc.extents:
             for ext in acc.extents:
