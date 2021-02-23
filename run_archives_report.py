@@ -124,7 +124,6 @@ def add_blocks(json):
     if len(json["dates"]) > 0:
         if len(json["dates"]) > 1:
             print("Multiple dates")
-            exit()
         else:
             date = json["dates"][0]
             fields = ["expression", "begin", "end", "date_type", "label"]
@@ -134,7 +133,6 @@ def add_blocks(json):
     if "extents" in json:
         if len(json["extents"]) > 1:
             print("Multiple extents")
-            exit()
         else:
             date = json["extents"][0]
             fields = ["number", "physical_details"]
@@ -216,7 +214,7 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
                         row = make_line(json, fields)
                         row = row + add_blocks(json)
                         file_obj.writerow(row)
-    print(format_types)
+    print('Formats: ', format_types)
 
 
 def accession_report(file_obj, repo, aspace, subject=None, years=None):
