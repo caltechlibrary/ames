@@ -19,7 +19,7 @@ if files:
     get_caltechdata(collection, production)
     mapping = file_mapping(collection)
 
-history = True
+history = False
 
 if history:
     keys = dataset.keys(collection)

@@ -1,25 +1,12 @@
-import os, argparse, csv
+import os, argparse, csv, json
 from py_dataset import dataset
 import random
+import requests
 from idutils import is_doi, is_arxiv, normalize_doi
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records
 from ames.harvesters import get_eprint_keys, get_eprint
-
-
-def is_in_range(year_arg, year):
-    # Is a given year in the range of a year argument YEAR-YEAR or YEAR?
-    if year_arg != None:
-        split = year_arg.split("-")
-        if len(split) == 2:
-            if int(year) >= int(split[0]) and int(year) <= int(split[1]):
-                return True
-        else:
-            if year == split[0]:
-                return True
-    else:
-        return True
-    return False
+from ames.utils import is_in_range
 
 
 def keep_record(metadata, years, item_type=None, group=None):
@@ -237,18 +224,79 @@ def thesis_search(file_obj, keys, source, search):
             file_obj.writerow([metadata["key"], metadata["thesis_type"]])
 
 
-def thesis_list(file_obj, keys, source):
+def thesis_doi(keys, source):
     all_metadata = []
-    dot_paths = [".full_text_status", "._Key", ".doi"]
-    labels = ["full_text_status", "key", "doi"]
+    dot_paths = [".doi", "._Key", ".eprint_status"]
+    labels = ["doi", "key", "status"]
     if source.split(".")[-1] == "ds":
-        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        all_metadata = get_records(dot_paths, "recs", source, keys, labels)
+    count = 0
+    for metadata in all_metadata:
+        if metadata["status"] == "archive":
+            if "doi" not in metadata:
+                count = count + 1
+    print(f"{count} archived theses without DOIs")
+
+
+def thesis_list(file_obj, keys, source, search):
+    all_metadata = []
+    dot_paths = [
+        ".full_text_status",
+        ".eprint_status",
+        "._Key",
+        ".doi",
+        ".creators.items[0].name.family",
+        ".creators.items[0].name.given",
+        ".date",
+        ".thesis_type",
+    ]
+    labels = [
+        "full_text_status",
+        "status",
+        "key",
+        "doi",
+        "family",
+        "given",
+        "date",
+        "type",
+    ]
+    if source.split(".")[-1] == "ds":
+        all_metadata = get_records(dot_paths, "data", source, keys, labels)
+    all_metadata.sort(key=lambda all_metadata: all_metadata["family"])
+    all_metadata.sort(key=lambda all_metadata: all_metadata["date"])
+    phd = []
+    eng = []
+    masters = []
     for metadata in all_metadata:
         # Determine if we want the record
-        if "full_text_status" in metadata:
-            if metadata["full_text_status"] == "public":
-                if "doi" not in metadata:
-                    file_obj.writerow([metadata["key"]])
+        if metadata["status"] == "archive":
+            if "full_text_status" in metadata:
+                if metadata["full_text_status"] == search:
+                    if metadata["type"] == "masters":
+                        write_thesis(masters, metadata)
+                    if metadata["type"] == "phd":
+                        write_thesis(phd, metadata)
+                    if metadata["type"] == "engd":
+                        write_thesis(eng, metadata)
+    file_obj.writerow(["PHD"])
+    for line in phd:
+        file_obj.writerow(line)
+    file_obj.writerow(["Engineers"])
+    for line in eng:
+        file_obj.writerow(line)
+    file_obj.writerow(["Masters"])
+    for line in masters:
+        file_obj.writerow(line)
+
+
+def write_thesis(struct, metadata):
+    struct.append(
+        [
+            metadata["date"],
+            metadata["family"] + "," + metadata["given"],
+            metadata["key"],
+        ]
+    )
 
 
 def thesis_report(file_obj, keys, source, years=None):
@@ -420,10 +468,10 @@ def doi_report(
                     author = metadata["creators"]["items"][0]["id"]
                 else:
                     author = ""
-                    print("Record " + ep + " is missing author id")
+                    print(f"Record {ep} is missing author id")
 
             if "title" not in metadata:
-                print("Record " + ep + " is missing Title")
+                print(f"Record {ep} is missing Title")
                 exit()
             title = metadata["title"]
             url = metadata["official_url"]
@@ -528,12 +576,18 @@ def license_report(file_obj, keys, source, item_type=None, rtype="summary"):
                 if item_type != None:
                     # Restrict to a specific item type
                     if metadata["resourceType"]["resourceTypeGeneral"] in item_type:
-                        lic = metadata["rightsList"][0]["rights"]
+                        if "rightsList" in metadata:
+                            lic = metadata["rightsList"][0]["rights"]
+                        else:
+                            lic = None
                     else:
                         lic = None
                 # Otherwise we always save license
                 else:
-                    lic = metadata["rightsList"]["rights"]
+                    if "rightsList" in metadata:
+                        lic = metadata["rightsList"][0]["rights"]
+                    else:
+                        lic = None
 
                 if lic != None:
                     if lic in licenses:
@@ -630,11 +684,18 @@ def file_report(file_obj, keys, source, years=None):
 
 def group_search(file_obj, keys, source, search, years=None):
     """Search for group name in Additional Information and Funders fields"""
-    file_obj.writerow(["Eprint ID", "Resolver URL"])
+    file_obj.writerow(["Eprint ID", "Resolver URL", "Groups"])
     all_metadata = []
     if source.split(".")[-1] == "ds":
-        dot_paths = ["._Key", ".note", ".date", ".funders.items", ".official_url"]
-        labels = ["eprint_id", "note", "date", "funders", "official_url"]
+        dot_paths = [
+            "._Key",
+            ".note",
+            ".date",
+            ".funders.items",
+            ".official_url",
+            ".local_group.items",
+        ]
+        labels = ["eprint_id", "note", "date", "funders", "official_url", "groups"]
         all_metadata = get_records(dot_paths, "group", source, keys, labels)
     else:
         for eprint_id in progressbar(keys, redirect_stdout=True):
@@ -650,14 +711,21 @@ def group_search(file_obj, keys, source, search, years=None):
                         keep = True
                 if "funders" in metadata:
                     for f in metadata["funders"]:
-                        print(f)
                         if "agency" in f:
                             if search in f["agency"]:
                                 keep = True
+                if "groups" in metadata:
+                    for f in metadata["groups"]:
+                        if search in f:
+                            keep = True
                 if keep:
                     ep = metadata["eprint_id"]
                     url = metadata["official_url"]
-                    file_obj.writerow([ep, url])
+                    if "groups" in metadata:
+                        groups = metadata["groups"]
+                    else:
+                        groups = ""
+                    file_obj.writerow([ep, url, groups])
     print("Report finished!")
 
 
@@ -668,9 +736,9 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
         dot_paths = [
             "._Key",
             ".directory_info",
-            ".ORCID",
+            ".orcid",
             ".sort_name",
-            ".Authors_ID",
+            ".authors_id",
             ".CaltechAUTHORS",
         ]
         labels = ["id", "directory_info", "orcid", "name", "authors_id", "authors"]
@@ -684,25 +752,40 @@ def people_search(file_obj, keys, source, names=None, division=None, years=None)
     ids = set()
 
     for metadata in all_metadata:
-        if division:
-            if "directory_info" in metadata:
-                directory = metadata["directory_info"]
-                if "division" in directory:
-                    if division == directory["division"]:
-                        file_obj.writerow(
-                            [
-                                metadata["name"],
-                                metadata["id"],
-                                metadata["orcid"],
-                                directory["bio"],
-                            ]
-                        )
         if names:
             if "authors_id" in metadata:
                 if metadata["authors_id"] in names:
                     if "authors" in metadata:
                         for key in metadata["authors"]:
                             ids.add(key)
+        elif "directory_info" in metadata:
+            directory = metadata["directory_info"]
+            keep = True
+            if "division" in directory:
+                if division:
+                    if division != directory["division"]:
+                        keep = False
+                if keep:
+                    if "orcid" in metadata:
+                        orcid = metadata["orcid"]
+                    else:
+                        orcid = ""
+                    if "authors_id" in metadata:
+                        authors = metadata["authors_id"]
+                    else:
+                        authors = ""
+                    file_obj.writerow(
+                        [
+                            metadata["name"],
+                            metadata["id"],
+                            authors,
+                            orcid,
+                            directory["directory_person_type"],
+                            directory["title"],
+                            directory["division"],
+                            directory["bio"],
+                        ]
+                    )
     if names:
         in_range = []
         dot_paths = ["._Key", ".date", ".local_group.items"]
@@ -871,6 +954,77 @@ def creator_quote_report(file_obj, keys, source):
                                 )
 
 
+def new_creator_report(file_obj, keys, source):
+    """Add CrossRef creators to existing Eprints record"""
+    print(f"Processing {len(keys)} eprint records for creators")
+    all_creators = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".creators.items", ".related_url.items"]
+        labels = ["eprint_id", "items", "urls"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+        for metadata in all_metadata:  # , redirect_stdout=True):
+            creators = []
+            key = metadata["eprint_id"]
+            for item in metadata["urls"]:
+                if "url" in item:
+                    url = item["url"].strip()
+                if "type" in item:
+                    itype = item["type"].strip().lower()
+                if "description" in item:
+                    description = item["description"].strip().lower()
+                if itype == "doi" and description == "article":
+                    doi = url
+                    break
+            doi = doi.split("doi.org/")[1]
+            url = (
+                "https://api.crossref.org/works/" + doi + "?mailto=library@caltech.edu"
+            )
+            response = requests.get(url)
+            crossref_a = response.json()["message"]["author"]
+            # Build up existing creator list
+            ex_creators = {}
+            existing = metadata["items"]
+            for author in existing:
+                ex_creators[author["name"]["family"]] = author
+            for author in crossref_a:
+                crossref_needed = True
+                if "family" in author:
+                    if author["family"] in ex_creators:
+                        existing = ex_creators[author["family"]]
+                        existing_given = existing["name"]["given"].replace(
+                            "\u2009", " "
+                        )
+                        author_given = author["given"].replace("\u2009", " ")
+                        if author_given == existing_given:
+                            creators.append(existing)
+                            crossref_needed = False
+                        elif author_given.replace(".", "") == existing_given.replace(
+                            ".", ""
+                        ):
+                            creators.append(existing)
+                            crossref_needed = False
+                        elif author_given[0] == existing_given[0]:
+                            print(
+                                f"""Possible data loss from CaltechAUTHORS in
+                                    record {key}: {existing} Crossref:
+                                    {author}"""
+                            )
+                if crossref_needed:
+                    if "family" in author:
+                        creators.append(
+                            {
+                                "name": {
+                                    "family": author["family"],
+                                    "given": author["given"],
+                                }
+                            }
+                        )
+                    else:
+                        creators.append({"name": {"family": author["name"]}})
+            all_creators.append({"id": key, "creators": creators})
+    json.dump(all_creators, file_obj, indent=4, ensure_ascii=False)
+
+
 def creator_report(file_obj, keys, source, update_only=False, filter_creators=None):
     creator_ids = []
     creators = {}
@@ -898,7 +1052,7 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
     if filter_creators:
         with open("../" + filter_creators, mode="r") as infile:
             reader = csv.reader(infile)
-            filter_values = {rows[0]: rows[1] for rows in reader}
+            filter_values = {rows[0].strip(): rows[1].strip() for rows in reader}
     to_check = {}
     for creator_id in creator_ids:
         creator = creators[creator_id]
@@ -934,22 +1088,38 @@ def creator_report(file_obj, keys, source, update_only=False, filter_creators=No
                 file_obj.writerow([creator_id, orcid, eprint_ids, update_ids])
                 to_check[creator_id] = orcid
     print("Checking against CaltechPEOPLE")
-    source = get_caltechfeed("people")
-    keys = dataset.keys(source)
-    keys.remove("captured")
+    psource = get_caltechfeed("people")
+    keys = dataset.keys(psource)
     for person in to_check:
         orcid = to_check[person]
-        if dataset.has_key(source, person) == False:
-            print(f"{person} {orcid} not in CaltechPEOPLE")
+        if dataset.has_key(psource, person) == False:
+            # Pick a Eprints record to get name
+            records = creators[person]["update_ids"]
+            existing = creators[person]["eprint_ids"]
+            if len(records) > 0:
+                record = records[0]
+            elif len(existing) > 0:
+                record = existing[0]
+            else:
+                print(f"Don't have records for {person}")
+            dot_paths = ["._Key", ".creators.items"]
+            labels = ["eprint_id", "items"]
+            metadata = get_records(dot_paths, "crea", source, [record], labels)
+            for item in metadata[0]["items"]:
+                if "id" in item:
+                    if item["id"] == person:
+                        family = item["name"]["family"]
+                        given = item["name"]["given"]
+                        print(f"{family},{given},{orcid},,{person}")
         else:
-            caltechperson, err = dataset.read(source, person)
+            caltechperson, err = dataset.read(psource, person)
             if err != "":
                 print(err)
-            if caltechperson["ORCID"] == "":
-                print(f"Add {orcid} to {person}")
-            elif caltechperson["ORCID"] != orcid:
+            if "orcid" not in caltechperson:
+                print(f"{person},{orcid}")
+            elif caltechperson["orcid"] != orcid:
                 print(
-                    f'CaltechPERSON ORCID { caltechperson["ORCID"]} not the same as {orcid} given in report for {person}'
+                    f'CaltechPERSON ORCID { caltechperson["orcid"]} not the same as {orcid} given in report for {person}'
                 )
     print("Report finished!")
 
@@ -1086,13 +1256,13 @@ if __name__ == "__main__":
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
     parser.add_argument("-sample", help="Number of records if you want a random sample")
+    parser.add_argument("-keys", help="Text file with specific record keys to use")
 
     args = parser.parse_args()
 
     if args.source == "feeds":
         source = get_caltechfeed(args.repository)
         keys = dataset.keys(source)
-        keys.remove("captured")
     elif args.source == "eprints":
         if args.username:
             source = "https://" + args.username + ":" + args.password + "@"
@@ -1116,6 +1286,10 @@ if __name__ == "__main__":
         print("Source is not feeds or eprints, exiting")
         exit()
 
+    if args.keys != None:
+        with open("../" + args.keys, "r", newline="\n", encoding="utf-8") as fin:
+            keys = fin.read().splitlines()
+
     if args.sample != None:
         keys = random.sample(keys, int(args.sample))
 
@@ -1128,6 +1302,8 @@ if __name__ == "__main__":
     with open("../" + args.output, "w", newline="\n", encoding="utf-8") as fout:
         if args.output.split(".")[-1] == "tsv":
             file_out = csv.writer(fout, delimiter="\t")
+        elif args.output.split(".")[-1] == "json":
+            file_out = fout
         else:
             file_out = csv.writer(fout)
         if args.report_name == "file_report":
@@ -1139,6 +1315,8 @@ if __name__ == "__main__":
                 creator_report(file_out, keys, source, filter_creators=args.creator)
             else:
                 creator_report(file_out, keys, source, update_only=True)
+        elif args.report_name == "new_creator_report":
+            new_creator_report(file_out, keys, source)
         elif args.report_name == "funder_report":
             funder_report(file_out, keys, source, args.search)
         elif args.report_name == "creator_search":
@@ -1147,12 +1325,13 @@ if __name__ == "__main__":
             creator_quote_report(file_out, keys, source)
         elif args.report_name == "people_search":
             names = None
-            if "csv" in args.creator:
-                names = []
-                with open("../" + args.creator, mode="r") as infile:
-                    reader = csv.reader(infile)
-                    for row in reader:
-                        names.append(row[0])
+            if args.creator:
+                if "csv" in args.creator:
+                    names = []
+                    with open("../" + args.creator, mode="r") as infile:
+                        reader = csv.reader(infile)
+                        for row in reader:
+                            names.append(row[0])
             people_search(file_out, keys, source, names, args.search, args.years)
         elif args.report_name == "status_report":
             status_report(file_out, keys, source)
@@ -1173,11 +1352,13 @@ if __name__ == "__main__":
         elif args.report_name == "thesis_report":
             thesis_report(file_out, keys, source, args.years)
         elif args.report_name == "thesis_list":
-            thesis_list(file_out, keys, source)
+            thesis_list(file_out, keys, source, args.search)
         elif args.report_name == "thesis_metadata":
             thesis_metadata(file_out, keys, source, args.years)
         elif args.report_name == "thesis_search":
             thesis_search(file_out, keys, source, args.option)
+        elif args.report_name == "thesis_doi":
+            thesis_doi(keys, source)
         elif args.report_name == "license_report":
             license_report(
                 file_out, keys, source, item_type=args.item

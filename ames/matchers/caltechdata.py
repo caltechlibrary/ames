@@ -24,12 +24,20 @@ def match_cd_refs():
     event_data = "crossref_refs.ds"
     event_keys = dataset.keys(event_data)
     event_keys.remove("captured")
+    f_name = "match_cd_refs"
     dot_paths = [".obj_id", ".id", ".subj_id"]
+    labels = ["obj_id", "id", "subj_id"]
     print("Getting Event Data Records")
-    (grid, err) = dataset.grid(event_data, event_keys, dot_paths)
-    if err != "":
-        print(err)
+    if dataset.has_frame(event_data, f_name):
+        if not dataset.frame_reframe(event_data, f_name, event_keys):
+            err = dataset.error_message()
+            print(f"Failed to reframe {f_name} in {event_data}, {err}")
+            exit()
+    elif not dataset.frame_create(event_data, f_name, event_keys, dot_paths, labels):
+        err = dataset.error_message()
+        print(f"Failed to create frame {f_name} in {event_data}, {err}")
         exit()
+    grid = dataset.frame_grid(event_data, f_name)
     df = pd.DataFrame(np.array(grid), columns=["obj_id", "id", "subj_id"])
     grouped = df.groupby(["obj_id"])
     groups = grouped.groups
@@ -117,8 +125,8 @@ def match_codemeta():
                 os.system("rm codemeta.json")
 
             existing["completed"] = "True"
-            err = dataset.update(collection, k, existing)
-            if err != "":
+            if not dataset.update(collection, k, existing):
+                err = dataset.error_message()
                 print(f"Unexpected error on read: {err}")
 
 
@@ -185,31 +193,25 @@ def fix_multiple_links(input_collection, token):
                 print(response)
 
 
-def update_citation(collection, token, production=True):
+def update_citation(record, rid, token, production=True):
     """Update example citation text in the description field"""
-    keys = dataset.keys(collection)
-    for k in keys:
-        record, err = dataset.read(collection, k)
-        if err != "":
-            print(err)
-            exit()
-        description = record["descriptions"]
-        for d in description:
-            descr_text = d["description"]
-            if descr_text.startswith("<br>Cite this record as:"):
-                record_doi = record["identifier"]["identifier"]
-                headers = {'Accept': 'text/x-bibliography; style=apa'}
-                citation_link = "https://doi.org/"
-                citation = requests.get(citation_link + record_doi, headers=headers).text
-                doi_url = "https://doi.org/" + record_doi.lower()
-                if doi_url in citation:
-                    # Check that we have a citation and not a server error,
-                    # otherwise wait till next time
-                    d["description"] = citation_text(citation, doi_url, record_doi)
-        response = caltechdata_edit(
-            token, k, {"descriptions": description}, {}, {}, production
-        )
-        print(response)
+    description = record["descriptions"]
+    for d in description:
+        descr_text = d["description"]
+        if descr_text.startswith("<br>Cite this record as:"):
+            record_doi = record["identifier"]["identifier"]
+            headers = {"Accept": "text/x-bibliography; style=apa"}
+            citation_link = "https://doi.org/"
+            citation = requests.get(citation_link + record_doi, headers=headers).text
+            doi_url = "https://doi.org/" + record_doi.lower()
+            if doi_url in citation.lower():
+                # Check that we have a citation and not a server error,
+                # otherwise wait till next time
+                d["description"] = citation_text(citation, doi_url, record_doi)
+    response = caltechdata_edit(
+        token, rid, {"descriptions": description}, {}, {}, production
+    )
+    print(response)
 
 
 def citation_text(citation, doi_url, record_doi):
@@ -221,7 +223,7 @@ def citation_text(citation, doi_url, record_doi):
     n_txt = (
         "<br>Cite this record as:<br>"
         + citation
-        + '<br> or choose a <a href="https://crosscite.org/?doi='
+        + '<br> or choose a <a href="https://citation.crosscite.org/?doi='
         + record_doi
         + '"> different citation style.</a><br>'
         + '<a href="https://data.datacite.org/application/x-bibtex/'
@@ -247,7 +249,7 @@ def add_citation(collection, token, production=True):
                 cite_exists = True
         if cite_exists == False:
             record_doi = record["identifier"]["identifier"]
-            headers = {'Accept': 'text/x-bibliography; style=apa'}
+            headers = {"Accept": "text/x-bibliography; style=apa"}
             citation_link = "https://doi.org/"
             citation = requests.get(citation_link + record_doi, headers=headers).text
             doi_url = "https://doi.org/" + record_doi

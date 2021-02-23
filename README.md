@@ -257,5 +257,5 @@ python run_coda_report.py doi_report authors keck_tech_reports.csv -group "Keck 
 ```
 
 ```console
-python run_coda_report.py people_search people chem.csv -division "Chemistry and Chemical Engineering Division"
+python run_coda_report.py people_search people chem.csv -search "Chemistry and Chemical Engineering Division"
 ```

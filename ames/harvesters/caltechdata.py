@@ -12,8 +12,7 @@ def get_caltechdata(collection, production=True, datacite=False):
     # Delete existing collection
     if os.path.isdir(collection):
         shutil.rmtree(collection)
-    ok = dataset.init(collection)
-    if ok == False:
+    if not dataset.init(collection):
         print("Dataset failed to init collection")
         exit()
 
@@ -35,8 +34,8 @@ def get_caltechdata(collection, production=True, datacite=False):
             # Get just DataCite metadata
             metadata = decustomize_schema(h["metadata"])
 
-        err = dataset.create(collection, rid, metadata)
-        if err != "":
+        if not dataset.create(collection, rid, metadata):
+            err = dataset.error_message()
             print(err)
 
 
@@ -59,8 +58,7 @@ def get_history(collection, caltechdata_collection, caltechdata_keys):
             keys_to_update.append(k)
 
     if not os.path.isdir(collection):
-        ok = dataset.init(collection)
-        if ok == False:
+        if not dataset.init(collection):
             print("Dataset failed to init collection")
             exit()
 
@@ -127,8 +125,7 @@ def get_cd_github(new=True):
         os.system("rm -rf " + collection)
 
     if os.path.isdir(collection) == False:
-        ok = dataset.init(collection)
-        if ok == False:
+        if not dataset.init(collection):
             print("Dataset failed to init collection")
             exit()
 

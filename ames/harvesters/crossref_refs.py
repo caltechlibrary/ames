@@ -13,8 +13,7 @@ def get_crossref_refs(prefix, done=False, new=True):
             shutil.rmtree(collection)
 
     if os.path.isdir(collection) == False:
-        ok = dataset.init(collection)
-        if ok == False:
+        if not dataset.init(collection):
             print("Dataset failed to init collection")
             exit()
 
@@ -34,11 +33,14 @@ def get_crossref_refs(prefix, done=False, new=True):
                 print("error on read: " + err)
             date = date["captured"]
             print(date)
-            url = base_url + "&from-collected-date=" + date + "&cursor=" + cursor
+            url = base_url + "&from-collected-date=" + date
         else:
-            url = base_url + "&cursor=" + cursor
+            url = base_url
+        if cursor != "":
+            url = url + "&cursor=" + cursor
         print(url)
         r = requests.get(url)
+        print(r.text)
         records = r.json()
         if records["status"] == "failed":
             print(records)
@@ -47,8 +49,8 @@ def get_crossref_refs(prefix, done=False, new=True):
             # Save results in dataset
             print(count, rec["id"])
             count = count + 1  # Just for prettyness
-            err = dataset.create(collection, rec["id"], rec)
-            if err != "":
+            if not dataset.create(collection, rec["id"], rec):
+                err = dataset.error_message()
                 print("Error in saving record: " + err)
 
         if cursor == records["message"]["next-cursor"]:
@@ -71,8 +73,8 @@ def get_crossref_refs(prefix, done=False, new=True):
             for rec in records["message"]["events"]:
                 # Delete results in dataset
                 print("Deleted: ", rec["id"])
-                err = dataset.delete(collection, rec["id"], rec)
-                if err != "":
+                if not dataset.delete(collection, rec["id"], rec):
+                    err = dataset.error_message()
                     print(f"Unexpected error on read: {err}")
             cursor = records["message"]["next-cursor"]
 
@@ -85,8 +87,8 @@ def get_crossref_refs(prefix, done=False, new=True):
             for rec in records["message"]["events"]:
                 # Delete results in dataset
                 print("Update: ", rec["id"])
-                err = dataset.update(collection, rec["id"], rec)
-                if err != "":
+                if not dataset.update(collection, rec["id"], rec):
+                    err = dataset.error_message()
                     print(f"Unexpected error on write: {err}")
             cursor = records["message"]["next-cursor"]
 
@@ -94,10 +96,10 @@ def get_crossref_refs(prefix, done=False, new=True):
         date = datetime.date.today().isoformat()
         record = {"captured": date}
         if dataset.has_key(collection, "captured"):
-            err = dataset.update(collection, "captured", record)
-            if err != "":
+            if not dataset.update(collection, "captured", record):
+                err = dataset.error_message()
                 print(f"Unexpected error on update: {err}")
         else:
-            err = dataset.create(collection, "captured", record)
-            if err != "":
+            if not dataset.create(collection, "captured", record):
+                err = dataset.error_message()
                 print(f"Unexpected error on create: {err}")

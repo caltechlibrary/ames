@@ -3,7 +3,7 @@ import requests
 from os import path
 from progressbar import progressbar
 from datacite import DataCiteMDSClient, schema40
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 
 def delete_datacite_media(username, password, doi):
@@ -32,8 +32,17 @@ def update_datacite_media(username, password, collection, prefix):
         existing, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
+        atlas = False
+        subjects = existing["subjects"]
+        for subject in subjects:
+            if (
+                subject["subject"].strip()
+                == "Atlas of Bacterial and Archaeal Cell Structure"
+            ):
+                atlas = True
         record_update = datetime.fromisoformat(existing["updated"]).date()
-        if record_update > update:
+        # Subtraction to get window to grab records that were updated between runs
+        if record_update > update - timedelta(days=2):
             if "electronic_location_and_access" in existing:
                 doi = existing["identifier"]["identifier"]
                 record_prefix = doi.split("/")[0]
@@ -43,6 +52,7 @@ def update_datacite_media(username, password, collection, prefix):
                         url = "https://mds.datacite.org/media/" + doi
                         headers = {"Content-Type": "application/txt;charset=UTF-8"}
                         extension = file_met["electronic_name"][0].split(".")[-1]
+                        filename = file_met["electronic_name"][0].split(".")[0]
                         data = {}
                         if extension == "nc":
                             data = (
@@ -50,9 +60,18 @@ def update_datacite_media(username, password, collection, prefix):
                                 + file_met["uniform_resource_identifier"]
                             )
                         elif extension == "mp4":
-                            data = (
-                                "video/mp4=" + file_met["uniform_resource_identifier"]
-                            )
+                            if atlas:
+                                data = (
+                                    "video/mp4="
+                                    + "https://www.cellstructureatlas.org/videos/"
+                                    + filename
+                                    + ".mp4"
+                                )
+                            else:
+                                data = (
+                                    "video/mp4="
+                                    + file_met["uniform_resource_identifier"]
+                                )
                         elif extension == "mj2":
                             data = (
                                 "video/mj2=" + file_met["uniform_resource_identifier"]
@@ -64,6 +83,11 @@ def update_datacite_media(username, password, collection, prefix):
                         elif extension == "mov":
                             data = (
                                 "video/quicktime="
+                                + file_met["uniform_resource_identifier"]
+                            )
+                        elif extension == "gz":
+                            data = (
+                                "application/gzip="
                                 + file_met["uniform_resource_identifier"]
                             )
                         if data != {}:
@@ -123,7 +147,7 @@ def update_datacite_metadata(collection, token, access):
 
 
 def submit_report(
-    month_collection, keys, token, production, prefix=None, org="Caltech Library"
+    month_collection, keys, token, production, prefix=None, org="Caltech_Library"
 ):
     for k in keys:
         datasets, err = dataset.read(month_collection, k, clean_object=True)

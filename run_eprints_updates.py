@@ -2,7 +2,7 @@ import os, argparse, csv
 from py_dataset import dataset
 from ames.harvesters import get_caltechfeed
 from ames.harvesters import get_eprint_keys
-from ames.matchers import resolver_links, special_characters, update_date
+from ames.matchers import resolver_links, special_characters, update_date, release_files
 
 if __name__ == "__main__":
     if os.path.isdir("data") == False:
@@ -30,7 +30,6 @@ if __name__ == "__main__":
     if args.test:
         source = get_caltechfeed(args.repository)
         keys = dataset.keys(source)
-        keys.remove("captured")
         fout = open("../" + args.test, "w", newline="\n", encoding="utf-8-sig")
         file_out = csv.writer(fout)
     else:
@@ -45,6 +44,12 @@ if __name__ == "__main__":
         file_out = None
     if args.update_type == "resolver":
         resolver_links(source, keys, file_out)
+    elif args.update_type == "release_files":
+        #Need to have dataset collection as well
+        collection = get_caltechfeed(args.repository)
+        fout = open("../thesis_released_files.csv", "w", newline="\n", encoding="utf-8-sig")
+        file_out = csv.writer(fout)
+        release_files(collection, source, file_out)
     elif args.update_type == "update_date":
         update_date(source, args.recid)
     elif args.update_type == "special_characters":
