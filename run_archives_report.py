@@ -107,20 +107,21 @@ def get_agents(aspace):
     return agents
 
 
-def make_line(json, fields, agents):
+def make_line(json, fields):
     """Return specific fields from a json object"""
     row = []
     for field in fields:
         if field in json:
             if field == 'agent':
-                row.append(agents[json[field].linked_agents[0].ref]
-            row.append(json[field])
+                row.append(agents[json[field].linked_agents[0].ref])
+            else:
+                row.append(json[field])
         else:
             row.append("")
     return row
 
 
-def add_blocks(json):
+def add_blocks(json, agents):
     """Return content from within blocks in json accession record"""
     row = []
     if len(json["dates"]) > 0:
@@ -144,10 +145,16 @@ def add_blocks(json):
     if "linked_agents" in json:
         agent_str = ""
         for agent in json["linked_agents"]:
-            if agent_str == "":
-                agent_str = agent["ref"]
+            if agent["ref"] != None:
+                agent_name = agents[agent["ref"]]
+                if agent_name == None:
+                    agent_name = agent 
             else:
-                agent_str = agent_str + ";" + agent["ref"]
+                agent_name = agent
+            if agent_str == "":
+                agent_str = agent_name 
+            else:
+                agent_str = agent_str + ";" + agent_name
         row.append(agent_str)
     else:
         row.append("")
@@ -216,7 +223,7 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
                         #if formt in types:
                         json = acc.json()
                         row = make_line(json, fields)
-                        row = row + add_blocks(json)
+                        row = row + add_blocks(json, agents)
                         file_obj.writerow(row)
     print('Formats: ', format_types)
 
