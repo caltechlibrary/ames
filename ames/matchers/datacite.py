@@ -90,6 +90,11 @@ def update_datacite_media(username, password, collection, prefix):
                                 "application/gzip="
                                 + file_met["uniform_resource_identifier"]
                             )
+                        elif extension == "h5ad":
+                            data = (
+                                "application/octet-stream="
+                                + file_met["uniform_resource_identifier"]
+                            )
                         if data != {}:
                             print(doi)
                             print(data)
