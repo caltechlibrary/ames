@@ -29,31 +29,31 @@ def send_simple_message(token, matched):
     metadata = r_data["metadata"]
     email = ""
     name = ""
-    for c in metadata["contributors"]:
-        if c["contributorType"] == "ContactPerson":
-            if "contributorEmail" in c:
-                email = c["contributorEmail"]
-                name = c["contributorName"]
-            else:
-                print("Missing email for record ", matched_key)
-    # Use dataset version to get datacite metadata
-    metadata, err = dataset.read("caltechdata.ds", matched_key)
-    if err != "":
-        print(f"Unexpected error on read: {err}")
-    title = metadata["titles"][0]["title"]
-    doi = metadata["identifier"]["identifier"]
-    headers = {"Accept": "text/bibliography;style=apa"}
-    citation_block = ""
-    for matched in matched_dois:
-        citation = requests.get(matched, headers=headers)
-        citation.encoding = "utf-8"
-        citation = citation.text
-        citation = su.unescape(citation)
-        citation_block = citation_block + "<p>" + citation + "</p>"
-    # Send email
+    if "contributors" in metadata:
+        for c in metadata["contributors"]:
+            if c["contributorType"] == "ContactPerson":
+                if "contributorEmail" in c:
+                    email = c["contributorEmail"]
+                    name = c["contributorName"]
     if email == "":
-        print("No email listed, Nothing sent")
+        print("Missing email for record ", matched_key)
     else:
+        # Use dataset version to get datacite metadata
+        metadata, err = dataset.read("caltechdata.ds", matched_key)
+        if err != "":
+            print(f"Unexpected error on read: {err}")
+            exit()
+        title = metadata["titles"][0]["title"]
+        doi = metadata["identifier"]["identifier"]
+        headers = {"Accept": "text/bibliography;style=apa"}
+        citation_block = ""
+        for matched in matched_dois:
+            citation = requests.get(matched, headers=headers)
+            citation.encoding = "utf-8"
+            citation = citation.text
+            citation = su.unescape(citation)
+            citation_block = citation_block + "<p>" + citation + "</p>"
+        # Send email
         return requests.post(
             "https://api.mailgun.net/v3/notices.caltechlibrary.org/messages",
             auth=("api", token),
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     if os.path.isdir("data") == False:
         os.mkdir("data")
     os.chdir("data")
-    get_crossref_refs("10.14291", False, False)
-    get_crossref_refs("10.22002", True, False)
+    get_crossref_refs("10.14291", done=False, new=False)
+    get_crossref_refs("10.22002", done=True, new=False)
     get_caltechdata("caltechdata.ds")
     matches = match_cd_refs()
 

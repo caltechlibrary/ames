@@ -486,7 +486,10 @@ def doi_report(
                 series = "other numbering:"
                 for item in num["items"]:
                     if "id" in item:
-                        series += " " + item["name"] + " " + item["id"]
+                        if "name" in item:
+                            series += " " + item["name"] + " " + item["id"]
+                        else:
+                            series += " " + item["id"]
                     else:
                         series += " " + item["name"]
             if "series" in metadata:
