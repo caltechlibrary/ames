@@ -12,3 +12,4 @@ from .eprints import resolver_links
 from .eprints import special_characters
 from .eprints import update_date
 from .eprints import release_files
+from .eprints import update_doi

@@ -1,5 +1,6 @@
 import requests
 import re
+from idutils import normalize_doi, is_doi
 from datetime import datetime
 from progressbar import progressbar
 from py_dataset import dataset
@@ -14,6 +15,39 @@ def replace_string(metadata, field, from_str, to_str):
     if from_str in metadata[field]:
         new = metadata[field].replace(from_str, to_str)
     return new
+
+
+def update_doi(source, keys, outfile=None):
+    if source.split(".")[-1] == "ds":
+        # This generates report
+        dot_paths = [".eprint_id", ".doi", ".related_url"]
+        labels = ["eprint_id", "doi", "related_url"]
+        all_metadata = get_records(dot_paths, "doi", source, keys, labels)
+        for metadata in all_metadata:
+            if "doi" not in metadata:
+                possible = []
+                eprint = metadata["eprint_id"]
+                if "related_url" in metadata and "items" in metadata["related_url"]:
+                    items = metadata["related_url"]["items"]
+                    for item in items:
+                        description = ""
+                        if "url" in item:
+                            url = item["url"].strip()
+                        if "type" in item:
+                            itype = item["type"].strip().lower()
+                        if "description" in item:
+                            description = item["description"].strip().lower()
+                        if itype == "doi":
+                            if is_doi(url):
+                                possible.append([normalize_doi(url), description])
+                            else:
+                                possible.append([url, description])
+                    if len(possible) == 1:
+                        outfile.writerow([eprint, possible[0][0]])
+                    elif len(possible) > 1:
+                        outfile.writerow(
+                            [eprint, "many_doi", possible[0], possible[1:]]
+                        )
 
 
 def resolver_links(source, keys, outfile=None):
