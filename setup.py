@@ -84,11 +84,10 @@ REQUIRES_PYTHON = ">=3.7.0"
 # What packages are required for this module to be executed?
 REQUIRED = [
     "requests",
-    "datacite",
     "idutils",
     "progressbar2",
-    "caltechdata_api>=0.1.3",
-    "py_dataset>=0.1.4",
+    "caltechdata_api>=0.1.8",
+    "py_dataset>=1.0.1",
     "pandas",
     "ArchivesSnake",
 ]
@@ -172,7 +171,7 @@ setup(
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
-    install_requires=read_requirements(),
+    install_requires=REQUIRED,
     extras_require=EXTRAS,
     package_data={name: files},
     license=lic,

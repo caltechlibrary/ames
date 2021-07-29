@@ -40,7 +40,6 @@ def get_crossref_refs(prefix, done=False, new=True):
             url = url + "&cursor=" + cursor
         print(url)
         r = requests.get(url)
-        print(r.text)
         records = r.json()
         if records["status"] == "failed":
             print(records)
@@ -56,7 +55,10 @@ def get_crossref_refs(prefix, done=False, new=True):
         if cursor == records["message"]["next-cursor"]:
             # Catches bug where we get the same curser back at end of results
             break
-        cursor = records["message"]["next-cursor"]
+        if records["message"]["total-results"] > count:
+            cursor = records["message"]["next-cursor"]
+        else:
+            cursor = None
 
     if collected == True:
         date, err = dataset.read(collection, "captured")
@@ -70,10 +72,11 @@ def get_crossref_refs(prefix, done=False, new=True):
             del_url = "https://api.eventdata.crossref.org/v1/events/deleted?mailto=data@caltech.edu&source=crossref"
             full = del_url + "&from-collected-date=" + date + "&cursor=" + cursor
             r = requests.get(full)
+            records = r.json()
             for rec in records["message"]["events"]:
                 # Delete results in dataset
                 print("Deleted: ", rec["id"])
-                if not dataset.delete(collection, rec["id"], rec):
+                if not dataset.delete(collection, rec["id"]):
                     err = dataset.error_message()
                     print(f"Unexpected error on read: {err}")
             cursor = records["message"]["next-cursor"]
@@ -84,8 +87,9 @@ def get_crossref_refs(prefix, done=False, new=True):
             del_url = "https://api.eventdata.crossref.org/v1/events/edited?mailto=data@caltech.edu&source=crossref"
             full = del_url + "&from-collected-date=" + date + "&cursor=" + cursor
             r = requests.get(full)
+            records = r.json()
             for rec in records["message"]["events"]:
-                # Delete results in dataset
+                # Update results in dataset
                 print("Update: ", rec["id"])
                 if not dataset.update(collection, rec["id"], rec):
                     err = dataset.error_message()
