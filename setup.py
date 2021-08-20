@@ -86,7 +86,7 @@ REQUIRED = [
     "requests",
     "idutils",
     "progressbar2",
-    "caltechdata_api>=0.1.8",
+    "caltechdata_api>=0.1.10",
     "py_dataset>=1.0.1",
     "pandas",
     "ArchivesSnake",
