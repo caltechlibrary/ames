@@ -133,22 +133,30 @@ def update_datacite_metadata(collection, token, access):
             # Get rid of Key from dataset
             metadata.pop("_Key")
 
-            record_doi = metadata["identifier"]["identifier"]
+            if "identifier" in metadata:
+                record_doi = metadata["identifier"]["identifier"]
 
-            if record_doi.split("/")[0] == prefix:
-                result = schema40.validate(metadata)
-                # Debugging if this fails
-                if result == False:
-                    v = schema40.validator.validate(metadata)
-                    errors = sorted(v.iter_errors(instance), key=lambda e: e.path)
-                    for error in errors:
-                        print(error.message)
-                    exit()
+                # Handle records with 4.3 metadata elements
+                if "schemaVersion" in metadata:
+                    metadata.pop("schemaVersion")
+                if "types" in metadata:
+                    metadata.pop("types")
 
-                xml = schema40.tostring(metadata)
+                if record_doi.split("/")[0] == prefix:
+                    result = schema40.validate(metadata)
+                    # Debugging if this fails
+                    if result == False:
+                        print(metadata)
+                        v = schema40.validator.validate(metadata)
+                        errors = sorted(v.iter_errors(instance), key=lambda e: e.path)
+                        for error in errors:
+                            print(error.message)
+                        exit()
 
-                response = d.metadata_post(xml)
-                print(response)
+                    xml = schema40.tostring(metadata)
+
+                    response = d.metadata_post(xml)
+                    print(response)
 
 
 def submit_report(
