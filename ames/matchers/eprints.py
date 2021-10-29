@@ -41,13 +41,17 @@ def update_doi(source, keys, outfile=None):
                             if is_doi(url):
                                 possible.append([normalize_doi(url), description])
                             else:
-                                possible.append([url, description])
+                                # Dropping anything without a 10. pattern
+                                if "10." in url:
+                                    doi = "10." + url.split("10.")[1]
+                                    if is_doi(doi):
+                                        possible.append([doi, description])
                     if len(possible) == 1:
                         outfile.writerow([eprint, possible[0][0]])
-                    elif len(possible) > 1:
-                        outfile.writerow(
-                            [eprint, "many_doi", possible[0], possible[1:]]
-                        )
+                    # elif len(possible) > 1:
+                    #    outfile.writerow(
+                    #        [eprint, "many_doi", possible[0], possible[1:]]
+                    #    )
 
 
 def resolver_links(source, keys, outfile=None):
