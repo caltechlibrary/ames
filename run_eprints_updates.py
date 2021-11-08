@@ -2,7 +2,13 @@ import os, argparse, csv
 from py_dataset import dataset
 from ames.harvesters import get_caltechfeed
 from ames.harvesters import get_eprint_keys
-from ames.matchers import resolver_links, special_characters, update_date, release_files, update_doi
+from ames.matchers import (
+    resolver_links,
+    special_characters,
+    update_date,
+    release_files,
+    update_doi,
+)
 
 if __name__ == "__main__":
     if os.path.isdir("data") == False:
@@ -18,6 +24,7 @@ if __name__ == "__main__":
         help="options: thesis, authors; others including test only work if using eprints source)",
     )
     parser.add_argument("-recid", help="Eprints recid")
+    parser.add_argument("-start_recid", help="Eprints recid to start at")
     parser.add_argument(
         "-test",
         help="Uses feeds data and writes report of what would be changed, but makes no changes. Provide output file name",
@@ -42,14 +49,18 @@ if __name__ == "__main__":
         source = source + args.repository + ".library.caltech.edu"
         keys = get_eprint_keys(source)
         file_out = None
+    if args.start_recid:
+        keys = [k for k in keys if int(k) >= int(args.start_recid)]
     if args.update_type == "resolver":
         resolver_links(source, keys, file_out)
     elif args.update_type == "update_doi":
         update_doi(source, keys, file_out)
     elif args.update_type == "release_files":
-        #Need to have dataset collection as well
+        # Need to have dataset collection as well
         collection = get_caltechfeed(args.repository)
-        fout = open("../thesis_released_files.csv", "w", newline="\n", encoding="utf-8-sig")
+        fout = open(
+            "../thesis_released_files.csv", "w", newline="\n", encoding="utf-8-sig"
+        )
         file_out = csv.writer(fout)
         release_files(collection, source, file_out)
     elif args.update_type == "update_date":

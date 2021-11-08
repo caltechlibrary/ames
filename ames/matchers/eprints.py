@@ -17,6 +17,40 @@ def replace_string(metadata, field, from_str, to_str):
     return new
 
 
+def decide_doi_update(metadata):
+    if "doi" not in metadata:
+        possible = []
+        eprint = metadata["eprint_id"]
+        if "related_url" in metadata and "items" in metadata["related_url"]:
+            items = metadata["related_url"]["items"]
+            for item in items:
+                description = ""
+                if "url" in item:
+                    url = item["url"].strip()
+                if "type" in item:
+                    itype = item["type"].strip().lower()
+                if "description" in item:
+                    description = item["description"].strip().lower()
+                if itype == "doi":
+                    if is_doi(url):
+                        possible.append([normalize_doi(url), description])
+                    else:
+                        # Dropping anything without a 10. pattern
+                        if "10." in url:
+                            doi = "10." + url.split("10.")[1]
+                            if is_doi(doi):
+                                possible.append([doi, description])
+            if len(possible) == 1:
+                # Description not really used
+                return [eprint, possible[0][0]]
+            else:
+                return None
+        else:
+            return None
+    else:
+        return None
+
+
 def update_doi(source, keys, outfile=None):
     if source.split(".")[-1] == "ds":
         # This generates report
@@ -24,34 +58,21 @@ def update_doi(source, keys, outfile=None):
         labels = ["eprint_id", "doi", "related_url"]
         all_metadata = get_records(dot_paths, "doi", source, keys, labels)
         for metadata in all_metadata:
-            if "doi" not in metadata:
-                possible = []
-                eprint = metadata["eprint_id"]
-                if "related_url" in metadata and "items" in metadata["related_url"]:
-                    items = metadata["related_url"]["items"]
-                    for item in items:
-                        description = ""
-                        if "url" in item:
-                            url = item["url"].strip()
-                        if "type" in item:
-                            itype = item["type"].strip().lower()
-                        if "description" in item:
-                            description = item["description"].strip().lower()
-                        if itype == "doi":
-                            if is_doi(url):
-                                possible.append([normalize_doi(url), description])
-                            else:
-                                # Dropping anything without a 10. pattern
-                                if "10." in url:
-                                    doi = "10." + url.split("10.")[1]
-                                    if is_doi(doi):
-                                        possible.append([doi, description])
-                    if len(possible) == 1:
-                        outfile.writerow([eprint, possible[0][0]])
-                    # elif len(possible) > 1:
-                    #    outfile.writerow(
-                    #        [eprint, "many_doi", possible[0], possible[1:]]
-                    #    )
+            update = decide_doi_update(metadata)
+            if update:
+                outfile.writerow(update)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            print(eprint_id)
+            meta = get_eprint(source, eprint_id)
+            # Ignore errors where the record doesn't exist
+            if meta != None:
+                update = decide_doi_update(meta)
+                if update:
+                    url = source + "/rest/eprint/" + str(eprint_id) + "/doi.txt"
+                    headers = {"content-type": "text/plain"}
+                    response = requests.put(url, data=update[1], headers=headers)
+                    print(response)
 
 
 def resolver_links(source, keys, outfile=None):
