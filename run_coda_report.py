@@ -4,8 +4,9 @@ import random
 import requests
 from idutils import is_doi, is_arxiv, normalize_doi
 from progressbar import progressbar
-from ames.harvesters import get_caltechfeed, get_records
+from ames.harvesters import get_caltechfeed, get_records, get_orcid_works
 from ames.harvesters import get_eprint_keys, get_eprint
+from ames.harvesters import doi_in_authors
 from ames.utils import is_in_range
 
 
@@ -390,7 +391,7 @@ def thesis_report(file_obj, keys, source, years=None):
 def doi_report(
     file_obj, keys, source, years=None, all_records=True, item_type=None, group=None
 ):
-    """Output a report of DOIs """
+    """Output a report of DOIs"""
     file_obj.writerow(
         [
             "Eprint ID",
@@ -687,6 +688,53 @@ def file_report(file_obj, keys, source, years=None):
 
 def group_search(file_obj, keys, source, search, years=None):
     """Search for group name in Additional Information and Funders fields"""
+    file_obj.writerow(["Eprint ID", "Resolver URL", "Groups"])
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = [
+            "._Key",
+            ".note",
+            ".date",
+            ".funders.items",
+            ".official_url",
+            ".local_group.items",
+        ]
+        labels = ["eprint_id", "note", "date", "funders", "official_url", "groups"]
+        all_metadata = get_records(dot_paths, "group", source, keys, labels)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    for metadata in all_metadata:
+        if "date" in metadata:
+            year = metadata["date"].split("-")[0]
+            if is_in_range(years, year):
+                keep = False
+                if "note" in metadata:
+                    if search in metadata["note"]:
+                        keep = True
+                if "funders" in metadata:
+                    for f in metadata["funders"]:
+                        if "agency" in f:
+                            if search in f["agency"]:
+                                keep = True
+                if "groups" in metadata:
+                    for f in metadata["groups"]:
+                        if search in f:
+                            keep = True
+                if keep:
+                    ep = metadata["eprint_id"]
+                    url = metadata["official_url"]
+                    if "groups" in metadata:
+                        groups = metadata["groups"]
+                    else:
+                        groups = ""
+                    file_obj.writerow([ep, url, groups])
+    print("Report finished!")
+
+
+def thesis_group_search(file_obj, keys, source, search, years=None):
+    """Search for group name in Major field"""
     file_obj.writerow(["Eprint ID", "Resolver URL", "Groups"])
     all_metadata = []
     if source.split(".")[-1] == "ds":
@@ -1177,6 +1225,22 @@ def funder_report(file_obj, keys, source, filter_funders=None):
     print("Report finished!")
 
 
+def orcid_works(file_obj, keys, source, file):
+    with open("../" + file) as infile:
+        people = csv.DictReader(infile, delimiter=",")
+
+        for person in people:
+            orcid = person["ORCID"]
+            if orcid != "":
+                works = get_orcid_works(person["ORCID"])
+                new = []
+                for work in works:
+                    if doi_in_authors(work):
+                        new.append(work)
+                file_obj.writerow([orcid, len(works), new])
+                print(works)
+
+
 def find_creators(items, eprint_id, creators, creator_ids):
     """Take a item list and return creators"""
     for item in items:
@@ -1250,7 +1314,9 @@ if __name__ == "__main__":
         help="Search term for report such as Division name (e.g. Engineering and Applied Science Division) or `Foundation` for funder name",
     )
     parser.add_argument(
-        "-option", nargs="+", help='Thesis option (e.g. "astronomy" or "astrophys")',
+        "-option",
+        nargs="+",
+        help='Thesis option (e.g. "astronomy" or "astrophys")',
     )
     parser.add_argument(
         "-creator",
@@ -1362,6 +1428,8 @@ if __name__ == "__main__":
             thesis_search(file_out, keys, source, args.option)
         elif args.report_name == "thesis_doi":
             thesis_doi(keys, source)
+        elif args.report_name == "orcid_works":
+            orcid_works(file_out, keys, source, args.search)
         elif args.report_name == "license_report":
             license_report(
                 file_out, keys, source, item_type=args.item

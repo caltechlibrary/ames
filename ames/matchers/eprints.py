@@ -71,8 +71,8 @@ def update_doi(source, keys, outfile=None):
                 if update:
                     url = source + "/rest/eprint/" + str(eprint_id) + "/doi.txt"
                     headers = {"content-type": "text/plain"}
-                    doi = update[1].replace('\u200b','')
-                    #Handle invisible charaters in ASM DOIs
+                    doi = update[1].replace("\u200b", "")
+                    # Handle invisible charaters in ASM DOIs
                     response = requests.put(url, data=doi, headers=headers)
                     print(response)
 
