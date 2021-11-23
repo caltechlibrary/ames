@@ -1234,11 +1234,11 @@ def orcid_works(file_obj, keys, source, file):
             if orcid != "":
                 works = get_orcid_works(person["ORCID"])
                 new = []
-                for work in works:
-                    if doi_in_authors(work):
+                for work in progressbar(works):
+                    if doi_in_authors(work) == False:
                         new.append(work)
-                file_obj.writerow([orcid, len(works), new])
-                print(works)
+                file_obj.writerow([person['Identifier'], orcid, len(works), new])
+                print(new)
 
 
 def find_creators(items, eprint_id, creators, creator_ids):

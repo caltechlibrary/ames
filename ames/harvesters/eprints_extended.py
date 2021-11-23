@@ -6,8 +6,10 @@ base_url = "http://localhost:8484/"
 def doi_in_authors(doi):
     results = []
     results += get_extended("caltechauthors", "doi", doi)
-    results += get_extended("caltechauthors", "doi", doi.lower())
-    results += get_extended("caltechauthors", "doi", doi.upper())
+    if len(results) == 0:
+        results += get_extended("caltechauthors", "doi", doi.lower())
+    if len(results) == 0:
+        results += get_extended("caltechauthors", "doi", doi.upper())
     if len(results) == 0:
         return False
     else:
