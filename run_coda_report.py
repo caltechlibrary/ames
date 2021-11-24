@@ -6,7 +6,7 @@ from idutils import is_doi, is_arxiv, normalize_doi
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records, get_orcid_works
 from ames.harvesters import get_eprint_keys, get_eprint
-from ames.harvesters import doi_in_authors
+from ames.harvesters import doi_in_authors, get_extended
 from ames.utils import is_in_range
 
 
@@ -1368,7 +1368,7 @@ if __name__ == "__main__":
 
     print("Running report for ", args.repository)
 
-    with open("../" + args.output, "w", newline="\n", encoding="utf-8") as fout:
+    with open("../" + args.output, "w",newline='',encoding='utf-8-sig') as fout:
         if args.output.split(".")[-1] == "tsv":
             file_out = csv.writer(fout, delimiter="\t")
         elif args.output.split(".")[-1] == "json":
@@ -1409,7 +1409,8 @@ if __name__ == "__main__":
         elif args.report_name == "alt_url_report":
             alt_url_report(file_out, keys, source)
         elif args.report_name == 'grant_report':
-            keys = get_extended('caltechauthors', 'grant', args.search)
+            keys = get_extended('caltechauthors', 'grant-number', args.search)
+            print(keys)
             doi_report(
                 file_out,
                 keys,
@@ -1420,6 +1421,7 @@ if __name__ == "__main__":
                 group=args.group,
             )
         elif args.report_name == "doi_report":
+            print(keys)
             doi_report(
                 file_out,
                 keys,

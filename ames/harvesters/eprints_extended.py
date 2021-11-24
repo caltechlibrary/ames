@@ -17,4 +17,8 @@ def doi_in_authors(doi):
 
 
 def get_extended(repository, typev, identifier):
-    return requests.get(base_url + f"{repository}/{typev}/{identifier}").json()
+    result = requests.get(base_url + f"{repository}/{typev}/{identifier}").json()
+    keys = []
+    for key in result:
+        keys.append(str(key))
+    return keys

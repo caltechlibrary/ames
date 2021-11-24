@@ -8,4 +8,4 @@ from .github import get_github_id
 from .usage import get_usage, file_mapping, build_usage
 from .usage import aggregate_usage, build_aggregate
 from .eputil import get_eprint_keys, get_eprints, get_eprint
-from .eprints_extended import doi_in_authors
+from .eprints_extended import doi_in_authors, get_extended

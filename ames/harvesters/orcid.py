@@ -11,5 +11,5 @@ def get_orcid_works(orcid):
         idvs = work["work-summary"][0]["external-ids"]["external-id"]
         for idv in idvs:
             if idv["external-id-type"] == "doi":
-                dois.append(idv["external-id-normalized"]["value"])
+                dois.append(idv["external-id-value"])
     return dois
