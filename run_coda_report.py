@@ -1408,6 +1408,17 @@ if __name__ == "__main__":
             record_number_report(file_out, keys, source)
         elif args.report_name == "alt_url_report":
             alt_url_report(file_out, keys, source)
+        elif args.report_name == 'grant_report':
+            keys = get_extended('caltechauthors', 'grant', args.search)
+            doi_report(
+                file_out,
+                keys,
+                source,
+                years=args.years,
+                all_records=True,
+                item_type=args.item,
+                group=args.group,
+            )
         elif args.report_name == "doi_report":
             doi_report(
                 file_out,
