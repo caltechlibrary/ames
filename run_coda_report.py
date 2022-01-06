@@ -923,6 +923,43 @@ def alt_url_report(file_obj, keys, source):
         print("Not Implemented")
 
 
+def supp_data_report(file_obj, keys, source):
+    print(f"Processing {len(keys)} eprint records for supplemental data")
+    file_obj.writerow(["eprint_id", "record_doi", "related_url", "description", "type"])
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".related_url.items", ".doi"]
+        labels = ["eprint_id", "items", "doi"]
+        print("Getting metadata")
+        all_metadata = get_records(dot_paths, "rel", source, keys, labels)
+        print("processing metadata")
+        for metadata in progressbar(all_metadata, redirect_stdout=True):
+            key = metadata["eprint_id"]
+            if "doi" in metadata:
+                doi = metadata["doi"]
+            else:
+                doi = ""
+            if "items" in metadata:
+                for i in metadata["items"]:
+                    if "url" in i:
+                        url = i["url"]
+                    else:
+                        url = ""
+                    if "description" in i:
+                        desc = i["description"]
+                    else:
+                        desc = ""
+                    if "type" in i:
+                        typ = i["type"]
+                    else:
+                        typ = ""
+                    if is_doi(url):
+                        url = normalize_doi(url)
+                    file_obj.writerow([key, doi, url, desc, typ])
+        print("Report finished!")
+    else:
+        print("Not Implemented")
+
+
 def creator_search(file_obj, keys, source, search_id):
     print(f"Processing {len(keys)} eprint records for creators")
     if source.split(".")[-1] == "ds":
@@ -1237,7 +1274,7 @@ def orcid_works(file_obj, keys, source, file):
                 for work in progressbar(works):
                     if doi_in_authors(work) == False:
                         new.append(work)
-                file_obj.writerow([person['Identifier'], orcid, len(works), new])
+                file_obj.writerow([person["Identifier"], orcid, len(works), new])
                 print(new)
 
 
@@ -1368,7 +1405,7 @@ if __name__ == "__main__":
 
     print("Running report for ", args.repository)
 
-    with open("../" + args.output, "w",newline='',encoding='utf-8-sig') as fout:
+    with open("../" + args.output, "w", newline="", encoding="utf-8-sig") as fout:
         if args.output.split(".")[-1] == "tsv":
             file_out = csv.writer(fout, delimiter="\t")
         elif args.output.split(".")[-1] == "json":
@@ -1408,8 +1445,10 @@ if __name__ == "__main__":
             record_number_report(file_out, keys, source)
         elif args.report_name == "alt_url_report":
             alt_url_report(file_out, keys, source)
-        elif args.report_name == 'grant_report':
-            keys = get_extended('caltechauthors', 'grant-number', args.search)
+        elif args.report_name == "supp_data_report":
+            supp_data_report(file_out, keys, source)
+        elif args.report_name == "grant_report":
+            keys = get_extended("caltechauthors", "grant-number", args.search)
             print(keys)
             doi_report(
                 file_out,
