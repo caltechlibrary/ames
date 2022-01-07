@@ -21,9 +21,10 @@ def get_caltechdata(collection, production=True, datacite=False):
     else:
         url = "https://cd-sandbox.tind.io/api/records"
 
-    response = requests.get(url + "/?size=50000")
+    response = requests.get(url + "/?size=9000")
     hits = response.json()
 
+    print(hits)
     for h in progressbar(hits["hits"]["hits"]):
         rid = str(h["id"])
         # Get enriched metadata records (including files)
