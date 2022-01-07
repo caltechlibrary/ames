@@ -112,7 +112,7 @@ def make_line(json, fields):
     row = []
     for field in fields:
         if field in json:
-            if field == 'agent':
+            if field == "agent":
                 row.append(agents[json[field].linked_agents[0].ref])
             else:
                 row.append(json[field])
@@ -148,11 +148,11 @@ def add_blocks(json, agents):
             if agent["ref"] != None:
                 agent_name = agents[agent["ref"]]
                 if agent_name == None:
-                    agent_name = agent 
+                    agent_name = agent
             else:
                 agent_name = agent
             if agent_str == "":
-                agent_str = agent_name 
+                agent_str = agent_name
             else:
                 agent_str = agent_str + ";" + agent_name
         row.append(agent_str)
@@ -217,15 +217,15 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
                 if "physical_details" in ext:
                     physical = ext["physical_details"]
                     if "FORMAT" in physical:
-                        #types = ["Cassette", "DAT", "CD", "CDR"]
+                        # types = ["Cassette", "DAT", "CD", "CDR"]
                         formt = physical.split("FORMAT: ")[1].split(";")[0]
                         format_types.add(formt)
-                        #if formt in types:
+                        # if formt in types:
                         json = acc.json()
                         row = make_line(json, fields)
                         row = row + add_blocks(json, agents)
                         file_obj.writerow(row)
-    print('Formats: ', format_types)
+    print("Formats: ", format_types)
 
 
 def accession_report(file_obj, repo, aspace, subject=None, years=None):

@@ -23,5 +23,5 @@ update_datacite_media(user, password, collection, prefix)
 
 # Save date in file
 today = date.today().isoformat()
-with open('mediaupdate', 'w') as outfile:
+with open("mediaupdate", "w") as outfile:
     outfile.write(today)

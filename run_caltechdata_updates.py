@@ -16,9 +16,9 @@ collection = "caltechdata.ds"
 get_caltechdata(collection, production)
 add_citation(collection, token, production)
 
-#If we need to update
-#keys = dataset.keys(collection)
-#for k in keys:
+# If we need to update
+# keys = dataset.keys(collection)
+# for k in keys:
 #    record, err = dataset.read(collection, k)
 #    if err != "":
 #        print(err)
