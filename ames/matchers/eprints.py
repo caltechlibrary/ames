@@ -77,6 +77,21 @@ def update_doi(source, keys, outfile=None):
                     print(response)
 
 
+def update_record_number(source, keys):
+    # Update record_number to what is in persistent url field
+    if source.split(".")[-1] != "ds":
+        # Report version in coda_reports script
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            print(eprint_id)
+            meta = get_eprint(source, eprint_id)
+            resolver = meta["official_url"]
+            new = resolver.split("resolver.caltech.edu/")[1]
+            url = source + "/rest/eprint/" + str(eprint_id) + "/id_number.txt"
+            headers = {"content-type": "text/plain"}
+            response = requests.put(url, data=new, headers=headers)
+            print(response)
+
+
 def resolver_links(source, keys, outfile=None):
     if source.split(".")[-1] == "ds":
         # This generates report
