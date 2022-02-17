@@ -1,4 +1,4 @@
-import os, subprocess, shutil
+import os, subprocess, shutil, math
 import requests
 from caltechdata_api import decustomize_schema
 from py_dataset import dataset
@@ -21,11 +21,20 @@ def get_caltechdata(collection, production=True, datacite=False):
     else:
         url = "https://cd-sandbox.tind.io/api/records"
 
-    response = requests.get(url + "/?size=9000")
-    hits = response.json()
+    response = requests.get(f"{url}?q=NOT(subjects:%27HTE%27)")
+    # We don't include the HTE records due to Elasticsearch limitations
+    total = response.json()["hits"]["total"]
+    pages = math.ceil(int(total) / 1000)
+    hits = []
+    for c in progressbar(range(1, pages + 1)):
+        # We don't include the HTE records due to Elasticsearch limitations
+        chunkurl = (
+            f"{url}?q=NOT(subjects:%27HTE%27)&sort=-mostrecent&size=1000&page={c}"
+        )
+        response = requests.get(chunkurl).json()
+        hits += response["hits"]["hits"]
 
-    print(hits)
-    for h in progressbar(hits["hits"]["hits"]):
+    for h in progressbar(hits):
         rid = str(h["id"])
         # Get enriched metadata records (including files)
         if datacite == False:
