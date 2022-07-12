@@ -4,6 +4,7 @@ from ames.harvesters import get_caltechfeed
 from ames.harvesters import get_eprint_keys
 from ames.matchers import (
     resolver_links,
+    publisher,
     special_characters,
     update_date,
     release_files,
@@ -31,6 +32,8 @@ if __name__ == "__main__":
         "-test",
         help="Uses feeds data and writes report of what would be changed, but makes no changes. Provide output file name",
     )
+    parser.add_argument("-from_val", help="From value")
+    parser.add_argument("-to_val", help="To value") 
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
 
@@ -58,6 +61,8 @@ if __name__ == "__main__":
         keys = [k for k in keys if int(k) >= int(args.start_recid)]
     if args.update_type == "resolver":
         resolver_links(source, keys, file_out)
+    elif args.update_type == "publisher":
+        publisher(source, keys, args.from_val, args.to_val, file_out)
     elif args.update_type == "update_doi":
         update_doi(source, keys, file_out)
     elif args.update_type == "release_files":

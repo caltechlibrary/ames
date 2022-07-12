@@ -91,6 +91,35 @@ def update_record_number(source, keys):
             response = requests.put(url, data=new, headers=headers)
             print(response)
 
+def publisher(source, keys, from_value, to_value, outfile=None):   
+    if source.split(".")[-1] == "ds":
+        # This generates report
+        dot_paths = [".eprint_id", ".publisher"]
+        labels = ["eprint_id", "publisher"]
+        all_metadata = get_records(dot_paths, "official", source, keys, labels)
+        for meta in all_metadata:
+            if 'publisher' in meta:
+                if meta['publisher'] == from_value:
+                    outfile.writerow([meta["eprint_id"], meta["publisher"],to_value])
+    else:
+        # This makes changes
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            meta = get_eprint(source, eprint_id)
+            # Ignore errors where the record doesn't exist
+            if meta != None:
+                if meta["eprint_status"] not in ["deletion", "inbox"]:
+                    if meta['publisher'] == from_value:
+                        url = (
+                            source
+                            + "/rest/eprint/"
+                            + str(eprint_id)
+                            + "/publisher.txt"
+                        )
+                        headers = {"content-type": "text/plain"}
+                        print(eprint_id)
+                        response = requests.put(url, data=to_value, headers=headers)
+                        print(response)
+
 
 def resolver_links(source, keys, outfile=None):
     if source.split(".")[-1] == "ds":
