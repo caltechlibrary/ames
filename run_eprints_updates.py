@@ -55,7 +55,7 @@ if __name__ == "__main__":
         keys = get_eprint_keys(source)
         file_out = None
     if args.keys:
-        with open("../" + args.keys, "r", newline="\n", encoding="utf-8") as fin:
+        with open("../" + args.keys, "r", newline="\n", encoding="utf-8-sig") as fin:
             keys = fin.read().splitlines()
     if args.start_recid:
         keys = [k for k in keys if int(k) >= int(args.start_recid)]
