@@ -83,7 +83,7 @@ def match_cd_refs():
                 }
                 ids.append(new_id)
             newmetadata = {"relatedIdentifiers": ids}
-            response = caltechdata_edit(token, k, newmetadata, {}, {}, True)
+            response = caltechdata_edit(k, newmetadata, token, {}, {}, True)
             print(response)
     return matches
 
@@ -120,7 +120,7 @@ def match_codemeta():
                             add = False
                     if add == True:
                         standardized["subjects"].append({"subject": "GitHub"})
-                    response = caltechdata_edit(token, k, standardized, {}, {}, True)
+                    response = caltechdata_edit(k, standardized, token, {}, {}, True)
                     print(response)
                 os.system("rm codemeta.json")
 
@@ -128,6 +128,41 @@ def match_codemeta():
             if not dataset.update(collection, k, existing):
                 err = dataset.error_message()
                 print(f"Unexpected error on read: {err}")
+
+
+def fix_multiple_subjects(input_collection, token):
+    keys = dataset.keys(input_collection)
+    for k in keys:
+        record, err = dataset.read(input_collection, k)
+        if err != "":
+            print(err)
+            exit()
+        if "subjects" in record:
+            replace = False
+            subjects = []
+            cleaned = []
+            dupes = []
+            for subject in record["subjects"]:
+                subjects.append(subject["subject"])
+            for sub in record["subjects"]:
+                subject = sub["subject"]
+                count = subjects.count(subject)
+                if count > 1:
+                    replace = True
+                    if subject not in dupes:
+                        cleaned.append(subject)
+                        dupes.append(subject)
+                else:
+                    cleaned.append(subject)
+            if replace == True:
+                print("Duplicate subject found in record ", k)
+                print("Will delete these subjects", dupes)
+                clean = []
+                for s in cleaned:
+                    clean.append({"subject": s})
+                new_metadata = {"subjects": clean}
+                response = caltechdata_edit(k, new_metadata, token, {}, {}, True)
+                print(response)
 
 
 def fix_multiple_links(input_collection, token):
@@ -173,23 +208,24 @@ def fix_multiple_links(input_collection, token):
                 response = input("Do you approve this change? Y or N")
                 new_metadata = {"relatedIdentifiers": new}
                 if response == "Y":
-                    response = caltechdata_edit(token, k, new_metadata, {}, {}, True)
+                    response = caltechdata_edit(k, new_metadata, token, {}, {}, True)
                     print(response)
         if "alternateIdentifiers" in record:
             idtypes = []
             alt_ids = []
             repeat = False
             for idv in record["alternateIdentifiers"]:
-                if idv["alternateIdentifierType"] not in idtypes:
-                    # If we haven't seen id type before, save it
-                    alt_ids.append(idv)
-                    idtypes.append(idv["alternateIdentifierType"])
-                else:
-                    repeat = True
-                    print("Will Delete Repeated ID ", idv["alternateIdentifier"])
+                if "alternateIdentiferType" in idv:
+                    if idv["alternateIdentifierType"] not in idtypes:
+                        # If we haven't seen id type before, save it
+                        alt_ids.append(idv)
+                        idtypes.append(idv["alternateIdentifierType"])
+                    else:
+                        repeat = True
+                        print("Will Delete Repeated ID ", idv["alternateIdentifier"])
             if repeat == True:
                 new_metadata = {"alternateIdentifiers": alt_ids}
-                response = caltechdata_edit(token, k, new_metadata, {}, {}, True)
+                response = caltechdata_edit(k, new_metadata, token, {}, {}, True)
                 print(response)
 
 
@@ -209,7 +245,7 @@ def update_citation(record, rid, token, production=True):
                 # otherwise wait till next time
                 d["description"] = citation_text(citation, doi_url, record_doi)
     response = caltechdata_edit(
-        token, rid, {"descriptions": description}, {}, {}, production
+        rid, {"descriptions": description}, token, {}, {}, production
     )
     print(response)
 
@@ -259,7 +295,7 @@ def add_citation(collection, token, production=True):
                 n_txt = citation_text(citation, doi_url, record_doi)
                 description.append({"descriptionType": "Other", "description": n_txt})
                 response = caltechdata_edit(
-                    token, k, {"descriptions": description}, {}, {}, production
+                    k, {"descriptions": description}, token, {}, {}, production
                 )
                 print(response)
 
@@ -318,7 +354,7 @@ def add_usage(collection, token, usage_collection, production=True):
             if use_exists == False:
                 description.append({"descriptionType": "Other", "description": u_txt})
             response = caltechdata_edit(
-                token, k, {"descriptions": description}, {}, {}, production
+                k, {"descriptions": description}, token, {}, {}, production
             )
             print(response)
     print(f"Most downloads {biggest_downloads} for record {biggest_downloads_record}")
@@ -398,6 +434,6 @@ def add_thesis_doi(data_collection, thesis_collection, token, production=True):
         if done == False:
             print("Adding " + thesis_doi + " to " + cd_doi)
             response = caltechdata_edit(
-                token, record_number, new_metadata, {}, {}, True
+                record_number, new_metadata, token, {}, {}, True
             )
             print(response)

@@ -115,7 +115,8 @@ def get_caltechfeed(feed, autoupdate=False):
                 update = "N"
 
         if update == "Y":
-            shutil.rmtree(cname)
+            os.rename(cname, "outdated")
+            shutil.rmtree("outdated")
             print("Downloading " + feed + " Metdata")
             download_file(url, fname)
             print("Extracting " + feed + " Metdata")
