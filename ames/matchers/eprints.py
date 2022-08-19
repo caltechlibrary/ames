@@ -77,6 +77,44 @@ def update_doi(source, keys, outfile=None):
                     print(response)
 
 
+def update_pub_data(source, keys, outfile=None):
+    if source.split(".")[-1] == "ds":
+        # This generates report
+        # dot_paths = [".eprint_id", ".doi", ".related_url"]
+        # labels = ["eprint_id", "doi", "related_url"]
+        # all_metadata = get_records(dot_paths, "doi", source, keys, labels)
+        # for metadata in all_metadata:
+        #    update = decide_doi_update(metadata)
+        #    if update:
+        #        outfile.writerow(update)
+        print("Not Implemented")
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            print(eprint_id)
+            meta = get_eprint(source, eprint_id)
+            # Ignore errors where the record doesn't exist
+            if meta != None:
+                if "doi" not in meta:
+                    print("NO DOI")
+                    exit()
+                doi = meta["doi"]
+                if "volume" not in meta:
+                    url = source + "/rest/eprint/" + str(eprint_id) + "/volume.txt"
+                    headers = {"content-type": "text/plain"}
+                    response = requests.put(url, data="1", headers=headers)
+                    print(response)
+                if "number" not in meta:
+                    url = source + "/rest/eprint/" + str(eprint_id) + "/number.txt"
+                    headers = {"content-type": "text/plain"}
+                    response = requests.put(url, data="1", headers=headers)
+                    print(response)
+                if "pagerange" not in meta:
+                    url = source + "/rest/eprint/" + str(eprint_id) + "/pagerange.txt"
+                    headers = {"content-type": "text/plain"}
+                    response = requests.put(url, data="1", headers=headers)
+                    print(response)
+
+
 def update_record_number(source, keys):
     # Update record_number to what is in persistent url field
     if source.split(".")[-1] != "ds":

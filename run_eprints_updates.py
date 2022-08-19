@@ -10,6 +10,7 @@ from ames.matchers import (
     release_files,
     update_doi,
     update_record_number,
+    update_pub_data,
 )
 
 if __name__ == "__main__":
@@ -59,10 +60,14 @@ if __name__ == "__main__":
             keys = fin.read().splitlines()
     if args.start_recid:
         keys = [k for k in keys if int(k) >= int(args.start_recid)]
+    if args.recid:
+        keys = [args.recid]
     if args.update_type == "resolver":
         resolver_links(source, keys, file_out)
     elif args.update_type == "publisher":
         publisher(source, keys, args.from_val, args.to_val, file_out)
+    elif args.update_type == "pub_data":
+        update_pub_data(source,keys)
     elif args.update_type == "update_doi":
         update_doi(source, keys, file_out)
     elif args.update_type == "release_files":
