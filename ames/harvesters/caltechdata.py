@@ -1,12 +1,11 @@
 import os, subprocess, shutil, math
 import requests
-from caltechdata_api import decustomize_schema
 from py_dataset import dataset
 from progressbar import progressbar
 from datetime import date, datetime
+from caltechdata_api import get_metadata
 
-
-def get_caltechdata(collection, production=True, datacite=False):
+def get_caltechdata(collection, production=True, full=False):
     """Harvest all records from CaltechDATA .
     Always creates collection from scratch"""
     # Delete existing collection
@@ -19,112 +18,37 @@ def get_caltechdata(collection, production=True, datacite=False):
     if production == True:
         url = "https://data.caltech.edu/api/records"
     else:
-        url = "https://cd-sandbox.tind.io/api/records"
+        url = "https://data.caltechlibrary.dev/api/records"
 
-    response = requests.get(f"{url}?q=NOT(subjects:%27HTE%27)")
-    # We don't include the HTE records due to Elasticsearch limitations
+    #if datacite == True:
+    #    headers = {
+    #        "accept": "application/vnd.datacite.datacite+json",
+    #    }
+
+    if full == True:
+        query = '?&sort=newest'
+    else:
+        #Exclude HTE for efficiency
+        query ='?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"&sort=newest'
+
+    response = requests.get(f"{url}{query}")
     total = response.json()["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []
     for c in progressbar(range(1, pages + 1)):
-        # We don't include the HTE records due to Elasticsearch limitations
         chunkurl = (
-            f"{url}?q=NOT(subjects:%27HTE%27)&sort=-mostrecent&size=1000&page={c}"
+            f"{url}{query}&size=1000&page={c}"
         )
         response = requests.get(chunkurl).json()
         hits += response["hits"]["hits"]
 
     for h in progressbar(hits):
         rid = str(h["id"])
-        # Get enriched metadata records (including files)
-        if datacite == False:
-            metadata = decustomize_schema(h["metadata"], True, True, True)
-            metadata["updated"] = h["updated"]
-        else:
-            # Get just DataCite metadata
-            metadata = decustomize_schema(h["metadata"])
-
+        metadata = get_metadata(rid,production, validate=False)
         if not dataset.create(collection, rid, metadata):
             err = dataset.error_message()
             print(err)
 
-
-def get_history(collection, caltechdata_collection, caltechdata_keys):
-    """Harvest the history of records from CaltechDATA."""
-
-    keys_to_update = []
-    if os.path.exists("historyupdate"):
-        with open("historyupdate", "r") as infile:
-            update = date.fromisoformat(infile.read())
-    else:
-        # Arbitrary old date - everything will be updated
-        update = date(2011, 1, 1)
-    for k in progressbar(caltechdata_keys, redirect_stdout=True):
-        existing, err = dataset.read(caltechdata_collection, k)
-        if err != "":
-            print(f"Unexpected error on read: {err}")
-        record_update = datetime.fromisoformat(existing["updated"]).date()
-        if record_update > update:
-            keys_to_update.append(k)
-
-    if not os.path.isdir(collection):
-        if not dataset.init(collection):
-            print("Dataset failed to init collection")
-            exit()
-
-    base_url = "https://data.caltech.edu/records/"
-
-    for k in progressbar(keys_to_update):
-        url = base_url + str(k) + "/revisions"
-        response = requests.get(url)
-        revisions = response.json()
-        for num, metadata in enumerate(revisions):
-            key = f"{k}-{num}"
-            if dataset.has_key(collection, key) == False:
-                dataset.create(collection, key, metadata)
-
-    # Save date in file
-    today = date.today().isoformat()
-    with open("historyupdate", "w") as outfile:
-        outfile.write(today)
-
-
-def get_multiple_links(input_collection, output_collection):
-    keys = dataset.keys(input_collection)
-    for k in keys:
-        record, err = dataset.read(input_collection, k)
-        if err != "":
-            print(err)
-            exit()
-        if "relatedIdentifiers" in record:
-            idvs = []
-            for idv in record["relatedIdentifiers"]:
-                idvs.append(idv["relatedIdentifier"])
-            for idv in record["relatedIdentifiers"]:
-                count = idvs.count(idv["relatedIdentifier"])
-                if count > 1:
-                    print("DUPE")
-                    print(k)
-                    print(idv["relatedIdentifier"])
-
-
-def download_file(erecord, rid):
-    r = requests.get(erecord["uniform_resource_identifier"], stream=True)
-    fname = erecord["electronic_name"][0]
-    if r.status_code == 403:
-        print(
-            "It looks like this file is embargoed.  We can't access until after the embargo is lifted"
-        )
-    else:
-        with open(fname, "wb") as f:
-            total_length = int(r.headers.get("content-length"))
-            for chunk in progressbar(
-                r.iter_content(chunk_size=1024), max_value=(total_length / 1024) + 1
-            ):
-                if chunk:
-                    f.write(chunk)
-                    # f.flush()
-        return fname
 
 
 def get_cd_github(new=True):
@@ -141,7 +65,7 @@ def get_cd_github(new=True):
 
     url = "https://data.caltech.edu/api/records"
 
-    response = requests.get(url + "/?size=1000&q=subjects:GitHub")
+    response = requests.get(url + "?size=1000&q=metadata.subjects.subject%3A'GitHub'")
     hits = response.json()
 
     for h in hits["hits"]["hits"]:
@@ -157,6 +81,9 @@ def get_cd_github(new=True):
             print("Downloading files for ", rid)
 
             codemeta = False
+            
+            print('NOT IMPLEMENTED')
+
 
             for erecord in record["electronic_location_and_access"]:
                 f = download_file(erecord, rid)

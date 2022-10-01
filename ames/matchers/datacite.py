@@ -41,6 +41,8 @@ def update_datacite_media(username, password, collection, prefix):
             ):
                 atlas = True
         record_update = datetime.fromisoformat(existing["updated"]).date()
+        print(record_update)
+        exit()
         # Subtraction to get window to grab records that were updated between runs
         if record_update > update - timedelta(days=2):
             if "electronic_location_and_access" in existing:

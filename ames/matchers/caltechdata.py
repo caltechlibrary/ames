@@ -49,42 +49,43 @@ def match_cd_refs():
         metadata, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
-        doi = "https://doi.org/" + metadata["identifier"]["identifier"]
-        if doi in groups:
-            hits = grouped.get_group(doi)
-            for index, h in hits.iterrows():
-                # Trigger for whether we already have this link
-                new = True
+        if 'identifier' in metadata:
+            doi = "https://doi.org/" + metadata["identifier"]["identifier"]
+            if doi in groups:
+                hits = grouped.get_group(doi)
+                for index, h in hits.iterrows():
+                    # Trigger for whether we already have this link
+                    new = True
+                    if "relatedIdentifiers" in metadata:
+                        for m in metadata["relatedIdentifiers"]:
+                            if m["relatedIdentifier"] in h["subj_id"]:
+                                new = False
+                    if new == True:
+                        match = h["subj_id"]
+                        print(match)
+                        print(h["obj_id"])
+                        inputv = input("Do you approve this link?  Type Y or N: ")
+                        if inputv == "Y":
+                            record_matches.append(match)
+            # If we have to update record
+            if len(record_matches) > 0:
+                ids = []
                 if "relatedIdentifiers" in metadata:
                     for m in metadata["relatedIdentifiers"]:
-                        if m["relatedIdentifier"] in h["subj_id"]:
-                            new = False
-                if new == True:
-                    match = h["subj_id"]
-                    print(match)
-                    print(h["obj_id"])
-                    inputv = input("Do you approve this link?  Type Y or N: ")
-                    if inputv == "Y":
-                        record_matches.append(match)
-        # If we have to update record
-        if len(record_matches) > 0:
-            ids = []
-            if "relatedIdentifiers" in metadata:
-                for m in metadata["relatedIdentifiers"]:
-                    ids.append(m)
-            matches.append([k, record_matches])
-            # Now collect identifiers for record
-            for match in record_matches:
-                split = match.split("doi.org/")
-                new_id = {
+                        ids.append(m)
+                matches.append([k, record_matches])
+                # Now collect identifiers for record
+                for match in record_matches:
+                    split = match.split("doi.org/")
+                    new_id = {
                     "relatedIdentifier": split[1],
                     "relatedIdentifierType": "DOI",
                     "relationType": "IsCitedBy",
-                }
-                ids.append(new_id)
-            newmetadata = {"relatedIdentifiers": ids}
-            response = caltechdata_edit(k, newmetadata, token, {}, {}, True)
-            print(response)
+                    }
+                    ids.append(new_id)
+                newmetadata = {"relatedIdentifiers": ids}
+                response = caltechdata_edit(k, newmetadata, token, {}, {}, True)
+                print(response)
     return matches
 
 

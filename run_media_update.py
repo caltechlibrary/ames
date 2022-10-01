@@ -12,12 +12,12 @@ os.chdir("data")
 
 collection = "caltechdata_formedia.ds"
 
-get_caltechdata(collection)
+#get_caltechdata(collection)
 update_datacite_media(user, password, collection, prefix)
 
-password = os.environ["TIND_DATACITE"]
+password = os.environ["CALTECHDATA_DATACITE"]
 prefix = "10.22002"
-user = "TIND.CALTECH"
+user = "CALTECH.DATA"
 
 update_datacite_media(user, password, collection, prefix)
 
