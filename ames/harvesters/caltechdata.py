@@ -31,8 +31,10 @@ def get_caltechdata(collection, production=True, full=False):
         #Exclude HTE for efficiency
         query ='?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"&sort=newest'
 
-    response = requests.get(f"{url}{query}")
-    total = response.json()["hits"]["total"]
+    response = requests.get(f"{url}{query}").json()
+    total = 0
+    if ("hits" in response) and ("total" in response):
+        total = response["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []
     for c in progressbar(range(1, pages + 1)):
@@ -40,7 +42,8 @@ def get_caltechdata(collection, production=True, full=False):
             f"{url}{query}&size=1000&page={c}"
         )
         response = requests.get(chunkurl).json()
-        hits += response["hits"]["hits"]
+        if ("hits" in response) and ("hits" in response["hits"]):
+            hits += response["hits"]["hits"]
 
     for h in progressbar(hits):
         rid = str(h["id"])
@@ -81,7 +84,7 @@ def get_cd_github(new=True):
             print("Downloading files for ", rid)
 
             codemeta = False
-            
+
             print('NOT IMPLEMENTED')
 
 
