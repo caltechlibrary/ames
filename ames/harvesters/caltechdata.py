@@ -31,6 +31,7 @@ def get_caltechdata(collection, production=True, full=False):
         #Exclude HTE for efficiency
         query ='?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"&sort=newest'
 
+    log.print(f'DEBUG requesting {url}{query}')
     response = requests.get(f"{url}{query}").json()
     total = 0
     if ("hits" in response) and ("total" in response):
@@ -41,6 +42,7 @@ def get_caltechdata(collection, production=True, full=False):
         chunkurl = (
             f"{url}{query}&size=1000&page={c}"
         )
+        log.print(f'DEBUG requestion {chunkurl}')
         response = requests.get(chunkurl).json()
         if ("hits" in response) and ("hits" in response["hits"]):
             hits += response["hits"]["hits"]
