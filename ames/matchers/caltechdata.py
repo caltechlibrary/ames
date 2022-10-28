@@ -49,7 +49,7 @@ def match_cd_refs():
         metadata, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
-        if 'identifier' in metadata:
+        if "identifier" in metadata:
             doi = "https://doi.org/" + metadata["identifier"]["identifier"]
             if doi in groups:
                 hits = grouped.get_group(doi)
@@ -78,9 +78,9 @@ def match_cd_refs():
                 for match in record_matches:
                     split = match.split("doi.org/")
                     new_id = {
-                    "relatedIdentifier": split[1],
-                    "relatedIdentifierType": "DOI",
-                    "relationType": "IsCitedBy",
+                        "relatedIdentifier": split[1],
+                        "relatedIdentifierType": "DOI",
+                        "relationType": "IsCitedBy",
                     }
                     ids.append(new_id)
                 newmetadata = {"relatedIdentifiers": ids}

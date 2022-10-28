@@ -19,99 +19,76 @@ def delete_datacite_media(username, password, doi):
             print(req)
 
 
-def update_datacite_media(username, password, collection, prefix):
+def update_datacite_media(username, password, collection, collection_files, prefix):
     keys = dataset.keys(collection)
 
-    if path.exists("mediaupdate"):
-        with open("mediaupdate", "r") as infile:
-            update = date.fromisoformat(infile.read())
-    else:
-        # Arbitrary old date - everything will be updated
-        update = date(2011, 1, 1)
     for k in progressbar(keys, redirect_stdout=True):
         existing, err = dataset.read(collection, k)
         if err != "":
             print(f"Unexpected error on read: {err}")
         atlas = False
-        subjects = existing["subjects"]
-        for subject in subjects:
-            if (
-                subject["subject"].strip()
-                == "Atlas of Bacterial and Archaeal Cell Structure"
-            ):
-                atlas = True
-        record_update = datetime.fromisoformat(existing["updated"]).date()
-        print(record_update)
-        exit()
-        # Subtraction to get window to grab records that were updated between runs
-        if record_update > update - timedelta(days=2):
-            if "electronic_location_and_access" in existing:
-                doi = existing["identifier"]["identifier"]
-                record_prefix = doi.split("/")[0]
-                if record_prefix == prefix:
-                    delete_datacite_media(username, password, doi)
-                    for file_met in existing["electronic_location_and_access"]:
-                        url = "https://mds.datacite.org/media/" + doi
-                        headers = {"Content-Type": "application/txt;charset=UTF-8"}
-                        extension = file_met["electronic_name"][0].split(".")[-1]
-                        filename = file_met["electronic_name"][0].split(".")[0]
-                        data = {}
-                        if extension == "nc":
+        tccon = False
+        if "subjects" in existing:
+            subjects = existing["subjects"]
+            for subject in subjects:
+                if (
+                    subject["subject"].strip()
+                    == "Atlas of Bacterial and Archaeal Cell Structure"
+                ):
+                    atlas = True
+                if subject["subject"].strip() == "TCCON":
+                    tccon = True
+        files, err = dataset.read(collection_files, k)
+        if err == "":
+            for idv in existing["identifiers"]:
+                if idv["identifierType"] == "DOI":
+                    doi = idv["identifier"]
+            record_prefix = doi.split("/")[0]
+            if record_prefix == prefix:
+                delete_datacite_media(username, password, doi)
+                for file_met in files["entries"]:
+                    url = "https://mds.datacite.org/media/" + doi
+                    headers = {"Content-Type": "application/txt;charset=UTF-8"}
+                    print(file_met)
+                    extension = file_met["key"].split(".")[-1]
+                    file_url = (
+                        f"https://data.caltech.edu/records/{k}/files/{file_met['key']}"
+                    )
+                    data = {}
+                    if extension == "nc":
+                        data = "application/x-netcdf=" + file_url
+                    elif extension == "mp4":
+                        if atlas:
                             data = (
-                                "application/x-netcdf="
-                                + file_met["uniform_resource_identifier"]
+                                "video/mp4="
+                                + "https://www.cellstructureatlas.org/videos/"
+                                + file_met["key"]
+                                + ".mp4"
                             )
-                        elif extension == "mp4":
-                            if atlas:
-                                data = (
-                                    "video/mp4="
-                                    + "https://www.cellstructureatlas.org/videos/"
-                                    + filename
-                                    + ".mp4"
-                                )
-                            else:
-                                data = (
-                                    "video/mp4="
-                                    + file_met["uniform_resource_identifier"]
-                                )
-                        elif extension == "mj2":
-                            data = (
-                                "video/mj2=" + file_met["uniform_resource_identifier"]
-                            )
-                        elif extension == "avi":
-                            data = (
-                                "video/avi=" + file_met["uniform_resource_identifier"]
-                            )
-                        elif extension == "mov":
-                            data = (
-                                "video/quicktime="
-                                + file_met["uniform_resource_identifier"]
-                            )
-                        elif extension == "gz":
-                            data = (
-                                "application/gzip="
-                                + file_met["uniform_resource_identifier"]
-                            )
-                        elif extension == "zip":
-                            data = (
-                                "application/zip="
-                                + file_met["uniform_resource_identifier"]
-                            )
-                        elif extension == "h5ad":
-                            data = (
-                                "application/octet-stream="
-                                + file_met["uniform_resource_identifier"]
-                            )
-                        if data != {}:
-                            print(doi)
-                            print(data)
-                            r = requests.post(
-                                url,
-                                data=data.encode("utf-8"),
-                                auth=(username, password),
-                                headers=headers,
-                            )
-                            print(r)
+                        else:
+                            data = "video/mp4=" + file_url
+                    elif extension == "mj2":
+                        data = "video/mj2=" + file_url
+                    elif extension == "avi":
+                        data = "video/avi=" + file_url
+                    elif extension == "mov":
+                        data = "video/quicktime=" + file_url
+                    elif extension == "gz":
+                        data = "application/gzip=" + file_url
+                    elif extension == "zip":
+                        data = "application/zip=" + file_url
+                    elif extension == "h5ad":
+                        data = "application/octet-stream=" + file_url
+                    if data != {}:
+                        print(doi)
+                        print(data)
+                        r = requests.post(
+                            url,
+                            data=data.encode("utf-8"),
+                            auth=(username, password),
+                            headers=headers,
+                        )
+                        print(r)
 
 
 def update_datacite_metadata(collection, token, access):
