@@ -13,8 +13,8 @@ os.chdir("data")
 collection = "caltechdata_formedia.ds"
 collection_files = "caltechdatafiles.ds"
 
-#get_caltechdata(collection)
-#get_caltechdata_files(collection_files)
+get_caltechdata(collection)
+get_caltechdata_files(collection_files)
 update_datacite_media(user, password, collection, collection_files, prefix)
 
 password = os.environ["CALTECHDATA_DATACITE"]

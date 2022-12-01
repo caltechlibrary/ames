@@ -6,7 +6,7 @@ if os.path.isdir("data") == False:
     os.mkdir("data")
 os.chdir("data")
 
-token = os.environ["TINDTOK"]
+token = os.environ["RDMTOK"]
 
 production = True
 collection = "caltechdata_forthesis.ds"

@@ -9,6 +9,7 @@ from ames.harvesters import get_eprint_keys, get_eprint
 from ames.harvesters import doi_in_authors, get_extended
 from ames.utils import is_in_range
 
+
 def keep_record(metadata, years, item_type=None, group=None):
     keep = True
 
@@ -924,7 +925,9 @@ def alt_url_report(file_obj, keys, source):
 
 def supp_data_report(file_obj, keys, source):
     print(f"Processing {len(keys)} eprint records for supplemental data")
-    file_obj.writerow(["eprint_id", "record_doi", "related_url", "description","type", "date"])
+    file_obj.writerow(
+        ["eprint_id", "record_doi", "related_url", "description", "type", "date"]
+    )
     if source.split(".")[-1] == "ds":
         dot_paths = ["._Key", ".related_url.items", ".doi", ".date"]
         labels = ["eprint_id", "items", "doi", "date"]
@@ -936,7 +939,7 @@ def supp_data_report(file_obj, keys, source):
             if "date" in metadata:
                 date = metadata["date"]
             else:
-                date = ''
+                date = ""
             if "doi" in metadata:
                 doi = metadata["doi"]
             else:

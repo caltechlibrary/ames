@@ -325,45 +325,45 @@ def add_thesis_doi(data_collection, thesis_collection, token, production=True):
     for doi_link in dois:
         cd_doi = doi_link[0]
         thesis_doi = doi_link[1]
-        print("Checking " + cd_doi)
-        if "D1" in cd_doi:
-            record_number = cd_doi.split("D1.")[1]
-        if "d1" in cd_doi:
-            record_number = cd_doi.split("d1.")[1]
-        record, err = dataset.read(data_collection, record_number)
-        if err != "":
-            print(err)
-            exit()
+        # Exclude tombstone records
+        if cd_doi != "10.22002/D1.1987":
+            print("Checking " + cd_doi)
+            record, err = dataset.read(data_collection, cd_doi)
+            if err != "":
+                print(err)
+                exit()
 
-        done = False
-        if "relatedIdentifiers" in record:
-            for idv in record["relatedIdentifiers"]:
-                identifier = idv["relatedIdentifier"]
-                if identifier == thesis_doi:
-                    done = True
-            if done == False:
-                identifiers = record["relatedIdentifiers"]
-                identifiers.append(
-                    {
-                        "relatedIdentifier": thesis_doi,
-                        "relatedIdentifierType": "DOI",
-                        "relationType": "IsSupplementTo",
-                    }
-                )
-                new_metadata = {"relatedIdentifiers": identifiers}
-        else:
-            new_metadata = {
-                "relatedIdentifiers": [
+            for idv in record["identifiers"]:
+                if idv["identifierType"] == "oai":
+                    record_number = idv["identifier"].split("data.caltech.edu:")[1]
+
+            done = False
+            if "relatedIdentifiers" in record:
+                for idv in record["relatedIdentifiers"]:
+                    identifier = idv["relatedIdentifier"]
+                    if identifier == thesis_doi:
+                        done = True
+                if done == False:
+                    identifiers = record["relatedIdentifiers"]
+                    identifiers.append(
+                        {
+                            "relatedIdentifier": thesis_doi,
+                            "relatedIdentifierType": "DOI",
+                            "relationType": "IsSupplementTo",
+                        }
+                    )
+                    record["relatedIdentifiers"] = identifiers
+            else:
+                record["relatedIdentifiers"] = [
                     {
                         "relatedIdentifier": thesis_doi,
                         "relatedIdentifierType": "DOI",
                         "relationType": "IsSupplementTo",
                     }
                 ]
-            }
-        if done == False:
-            print("Adding " + thesis_doi + " to " + cd_doi)
-            response = caltechdata_edit(
-                record_number, new_metadata, token, {}, {}, True
-            )
-            print(response)
+            if done == False:
+                print("Adding " + thesis_doi + " to " + cd_doi)
+                response = caltechdata_edit(
+                    record_number, record, token, {}, True, publish=True
+                )
+                print(response)

@@ -34,7 +34,7 @@ if __name__ == "__main__":
         help="Uses feeds data and writes report of what would be changed, but makes no changes. Provide output file name",
     )
     parser.add_argument("-from_val", help="From value")
-    parser.add_argument("-to_val", help="To value") 
+    parser.add_argument("-to_val", help="To value")
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     elif args.update_type == "publisher":
         publisher(source, keys, args.from_val, args.to_val, file_out)
     elif args.update_type == "pub_data":
-        update_pub_data(source,keys)
+        update_pub_data(source, keys)
     elif args.update_type == "update_doi":
         update_doi(source, keys, file_out)
     elif args.update_type == "release_files":

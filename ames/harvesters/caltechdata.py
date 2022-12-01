@@ -37,9 +37,10 @@ def get_caltechdata(collection, production=True, full=False):
         hits += response["hits"]["hits"]
 
     for h in progressbar(hits):
-        rid = str(h["id"])
+        rid = h["id"]
+        doi = h["links"]["doi"].split("doi.org/")[1]
         metadata = get_metadata(rid, production, validate=False)
-        if not dataset.create(collection, rid, metadata):
+        if not dataset.create(collection, doi, metadata):
             err = dataset.error_message()
             print(err)
 
