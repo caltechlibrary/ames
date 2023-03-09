@@ -388,6 +388,31 @@ def thesis_report(file_obj, keys, source, years=None):
             )
 
 
+def missing_pub_date(file_obj, keys, source):
+    """Output a report of DOIs"""
+    file_obj.writerow(
+        [
+            "Eprint ID",
+            "Resolver URL",
+        ]
+    )
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".official_url", ".date"]
+        labels = ["eprint_id", "official_url", "date"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    for metadata in all_metadata:
+        ep = metadata["eprint_id"]
+        url = metadata["official_url"]
+        if "date" not in metadata:
+            file_obj.writerow([ep, url])
+    print("Report finished!")
+
+
 def doi_report(
     file_obj, keys, source, years=None, all_records=True, item_type=None, group=None
 ):
@@ -402,7 +427,7 @@ def doi_report(
             "Resolver URL",
             "Series Information",
             "Files",
-            "Possible DOI"
+            "Possible DOI",
         ]
     )
     all_metadata = []
@@ -421,7 +446,7 @@ def doi_report(
             ".other_numbering_system",
             ".series",
             ".number",
-            ".documents"
+            ".documents",
         ]
         labels = [
             "eprint_id",
@@ -437,7 +462,7 @@ def doi_report(
             "other_numbering_system",
             "series",
             "number",
-            "documents"
+            "documents",
         ]
         all_metadata = get_records(dot_paths, "dois", source, keys, labels)
     else:
@@ -451,11 +476,11 @@ def doi_report(
         if keep_record(metadata, years, item_type, group):
 
             ep = metadata["eprint_id"]
-            suggested = ''
-            maybe = ''
+            suggested = ""
+            maybe = ""
             dois = set()
             article_dois = set()
-            arxiv = ''
+            arxiv = ""
             if "doi" not in metadata:
                 if "related_url" in metadata and "items" in metadata["related_url"]:
                     items = metadata["related_url"]["items"]
@@ -471,22 +496,22 @@ def doi_report(
                                 normal = normalize_doi(url)
                                 dois.add(normal)
                             else:
-                                #We have a incorrectly formatted DOI
+                                # We have a incorrectly formatted DOI
                                 normal = False
                                 maybe += url
-                            if description == 'article':
+                            if description == "article":
                                 if normal:
                                     article_dois.add(normal)
-                        elif itype == 'arxiv':
-                            aidv = url.split('/')[-1]
-                            arxiv  = '10.48550/arXiv.'+aidv
+                        elif itype == "arxiv":
+                            aidv = url.split("/")[-1]
+                            arxiv = "10.48550/arXiv." + aidv
                         elif is_doi(url):
                             dois.add(normalize_doi(url))
-                if len(dois) ==1:#some records have duplicate DOIs
+                if len(dois) == 1:  # some records have duplicate DOIs
                     suggested = dois.pop()
-                elif len(article_dois) == 1:#The article DOI is probably correct
+                elif len(article_dois) == 1:  # The article DOI is probably correct
                     suggested = article_dois.pop()
-                elif arxiv != '':
+                elif arxiv != "":
                     suggested = arxiv
                 elif len(dois) > 0:
                     maybe += str(dois)
@@ -524,16 +549,18 @@ def doi_report(
                         series += " " + metadata["series"] + " " + metadata["number"]
                     else:
                         series += " " + metadata["series"]
-                files = ''
+                files = ""
                 if "documents" in metadata:
                     file = False
-                    for d in metadata['documents']:
-                        if 'security' in d:
-                            if d['security'] != 'internal':
+                    for d in metadata["documents"]:
+                        if "security" in d:
+                            if d["security"] != "internal":
                                 file = True
                     if file:
-                        files = 'files-present'
-                file_obj.writerow([ep, suggested, year, author, title, url, series, files, maybe])
+                        files = "files-present"
+                file_obj.writerow(
+                    [ep, suggested, year, author, title, url, series, files, maybe]
+                )
     print("Report finished!")
 
 
@@ -1506,6 +1533,8 @@ if __name__ == "__main__":
                 item_type=args.item,
                 group=args.group,
             )
+        elif args.report_name == "pubdate_report":
+            missing_pub_date(file_out, keys, source)
         elif args.report_name == "thesis_report":
             thesis_report(file_out, keys, source, args.years)
         elif args.report_name == "thesis_list":
