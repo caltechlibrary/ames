@@ -2,7 +2,7 @@ import os, argparse, csv, json
 from py_dataset import dataset
 import random
 import requests
-from idutils import is_doi, is_arxiv, normalize_doi
+from idutils import is_doi, is_arxiv, normalize_doi, normalize_arxiv
 from progressbar import progressbar
 from ames.harvesters import get_caltechfeed, get_records, get_orcid_works
 from ames.harvesters import get_eprint_keys, get_eprint
@@ -395,12 +395,14 @@ def doi_report(
     file_obj.writerow(
         [
             "Eprint ID",
-            "DOI",
+            "Suggested DOI",
             "Year",
             "Author ID",
             "Title",
             "Resolver URL",
             "Series Information",
+            "Files",
+            "Possible DOI"
         ]
     )
     all_metadata = []
@@ -419,6 +421,7 @@ def doi_report(
             ".other_numbering_system",
             ".series",
             ".number",
+            ".documents"
         ]
         labels = [
             "eprint_id",
@@ -434,6 +437,7 @@ def doi_report(
             "other_numbering_system",
             "series",
             "number",
+            "documents"
         ]
         all_metadata = get_records(dot_paths, "dois", source, keys, labels)
     else:
@@ -447,63 +451,89 @@ def doi_report(
         if keep_record(metadata, years, item_type, group):
 
             ep = metadata["eprint_id"]
-            # Handle odd CaltechAUTHORS DOI setup
-            if "doi" in metadata:
-                doi = metadata["doi"].strip()
-            elif "related_url" in metadata and "items" in metadata["related_url"]:
-                items = metadata["related_url"]["items"]
-                for item in items:
-                    if "url" in item:
-                        url = item["url"].strip()
-                    if "type" in item:
-                        itype = item["type"].strip().lower()
-                    if "description" in item:
-                        description = item["description"].strip().lower()
-                    if itype == "doi" and description == "article":
-                        doi = url
-                        break
-            else:
-                doi = ""
-            if "creators" in metadata:
-                if "id" in metadata["creators"]["items"][0]:
-                    author = metadata["creators"]["items"][0]["id"]
-                else:
-                    author = ""
-                    print(f"Record {ep} is missing author id")
-
-            if "title" not in metadata:
-                print(f"Record {ep} is missing Title")
-                exit()
-            title = metadata["title"]
-            url = metadata["official_url"]
-            if "date" in metadata:
-                year = metadata["date"].split("-")[0]
-            else:
-                year = ""
-            # Series info
-            series = ""
-            if "other_numbering_system" in metadata:
-                num = metadata["other_numbering_system"]
-                series = "other numbering:"
-                for item in num["items"]:
-                    if "id" in item:
-                        if "name" in item:
-                            series += " " + item["name"] + " " + item["id"]
-                        else:
-                            series += " " + item["id"]
+            suggested = ''
+            maybe = ''
+            dois = set()
+            article_dois = set()
+            arxiv = ''
+            if "doi" not in metadata:
+                if "related_url" in metadata and "items" in metadata["related_url"]:
+                    items = metadata["related_url"]["items"]
+                    for item in items:
+                        if "url" in item:
+                            url = item["url"].strip()
+                        if "type" in item:
+                            itype = item["type"].strip().lower()
+                        if "description" in item:
+                            description = item["description"].strip().lower()
+                        if itype == "doi":
+                            if is_doi(url):
+                                normal = normalize_doi(url)
+                                dois.add(normal)
+                            else:
+                                #We have a incorrectly formatted DOI
+                                normal = False
+                                maybe += url
+                            if description == 'article':
+                                if normal:
+                                    article_dois.add(normal)
+                        elif itype == 'arxiv':
+                            aidv = url.split('/')[-1]
+                            arxiv  = '10.48550/arXiv.'+aidv
+                        elif is_doi(url):
+                            dois.add(normalize_doi(url))
+                if len(dois) ==1:#some records have duplicate DOIs
+                    suggested = dois.pop()
+                elif len(article_dois) == 1:#The article DOI is probably correct
+                    suggested = article_dois.pop()
+                elif arxiv != '':
+                    suggested = arxiv
+                elif len(dois) > 0:
+                    maybe += str(dois)
+                if "creators" in metadata:
+                    if "id" in metadata["creators"]["items"][0]:
+                        author = metadata["creators"]["items"][0]["id"]
                     else:
-                        series += " " + item["name"]
-            if "series" in metadata:
-                series += "series:"
-                if "number" in metadata:
-                    series += " " + metadata["series"] + " " + metadata["number"]
+                        author = ""
+
+                if "title" not in metadata:
+                    print(f"Record {ep} is missing Title")
+                    exit()
+                title = metadata["title"]
+                url = metadata["official_url"]
+                if "date" in metadata:
+                    year = metadata["date"].split("-")[0]
                 else:
-                    series += " " + metadata["series"]
-            if all_records == False:
-                if doi != "":
-                    file_obj.writerow([ep, doi, year, author, title, url, series])
-            else:
-                file_obj.writerow([ep, doi, year, author, title, url, series])
+                    year = ""
+                # Series info
+                series = ""
+                if "other_numbering_system" in metadata:
+                    num = metadata["other_numbering_system"]
+                    series = "other numbering:"
+                    for item in num["items"]:
+                        if "id" in item:
+                            if "name" in item:
+                                series += " " + item["name"] + " " + item["id"]
+                            else:
+                                series += " " + item["id"]
+                        else:
+                            series += " " + item["name"]
+                if "series" in metadata:
+                    series += "series:"
+                    if "number" in metadata:
+                        series += " " + metadata["series"] + " " + metadata["number"]
+                    else:
+                        series += " " + metadata["series"]
+                files = ''
+                if "documents" in metadata:
+                    file = False
+                    for d in metadata['documents']:
+                        if 'security' in d:
+                            if d['security'] != 'internal':
+                                file = True
+                    if file:
+                        files = 'files-present'
+                file_obj.writerow([ep, suggested, year, author, title, url, series, files, maybe])
     print("Report finished!")
 
 
