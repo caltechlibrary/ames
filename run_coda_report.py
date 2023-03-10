@@ -389,7 +389,7 @@ def thesis_report(file_obj, keys, source, years=None):
 
 
 def missing_pub_date(file_obj, keys, source):
-    """Output a report of DOIs"""
+    """Output a report of records without a publication date"""
     file_obj.writerow(
         [
             "Eprint ID",
@@ -410,6 +410,38 @@ def missing_pub_date(file_obj, keys, source):
         url = metadata["official_url"]
         if "date" not in metadata:
             file_obj.writerow([ep, url])
+    print("Report finished!")
+
+
+def duplicate_doi(file_obj, keys, source):
+    """Output a report of duplicate DOIs"""
+    file_obj.writerow(
+        [
+            "DOI",
+            "Eprint ID 1",
+            "Resolver URL",
+            "Eprint ID 2",
+        ]
+    )
+    all_metadata = []
+    if source.split(".")[-1] == "ds":
+        dot_paths = ["._Key", ".official_url", ".doi"]
+        labels = ["eprint_id", "official_url", "doi"]
+        all_metadata = get_records(dot_paths, "dois", source, keys, labels)
+    else:
+        for eprint_id in progressbar(keys, redirect_stdout=True):
+            all_metadata.append(get_eprint(source, eprint_id))
+
+    dois = {}
+    for metadata in all_metadata:
+        ep = metadata["eprint_id"]
+        url = metadata["official_url"]
+        if "doi" in metadata:
+            doi = metadata["doi"]
+            if doi in dois:
+                file_obj.writerow([doi, ep, url, dois[doi]])
+            else:
+                dois[doi] = ep
     print("Report finished!")
 
 
@@ -1535,6 +1567,8 @@ if __name__ == "__main__":
             )
         elif args.report_name == "pubdate_report":
             missing_pub_date(file_out, keys, source)
+        elif args.report_name == "duplicate_doi":
+            duplicate_doi(file_out, keys, source)
         elif args.report_name == "thesis_report":
             thesis_report(file_out, keys, source, args.years)
         elif args.report_name == "thesis_list":
