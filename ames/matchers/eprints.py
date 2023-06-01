@@ -51,7 +51,7 @@ def decide_doi_update(metadata):
         return None
 
 
-def update_doi(source, keys, outfile=None):
+def update_doi(source, keys, to_value=None, outfile=None):
     if source.split(".")[-1] == "ds":
         # This generates report
         dot_paths = [".eprint_id", ".doi", ".related_url"]
@@ -67,14 +67,21 @@ def update_doi(source, keys, outfile=None):
             meta = get_eprint(source, eprint_id)
             # Ignore errors where the record doesn't exist
             if meta != None:
-                update = decide_doi_update(meta)
-                if update:
-                    url = source + "/rest/eprint/" + str(eprint_id) + "/doi.txt"
-                    headers = {"content-type": "text/plain"}
-                    doi = update[1].replace("\u200b", "")
-                    # Handle invisible charaters in ASM DOIs
-                    response = requests.put(url, data=doi, headers=headers)
-                    print(response)
+                url = source + "/rest/eprint/" + str(eprint_id) + "/doi.txt"
+                headers = {"content-type": "text/plain"}
+                if to_value == None:
+                    update = decide_doi_update(meta)
+                    if update:
+                        doi = update[1].replace("\u200b", "")
+                        # Handle invisible charaters in ASM DOIs
+                        response = requests.put(url, data=doi, headers=headers)
+                        print(response)
+                else:
+                    if "doi" not in meta:
+                        response = requests.put(url, data=to_value, headers=headers)
+                        print(response)
+                    else:
+                        print("Skipping because DOI value is already set")
 
 
 def update_pub_data(source, keys, outfile=None):

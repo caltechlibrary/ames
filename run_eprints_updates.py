@@ -37,6 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("-to_val", help="To value")
     parser.add_argument("-username", help="Eprints username")
     parser.add_argument("-password", help="Eprints password")
+    parser.add_argument("-csv", help="csv input file")
 
     args = parser.parse_args()
 
@@ -69,7 +70,13 @@ if __name__ == "__main__":
     elif args.update_type == "pub_data":
         update_pub_data(source, keys)
     elif args.update_type == "update_doi":
-        update_doi(source, keys, file_out)
+        if args.csv:
+            with open("../" + args.csv, "r", newline="\n", encoding="utf-8-sig") as fin:
+                reader = csv.reader(fin)
+                for row in reader:
+                    update_doi(source, [row[0]], to_value=row[1])
+        else:
+            update_doi(source, keys, file_out)
     elif args.update_type == "release_files":
         # Need to have dataset collection as well
         collection = get_caltechfeed(args.repository)

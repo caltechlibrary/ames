@@ -1015,11 +1015,19 @@ def alt_url_report(file_obj, keys, source):
 def supp_data_report(file_obj, keys, source):
     print(f"Processing {len(keys)} eprint records for supplemental data")
     file_obj.writerow(
-        ["eprint_id", "record_doi", "related_url", "description", "type", "date"]
+        [
+            "eprint_id",
+            "record_doi",
+            "related_url",
+            "description",
+            "type",
+            "date",
+            "pmcid",
+        ]
     )
     if source.split(".")[-1] == "ds":
-        dot_paths = ["._Key", ".related_url.items", ".doi", ".date"]
-        labels = ["eprint_id", "items", "doi", "date"]
+        dot_paths = ["._Key", ".related_url.items", ".doi", ".date", ".pmcid"]
+        labels = ["eprint_id", "items", "doi", "date", "pmcid"]
         print("Getting metadata")
         all_metadata = get_records(dot_paths, "rel", source, keys, labels)
         print("processing metadata")
@@ -1033,6 +1041,10 @@ def supp_data_report(file_obj, keys, source):
                 doi = metadata["doi"]
             else:
                 doi = ""
+            if "pmcid" in metadata:
+                pmcid = metadata["pmcid"]
+            else:
+                pmcid = ""
             if "items" in metadata:
                 for i in metadata["items"]:
                     if "url" in i:
@@ -1049,7 +1061,7 @@ def supp_data_report(file_obj, keys, source):
                         typ = ""
                     if is_doi(url):
                         url = normalize_doi(url)
-                    file_obj.writerow([key, doi, url, desc, typ, date])
+                    file_obj.writerow([key, doi, url, desc, typ, date, pmcid])
         print("Report finished!")
     else:
         print("Not Implemented")
