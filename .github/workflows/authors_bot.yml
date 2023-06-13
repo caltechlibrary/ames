@@ -24,7 +24,7 @@ jobs:
         shell: bash
         env:
             CTATOK: ${{ secrets.CTATOK }}
-        run: python caltechauthors_bot.py
+        run: python run_caltechauthors_bot.py
       - name: Commit Files
         uses: EndBug/add-and-commit@v9
         with:
