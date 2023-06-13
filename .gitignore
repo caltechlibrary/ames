@@ -12,6 +12,7 @@ dist/
 ames.egg-info/
 *.sh
 *.log
+.DS_Store
+.ipynb_checkpoints
 # Test files
-*.csv
 updates

@@ -15,3 +15,4 @@ from .eprints import update_doi
 from .eprints import update_record_number
 from .eprints import publisher
 from .eprints import update_pub_data
+from .caltechauthors import add_journal_metadata

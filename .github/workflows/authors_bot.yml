@@ -1,0 +1,33 @@
+name: CaltechAUTHORS Bot
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  Harvest:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Python Deps
+        shell: bash
+        run: pip install -r requirements.txt
+      - name: Run Bot
+        shell: bash
+        env:
+            CTATOK: ${{ secrets.CTATOK }}
+        run: python caltechauthors_bot.py
+      - name: Commit Files
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'Update requests that are completed'
+          add: "['completed_requests.csv']"
+
