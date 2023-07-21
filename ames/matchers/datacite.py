@@ -38,6 +38,7 @@ def update_datacite_media(username, password, collection, collection_files, pref
                     atlas = True
                 if subject["subject"].strip() == "TCCON":
                     tccon = True
+
         files, err = dataset.read(collection_files, k)
         if err == "":
             for idv in existing["identifiers"]:
@@ -46,15 +47,18 @@ def update_datacite_media(username, password, collection, collection_files, pref
             record_prefix = doi.split("/")[0]
             if record_prefix == prefix:
                 delete_datacite_media(username, password, doi)
-                for file_met in files["entries"]:
+                for file_met in files["files"]:
                     url = "https://mds.datacite.org/media/" + doi
                     headers = {"Content-Type": "application/txt;charset=UTF-8"}
-                    print(file_met)
-                    extension = file_met["key"].split(".")[-1]
-                    file_url = (
-                        f"https://data.caltech.edu/records/{k}/files/{file_met['key']}"
-                    )
                     data = {}
+                    if "url" in file_met:
+                        # We're dealing with an external file
+                        file_url = file_met["url"]
+                        extension = file_url.split(".")[-1]
+                    else:
+                        # We have an internal CaltechDATA file
+                        extension = file_met["key"].split(".")[-1]
+                        file_url = f"https://data.caltech.edu/records/{k}/files/{file_met['key']}"
                     if extension == "nc":
                         data = "application/x-netcdf=" + file_url
                     elif extension == "mp4":

@@ -24,8 +24,8 @@ def get_caltechdata(collection, production=True, full=False):
     if full == True:
         query = "?&sort=newest"
     else:
-        # Exclude HTE for efficiency
-        query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"&sort=newest'
+        # Exclude HTE and tomograms for efficiency
+        query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
 
     response = requests.get(f"{url}{query}")
     total = response.json()["hits"]["total"]
@@ -38,7 +38,8 @@ def get_caltechdata(collection, production=True, full=False):
 
     for h in progressbar(hits):
         rid = h["id"]
-        doi = h["links"]["doi"].split("doi.org/")[1]
+        doi = h["links"]["doi"].split("doi.org/")[1].lower()
+        # Need lower because of dataset key limitations
         metadata = get_metadata(rid, production, validate=False)
         if not dataset.create(collection, doi, metadata):
             err = dataset.error_message()
@@ -63,8 +64,8 @@ def get_caltechdata_files(collection, production=True, full=False):
     if full == True:
         query = "?&sort=newest"
     else:
-        # Exclude HTE for efficiency
-        query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"&sort=newest'
+        # Exclude HTE and tomograms for efficiency
+        query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
 
     response = requests.get(f"{url}{query}")
     total = response.json()["hits"]["total"]
@@ -77,13 +78,28 @@ def get_caltechdata_files(collection, production=True, full=False):
 
     for h in progressbar(hits):
         rid = str(h["id"])
+        files = {"files": []}
+        # Capture external files:
+        metadata = h["metadata"]
+        doi = h["links"]["doi"].split("doi.org/")[1].lower()
+        # Need lower because of dataset key limitations
+        if "additional_descriptions" in metadata:
+            for desc in metadata["additional_descriptions"]:
+                if "type" in desc and desc["type"]["id"] == "files":
+                    description = desc["description"]
+                    chunks = description.split('href="')[1:]
+                    for c in chunks:
+                        files["files"].append({"url": c.split('"')[0]})
+
         response = requests.get(f"{url}/{rid}/files")
         if response.status_code == 200:
             if "entries" in response.json():
-                files = response.json()
-                if not dataset.create(collection, rid, files):
-                    err = dataset.error_message()
-                    print(err)
+                files["files"] += response.json()["entries"]
+
+        if len(files["files"]) > 0:
+            if not dataset.create(collection, doi, files):
+                err = dataset.error_message()
+                print(err)
 
 
 def get_cd_github(new=True):
