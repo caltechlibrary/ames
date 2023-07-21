@@ -61,6 +61,8 @@ def update_datacite_media(username, password, collection, collection_files, pref
                         file_url = f"https://data.caltech.edu/records/{k}/files/{file_met['key']}"
                     if extension == "nc":
                         data = "application/x-netcdf=" + file_url
+                    if extension == "txt":
+                        data = "text/plain=" + file_url
                     elif extension == "mp4":
                         if atlas:
                             data = (
