@@ -1,8 +1,6 @@
 import os, getpass, shutil
 from ames.harvesters import get_caltechdata
-from ames.matchers import fix_multiple_links
 from ames.matchers import update_datacite_metadata
-from ames.matchers import fix_multiple_subjects
 
 collection = "caltechdata.ds"
 if os.path.isdir("data") == False:
@@ -15,8 +13,6 @@ if os.path.isdir(collection) == True:
 token = os.environ["TINDTOK"]
 
 get_caltechdata(collection, datacite=True)
-fix_multiple_links(collection, token)
-fix_multiple_subjects(collection, token)
 check = input("Do you want to update DOI metadata with DataCite? Y or N:")
 if check == "Y":
     username = getpass.getpass("Enter the DataCite Username:")
