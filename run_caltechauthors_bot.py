@@ -4,7 +4,7 @@ from ames.matchers import add_journal_metadata
 
 token = os.environ["CTATOK"]
 
-community = '669e5e57-7d9e-4d19-8ab5-9c6158562fb3'
+community = 'aedd135f-227e-4fdf-9476-5b3fd011bac6'
 
 completed = []
 with open('completed_requests.csv','r') as f:
