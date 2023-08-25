@@ -2,11 +2,15 @@ import csv, json
 import requests
 
 
-def add_journal_metadata(request, token):
+def add_journal_metadata(request, token, test=False):
     # For a given request, determine whether we need to add journal metadata
 
-    request_url = "https://authors.caltechlibrary.dev/api/requests/" + request
-    record_url = "https://authors.caltechlibrary.dev/api/records/"
+    if test:
+        base = "https://authors.caltechlibrary.dev"
+    else:
+        base = "https://authors.library.caltech.edu"
+    request_url = base + "/api/requests/" + request
+    record_url = base + "/api/records/"
 
     headers = {
         "Authorization": "Bearer %s" % token,

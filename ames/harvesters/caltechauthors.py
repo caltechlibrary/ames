@@ -1,8 +1,11 @@
 import requests, math
 
 
-def get_pending_requests(token, community=None, return_ids=False):
-    url = "https://authors.caltechlibrary.dev/api/requests?q=is_open:true"
+def get_pending_requests(token, community=None, return_ids=False, test=False):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/requests?q=is_open:true"
+    else:
+        url = "https://authors.library.caltech.edu/api/requests?q=is_open:true"
 
     headers = {
         "Authorization": "Bearer %s" % token,
