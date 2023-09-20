@@ -60,3 +60,29 @@ def get_author_records(token, author_identifier, test=False):
     for item in hits:
         req.append(item["id"])
     return req
+
+
+def get_restricted_records(token, test=False):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/records"
+    else:
+        url = "https://authors.library.caltech.edu/api/records"
+
+    query = "?q=access.status:restricted"
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    url = url + query
+    response = requests.get(url, headers=headers)
+    total = response.json()["hits"]["total"]
+    pages = math.ceil(int(total) / 1000)
+    hits = []
+    for c in range(1, pages + 1):
+        chunkurl = f"{url}&size=1000&page={c}"
+        response = requests.get(chunkurl, headers=headers).json()
+        hits += response["hits"]["hits"]
+
+    return hits
