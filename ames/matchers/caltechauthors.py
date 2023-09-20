@@ -1,5 +1,6 @@
 import csv, json
 import requests
+from caltechdata_api import caltechdata_edit
 
 
 def add_journal_metadata(request, token, test=False):
@@ -58,3 +59,34 @@ def add_journal_metadata(request, token, test=False):
                     print(f"Error adding comment to {request} {response}")
                 else:
                     print(f"Added comment to {request}")
+
+
+def edit_author_identifier(record, token, old_identifier, new_identifier, test=False):
+    # For a given record, change the person identifers from the old to the new
+
+    if test:
+        rurl = "https://authors.caltechlibrary.dev/api/records/" + record
+    else:
+        rurl = "https://authors.library.caltech.edu/api/records/" + record
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    data = requests.get(rurl, headers=headers).json()
+
+    for creator in data["metadata"]["creators"]:
+        block = creator["person_or_org"]
+        if "identifiers" in block:
+            for idv in block["identifiers"]:
+                if idv["identifier"] == old_identifier:
+                    idv["identifier"] = new_identifier
+    caltechdata_edit(
+        record,
+        metadata=data,
+        token=token,
+        production=True,
+        publish=True,
+        authors=True,
+    )
