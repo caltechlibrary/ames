@@ -58,7 +58,8 @@ def update_datacite_media(username, password, collection, collection_files, pref
                     else:
                         # We have an internal CaltechDATA file
                         extension = file_met["key"].split(".")[-1]
-                        file_url = f"https://data.caltech.edu/records/{k}/files/{file_met['key']}"
+                        base_link = file_met["links"]["self"]
+                        file_url = base_link.replace("/api", "")
                     if extension == "nc":
                         data = "application/x-netcdf=" + file_url
                     if extension == "txt":

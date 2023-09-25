@@ -11,3 +11,4 @@ from .eputil import get_eprint_keys, get_eprints, get_eprint
 from .eprints_extended import doi_in_authors, get_extended
 from .caltechauthors import get_pending_requests
 from .caltechauthors import get_author_records
+from .caltechauthors import get_restricted_records
