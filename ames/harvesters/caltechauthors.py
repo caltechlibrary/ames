@@ -15,7 +15,6 @@ def get_pending_requests(token, community=None, return_ids=False, test=False):
     if community:
         url += "%20AND%20receiver.community:" + community
     response = requests.get(url, headers=headers)
-    print(response)
     total = response.json()["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []
