@@ -19,7 +19,7 @@ def send_simple_message(token, matched):
     if "message" in r_data:
         raise AssertionError(
             "id "
-            + idv
+            + matched_key
             + " expected http status 200, got "
             + r_data.status
             + r_data.message

@@ -12,7 +12,7 @@ import requests
 
 
 def match_cd_refs():
-    token = os.environ["TINDTOK"]
+    token = os.environ["RDMTOK"]
 
     matches = []
     collection = "caltechdata.ds"
@@ -45,28 +45,30 @@ def match_cd_refs():
     for k in keys:
         # Collect matched new links for the record
         record_matches = []
-        print(k)
         metadata, err = dataset.read(collection, k)
+        for idv in metadata["identifiers"]:
+            if idv["identifierType"] == "oai":
+                rdm_id = idv["identifier"].split("oai:data.caltech.edu:")[1]
         if err != "":
             print(f"Unexpected error on read: {err}")
-        if "identifier" in metadata:
-            doi = "https://doi.org/" + metadata["identifier"]["identifier"]
-            if doi in groups:
-                hits = grouped.get_group(doi)
-                for index, h in hits.iterrows():
-                    # Trigger for whether we already have this link
-                    new = True
-                    if "relatedIdentifiers" in metadata:
-                        for m in metadata["relatedIdentifiers"]:
-                            if m["relatedIdentifier"] in h["subj_id"]:
-                                new = False
-                    if new == True:
-                        match = h["subj_id"]
-                        print(match)
-                        print(h["obj_id"])
-                        inputv = input("Do you approve this link?  Type Y or N: ")
-                        if inputv == "Y":
-                            record_matches.append(match)
+        doi = "https://doi.org/" + k
+        if doi in groups:
+            hits = grouped.get_group(doi)
+            print(hits)
+            for index, h in hits.iterrows():
+                # Trigger for whether we already have this link
+                new = True
+                if "relatedIdentifiers" in metadata:
+                    for m in metadata["relatedIdentifiers"]:
+                        if m["relatedIdentifier"] in h["subj_id"]:
+                            new = False
+                if new == True:
+                    match = h["subj_id"]
+                    print(match)
+                    print(h["obj_id"])
+                    inputv = input("Do you approve this link?  Type Y or N: ")
+                    if inputv == "Y":
+                        record_matches.append(match)
             # If we have to update record
             if len(record_matches) > 0:
                 ids = []
@@ -83,8 +85,10 @@ def match_cd_refs():
                         "relationType": "IsCitedBy",
                     }
                     ids.append(new_id)
-                newmetadata = {"relatedIdentifiers": ids}
-                response = caltechdata_edit(k, newmetadata, token, {}, {}, True)
+                metadata["relatedIdentifiers"] = ids
+                response = caltechdata_edit(
+                    rdm_id, metadata, token, production=True, publish=True
+                )
                 print(response)
     return matches
 

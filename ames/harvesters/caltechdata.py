@@ -38,6 +38,9 @@ def get_caltechdata(collection, production=True, full=False):
 
     for h in progressbar(hits):
         rid = h["id"]
+        if "doi" not in h["links"]:
+            print("DOI is missing for " + rid)
+            exit()
         doi = h["links"]["doi"].split("doi.org/")[1].lower()
         # Need lower because of dataset key limitations
         metadata = get_metadata(rid, production, validate=False)
