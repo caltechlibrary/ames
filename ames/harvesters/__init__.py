@@ -12,3 +12,4 @@ from .eprints_extended import doi_in_authors, get_extended
 from .caltechauthors import get_pending_requests
 from .caltechauthors import get_author_records
 from .caltechauthors import get_restricted_records
+from .caltechauthors import get_records_from_date

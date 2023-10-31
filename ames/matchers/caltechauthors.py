@@ -2,6 +2,26 @@ import csv, json
 import requests
 from caltechdata_api import caltechdata_edit
 
+def check_doi(doi, production=True):
+    # Returns whether or not a DOI has already been added to CaltechAUTHORS
+
+    if production == True:
+        url = "https://authors.library.caltech.edu/api/records"
+    else:
+        url = "https://authors.caltechlibrary.dev/api/records"
+
+    query = f'?q=pids.doi.identifier:"{doi}"'
+
+    response = requests.get(url + query)
+    if response.status_code != 200:
+        raise Exception(response.text)
+    else:
+        metadata = response.json()
+        if metadata["hits"]["total"] > 0:
+            return metadata["hits"]["total"]
+        else:
+            return False
+
 
 def add_journal_metadata(request, token, test=False):
     # For a given request, determine whether we need to add journal metadata
