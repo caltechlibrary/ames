@@ -2,6 +2,7 @@ import csv, json
 import requests
 from caltechdata_api import caltechdata_edit
 
+
 def check_doi(doi, production=True):
     # Returns whether or not a DOI has already been added to CaltechAUTHORS
 

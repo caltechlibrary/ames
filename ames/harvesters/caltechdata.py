@@ -6,7 +6,7 @@ from datetime import date, datetime
 from caltechdata_api import get_metadata
 
 
-def get_caltechdata(collection, production=True, full=False):
+def get_caltechdata(collection, production=True, full=False, token=False, date=None):
     """Harvest all records from CaltechDATA .
     Always creates collection from scratch"""
     # Delete existing collection
@@ -23,6 +23,9 @@ def get_caltechdata(collection, production=True, full=False):
 
     if full == True:
         query = "?&sort=newest"
+    elif date:
+        # Exclude HTE and tomograms for efficiency
+        query = f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
     else:
         # Exclude HTE and tomograms for efficiency
         query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
@@ -43,13 +46,15 @@ def get_caltechdata(collection, production=True, full=False):
             exit()
         doi = h["links"]["doi"].split("doi.org/")[1].lower()
         # Need lower because of dataset key limitations
-        metadata = get_metadata(rid, production, validate=False)
+        metadata = get_metadata(rid, production, validate=False, token=token)
         if not dataset.create(collection, doi, metadata):
             err = dataset.error_message()
             print(err)
 
 
-def get_caltechdata_files(collection, production=True, full=False):
+def get_caltechdata_files(
+    collection, production=True, full=False, token=False, date=None
+):
     """Harvest all files from CaltechDATA .
     Always creates collection from scratch"""
     # Delete existing collection
@@ -66,6 +71,9 @@ def get_caltechdata_files(collection, production=True, full=False):
 
     if full == True:
         query = "?&sort=newest"
+    elif date:
+        # Exclude HTE and tomograms for efficiency
+        query = f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
     else:
         # Exclude HTE and tomograms for efficiency
         query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
@@ -94,7 +102,17 @@ def get_caltechdata_files(collection, production=True, full=False):
                     for c in chunks:
                         files["files"].append({"url": c.split('"')[0]})
 
-        response = requests.get(f"{url}/{rid}/files")
+        if token:
+            headers = {
+                "Authorization": "Bearer %s" % token,
+                "Content-type": "application/json",
+            }
+        else:
+            headers = {
+                "Content-type": "application/json",
+            }
+
+        response = requests.get(f"{url}/{rid}/files", headers=headers)
         if response.status_code == 200:
             if "entries" in response.json():
                 files["files"] += response.json()["entries"]

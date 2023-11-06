@@ -86,7 +86,8 @@ def get_restricted_records(token, test=False):
 
     return hits
 
-def get_records_from_date(date='2023-08-25', test=False):
+
+def get_records_from_date(date="2023-08-25", test=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
     else:
@@ -97,7 +98,7 @@ def get_records_from_date(date='2023-08-25', test=False):
     url = url + query
     response = requests.get(url)
     total = response.json()["hits"]["total"]
-    print(f'Found {total} Records')
+    print(f"Found {total} Records")
     pages = math.ceil(int(total) / 1000)
     hits = []
     for c in range(1, pages + 1):
@@ -106,4 +107,3 @@ def get_records_from_date(date='2023-08-25', test=False):
         hits += response["hits"]["hits"]
 
     return hits
-

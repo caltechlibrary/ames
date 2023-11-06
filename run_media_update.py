@@ -7,14 +7,18 @@ from ames.matchers import update_datacite_media
 password = os.environ["DATACITE"]
 prefix = "10.14291"
 user = "CALTECH.LIBRARY"
+token = os.environ["RDMTOK"]
 
 os.chdir("data")
+
+with open("mediaupdate", "r") as infile:
+    last_date = infile.readline()
 
 collection = "caltechdata_formedia.ds"
 collection_files = "caltechdatafiles.ds"
 
-get_caltechdata(collection)
-get_caltechdata_files(collection_files)
+get_caltechdata(collection, token=token, date=last_date)
+get_caltechdata_files(collection_files, token=token, date=last_date)
 update_datacite_media(user, password, collection, collection_files, prefix)
 
 password = os.environ["CALTECHDATA_DATACITE"]
