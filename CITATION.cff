@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: ames
+authors:
+  - family-names: Morrell
+    given-names: Thomas E
+    orcid: https://orcid.org/0000-0001-9266-5146
+  - family-names: Doiel
+    given-names: Robert
+    orcid: https://orcid.org/0000-0003-0900-6903
+abstract: Automated Metadata Service: Manage metadata from different sources.
+repository-code: "https://github.com/caltechlibrary/ames"
+type: software
+version: 1.1.2
+license-url: "https://data.caltech.edu/license"
+keywords:
+  - GitHub
+  - metadata
+  - software
+date-released: 2023-11-15
