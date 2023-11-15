@@ -32,6 +32,36 @@ def get_pending_requests(token, community=None, return_ids=False, test=False):
     return req
 
 
+def get_request_id_title(token, request):
+    url = f" https://authors.library.caltech.edu/api/requests/{request}"
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error getting comments for request {p}")
+    response = response.json()
+    date = response["updated"].split("T")[0]
+    return response["topic"]["record"], response["title"], date
+
+
+def get_request_comments(token, request):
+    url = f" https://authors.library.caltech.edu/api/requests/{request}/timeline"
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error getting comments for request {p}")
+    comments = response.json()["hits"]["hits"]
+    cleaned = []
+    for c in comments:
+        cleaned.append(c["payload"]["content"])
+    return cleaned
+
+
 def get_author_records(token, author_identifier, test=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
