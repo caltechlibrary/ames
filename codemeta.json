@@ -6,7 +6,7 @@
   "codeRepository": "https://github.com/caltechlibrary/ames",
   "issueTracker": "https://github.com/caltechlibrary/ames/issues",
   "license": "https://data.caltech.edu/license",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": [
     {
       "@type": "Person",
@@ -32,12 +32,23 @@
     }
   ],
   "developmentStatus": "active",
-  "downloadUrl": "https://github.com/caltechlibrary/ames/archive/v0.6.0.zip",
+  "downloadUrl": "https://github.com/caltechlibrary/ames/archive/v1.1.2.zip",
   "keywords": [
     "GitHub",
     "metadata",
     "software"
   ],
-  "maintainer": "https://orcid.org/0000-0001-9266-5146",
-  "programmingLanguage": "Python"
+  "programmingLanguage": "Python",
+  "maintainer": [
+    {
+      "@id": "https://orcid.org/0000-0001-9266-5146",
+      "@type": "Person",
+      "affiliation": {
+                "@type": "Organization",
+                "name": "Caltech Library"
+            },
+      "familyName": "Morrell",
+      "givenName": "Thomas E."
+    }
+  ]
 }
