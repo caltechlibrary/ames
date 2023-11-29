@@ -91,6 +91,32 @@ def get_author_records(token, author_identifier, test=False):
     return req
 
 
+def get_group_records(token, group_identifier, test=False):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/records"
+    else:
+        url = "https://authors.library.caltech.edu/api/records"
+
+    query = f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"'
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    url = url + query
+    response = requests.get(url, headers=headers)
+    total = response.json()["hits"]["total"]
+    pages = math.ceil(int(total) / 1000)
+    hits = []
+    for c in range(1, pages + 1):
+        chunkurl = f"{url}&size=1000&page={c}"
+        response = requests.get(chunkurl, headers=headers).json()
+        hits += response["hits"]["hits"]
+
+    return hits
+
+
 def get_restricted_records(token, test=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
