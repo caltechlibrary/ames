@@ -130,6 +130,8 @@ def add_group(record, token, group_identifier, test=False):
 
     if "custom_fields" in data and "caltech:groups" in data["custom_fields"]:
         data["custom_fields"]["caltech:groups"].append({"id": group_identifier})
+    elif "custom_fields" in data:
+        data["custom_fields"]["caltech:groups"] = [{"id": group_identifier}]}
     else:
         data["custom_fields"] = {"caltech:groups": [{"id": group_identifier}]}
 
