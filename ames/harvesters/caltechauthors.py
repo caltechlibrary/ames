@@ -62,13 +62,18 @@ def get_request_comments(token, request):
     return cleaned
 
 
-def get_author_records(token, author_identifier, test=False):
+def get_author_records(token, author_identifier, year=None, test=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
     else:
         url = "https://authors.library.caltech.edu/api/records"
 
     query = f'?q=metadata.creators.person_or_org.identifiers.identifier%3A"{author_identifier}"'
+
+    if year:
+        query += (
+            f"%20AND%20metadata.publication_date%3A%5B{year}-01-01%20TO%20%2A%20%5D"
+        )
 
     headers = {
         "Authorization": "Bearer %s" % token,
@@ -78,6 +83,7 @@ def get_author_records(token, author_identifier, test=False):
     url = url + query
     response = requests.get(url, headers=headers)
     total = response.json()["hits"]["total"]
+    print(total)
     pages = math.ceil(int(total) / 1000)
     hits = []
     for c in range(1, pages + 1):

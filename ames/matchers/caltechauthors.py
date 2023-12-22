@@ -111,3 +111,66 @@ def edit_author_identifier(record, token, old_identifier, new_identifier, test=F
         publish=True,
         authors=True,
     )
+
+
+def add_group(record, token, group_identifier, test=False):
+    # For a given record, change the person identifers from the old to the new
+
+    if test:
+        rurl = "https://authors.caltechlibrary.dev/api/records/" + record
+    else:
+        rurl = "https://authors.library.caltech.edu/api/records/" + record
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    data = requests.get(rurl, headers=headers).json()
+
+    if "custom_fields" in data and "caltech:groups" in data["custom_fields"]:
+        data["custom_fields"]["caltech:groups"].append({"id": group_identifier})
+    else:
+        data["custom_fields"] = {"caltech:groups": [{"id": group_identifier}]}
+
+    caltechdata_edit(
+        record,
+        metadata=data,
+        token=token,
+        production=not test,
+        publish=True,
+        authors=True,
+    )
+
+
+def add_doi(record, token, test=False):
+    # Add a locally minted DOI to a record
+
+    if test:
+        rurl = "https://authors.caltechlibrary.dev/api/records/" + record
+    else:
+        rurl = "https://authors.library.caltech.edu/api/records/" + record
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    data = requests.get(rurl, headers=headers).json()
+
+    if "doi" in data["pids"]:
+        print(f"DOI {data['pids']['doi']['identifier']} already assigned to this record")
+    else:
+        data["pids"]["doi"] = {
+            "provider": "datacite",
+            "identifier": f"10.7907/{record}",
+            "client": "datacite",
+        }
+        caltechdata_edit(
+            record,
+            metadata=data,
+            token=token,
+            production=not test,
+            publish=True,
+            authors=True,
+        )
