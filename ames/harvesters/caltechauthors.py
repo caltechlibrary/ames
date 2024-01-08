@@ -112,7 +112,7 @@ def get_group_records(group_identifier, test=False):
     hits = []
     for c in range(1, pages + 1):
         chunkurl = f"{url}&size=1000&page={c}"
-        response = requests.get(chunkurl, headers=headers).json()
+        response = requests.get(chunkurl).json()
         hits += response["hits"]["hits"]
 
     return hits
