@@ -97,7 +97,7 @@ def get_author_records(token, author_identifier, year=None, test=False):
     return req
 
 
-def get_group_records(token, group_identifier, test=False):
+def get_group_records(group_identifier, test=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
     else:
@@ -105,13 +105,8 @@ def get_group_records(token, group_identifier, test=False):
 
     query = f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"'
 
-    headers = {
-        "Authorization": "Bearer %s" % token,
-        "Content-type": "application/json",
-    }
-
     url = url + query
-    response = requests.get(url, headers=headers)
+    response = requests.get(url) 
     total = response.json()["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []
