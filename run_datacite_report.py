@@ -16,7 +16,6 @@ def prefix_report(file_obj, prefix):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Run a report of DataCite DOIs")
     parser.add_argument(
         "-report_name",

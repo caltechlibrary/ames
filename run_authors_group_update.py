@@ -8,7 +8,7 @@ name_file = sys.argv[1]
 group_identifier = sys.argv[2]
 year = sys.argv[3]
 
-input_file = open(name_file, "r",encoding="utf-8-sig")
+input_file = open(name_file, "r", encoding="utf-8-sig")
 names = input_file.read().splitlines()
 input_file.close()
 

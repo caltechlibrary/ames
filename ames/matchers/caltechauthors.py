@@ -82,7 +82,8 @@ def add_journal_metadata(request, token, test=False):
                     print(f"Added comment to {request}")
 
 
-def edit_author_identifier(record, token, old_identifier, new_identifier, test=False):
+def edit_author_identifier(record, token, old_identifier, new_identifier,
+                           test=False, add=False, new_scheme=None):
     # For a given record, change the person identifers from the old to the new
 
     if test:
@@ -97,20 +98,36 @@ def edit_author_identifier(record, token, old_identifier, new_identifier, test=F
 
     data = requests.get(rurl, headers=headers).json()
 
+    update= False
     for creator in data["metadata"]["creators"]:
         block = creator["person_or_org"]
         if "identifiers" in block:
+            existing = False
+            match = False
             for idv in block["identifiers"]:
+                if idv["identifier"] == new_identifier:
+                    existing = True
                 if idv["identifier"] == old_identifier:
-                    idv["identifier"] = new_identifier
-    caltechdata_edit(
+                    match = True
+                    if not add:
+                        update = True
+                        idv["identifier"] = new_identifier
+            if add:
+                if match == True:
+                    if existing == False:
+                        update= True
+                        block["identifiers"].append({'identifier':new_identifier,'scheme':new_scheme})
+    
+    if update == True:
+        print(record)
+        caltechdata_edit(
         record,
         metadata=data,
         token=token,
         production=True,
         publish=True,
         authors=True,
-    )
+        )
 
 
 def add_group(record, token, group_identifier, test=False):
@@ -131,7 +148,7 @@ def add_group(record, token, group_identifier, test=False):
     if "custom_fields" in data and "caltech:groups" in data["custom_fields"]:
         data["custom_fields"]["caltech:groups"].append({"id": group_identifier})
     elif "custom_fields" in data:
-        data["custom_fields"]["caltech:groups"] = [{"id": group_identifier}]}
+        data["custom_fields"]["caltech:groups"] = [{"id": group_identifier}]
     else:
         data["custom_fields"] = {"caltech:groups": [{"id": group_identifier}]}
 

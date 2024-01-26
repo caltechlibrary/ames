@@ -506,7 +506,6 @@ def doi_report(
 
         # Determine if we want the record
         if keep_record(metadata, years, item_type, group):
-
             ep = metadata["eprint_id"]
             suggested = ""
             maybe = ""
@@ -663,7 +662,6 @@ def license_report(file_obj, keys, source, item_type=None, rtype="summary"):
         licenses = {}
 
         if rtype == "summary":
-
             file_obj.writerow(["License Name", "Number of Records", "IDs"])
             for metadata in all_metadata:
                 if item_type != None:
@@ -696,7 +694,6 @@ def license_report(file_obj, keys, source, item_type=None, rtype="summary"):
                 file_obj.writerow([lic, licenses[lic]["count"], licenses[lic]["ids"]])
 
         else:
-
             file_obj.writerow(["CaltechDATA ID", "Authors", "License", "Funders"])
             for metadata in all_metadata:
                 write = False
