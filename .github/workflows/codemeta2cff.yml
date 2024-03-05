@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Convert CFF
         uses: caltechlibrary/codemeta2cff@main
       - name: Commit and Push Changes
@@ -24,3 +24,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Add CITATION.cff for release'
+          file_pattern: 'CITATION.cff'
