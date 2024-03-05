@@ -62,6 +62,22 @@ def get_request_comments(token, request):
     return cleaned
 
 
+def get_publisher(token, record, test=False, draft=True):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/records"
+    else:
+        url = "https://authors.library.caltech.edu/api/records"
+    url = url + "/" + record
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    if draft:
+        url = url + "/draft"
+    response = requests.get(url, headers=headers)
+    return response.json()["metadata"]["publisher"]
+
+
 def get_author_records(token, author_identifier, year=None, test=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
