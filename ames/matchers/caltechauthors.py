@@ -82,8 +82,15 @@ def add_journal_metadata(request, token, test=False):
                     print(f"Added comment to {request}")
 
 
-def edit_author_identifier(record, token, old_identifier, new_identifier,
-                           test=False, add=False, new_scheme=None):
+def edit_author_identifier(
+    record,
+    token,
+    old_identifier,
+    new_identifier,
+    test=False,
+    add=False,
+    new_scheme=None,
+):
     # For a given record, change the person identifers from the old to the new
 
     if test:
@@ -98,7 +105,7 @@ def edit_author_identifier(record, token, old_identifier, new_identifier,
 
     data = requests.get(rurl, headers=headers).json()
 
-    update= False
+    update = False
     for creator in data["metadata"]["creators"]:
         block = creator["person_or_org"]
         if "identifiers" in block:
@@ -115,18 +122,26 @@ def edit_author_identifier(record, token, old_identifier, new_identifier,
             if add:
                 if match == True:
                     if existing == False:
-                        update= True
-                        block["identifiers"].append({'identifier':new_identifier,'scheme':new_scheme})
-    
+                        update = True
+                        done = False
+                        for idv in block["identifiers"]:
+                            if idv["scheme"] == new_scheme:
+                                idv["identifier"] = new_identifier
+                                done = True
+                        if done == False:
+                            block["identifiers"].append(
+                                {"identifier": new_identifier, "scheme": new_scheme}
+                            )
+
     if update == True:
         print(record)
         caltechdata_edit(
-        record,
-        metadata=data,
-        token=token,
-        production=True,
-        publish=True,
-        authors=True,
+            record,
+            metadata=data,
+            token=token,
+            production=True,
+            publish=True,
+            authors=True,
         )
 
 
@@ -178,7 +193,9 @@ def add_doi(record, token, test=False):
     data = requests.get(rurl, headers=headers).json()
 
     if "doi" in data["pids"]:
-        print(f"DOI {data['pids']['doi']['identifier']} already assigned to this record")
+        print(
+            f"DOI {data['pids']['doi']['identifier']} already assigned to this record"
+        )
     else:
         data["pids"]["doi"] = {
             "provider": "datacite",

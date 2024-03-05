@@ -106,7 +106,7 @@ def get_group_records(group_identifier, test=False):
     query = f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"'
 
     url = url + query
-    response = requests.get(url) 
+    response = requests.get(url)
     total = response.json()["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []

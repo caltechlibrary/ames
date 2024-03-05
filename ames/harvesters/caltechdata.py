@@ -124,7 +124,6 @@ def get_caltechdata_files(
 
 
 def get_cd_github(new=True):
-
     collection = "github_records.ds"
 
     if new == True:
@@ -147,7 +146,6 @@ def get_cd_github(new=True):
         result = dataset.has_key(collection, rid)
 
         if result == False:
-
             dataset.create(collection, rid, record)
 
             print("Downloading files for ", rid)

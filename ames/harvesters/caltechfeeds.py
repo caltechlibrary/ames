@@ -46,7 +46,6 @@ def get_records(dot_paths, f_name, d_name, keys, labels=None, clear=True):
 
 
 def get_caltechfeed(feed, autoupdate=False):
-
     url = "https://feeds.library.caltech.edu/" + feed + "/"
 
     if feed == "authors":
