@@ -22,60 +22,6 @@ def is_in_range(year_arg, year):
     return False
 
 
-def keep_record(metadata, years, item_type=None, group=None):
-    keep = True
-
-    if years:
-        # Not implemented for CaltechDATA
-        if "date" in metadata:
-            year = metadata["date"].split("-")[0]
-            if is_in_range(years, year) == False:
-                keep = False
-        else:
-            keep = False
-
-    if item_type:
-        # CaltechDATA item
-        if "resourceTye" in metadata:
-            if metadata["resourceType"]["resourceTypeGeneral"] not in item_type:
-                keep = False
-        # Eprints item
-        elif "type" in metadata:
-            if "monograph_type" in metadata:
-                # There are records with monograph_type that arn't monographs
-                if metadata["type"] == "monograph":
-                    if (
-                        metadata["monograph_type"] not in item_type
-                        and metadata["type"] not in item_type
-                    ):
-                        keep = False
-                else:
-                    if metadata["type"] not in item_type:
-                        keep = False
-            else:
-                if metadata["type"] not in item_type:
-                    keep = False
-        else:
-            print("Item type not found in record")
-            keep = False
-
-    if group:
-        # Not implemented for CaltechDATA
-        if "local_group" in metadata:
-            match = False
-            if isinstance(metadata["local_group"]["items"], list) == False:
-                # Deal with single item listings
-                metadata["local_group"]["items"] = [metadata["local_group"]["items"]]
-            for gname in metadata["local_group"]["items"]:
-                if gname in group:
-                    match = True
-            if match == False:
-                keep = False
-        else:
-            keep = False
-    return keep
-
-
 def break_up_group(metadata, field, val, row):
     """Break up a array in 'field' into a single element with number 'val'"""
     if field in metadata:
@@ -177,6 +123,22 @@ def add_blocks(json, agents):
     return row
 
 
+def block_fields():
+    return [
+        "expression",
+        "begin",
+        "end",
+        "date_type",
+        "label",
+        "number",
+        "physical_details",
+        "agents",
+        "subjects",
+        "text_2",
+        "text_3",
+        "text_4",
+    ]
+
 def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
     fields = [
         "title",
@@ -192,21 +154,7 @@ def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
         "access_restrictions_note",
         "use_restrictions",
     ]
-    extras = [
-        "expression",
-        "begin",
-        "end",
-        "date_type",
-        "label",
-        "number",
-        "physical_details",
-        "agents",
-        "subjects",
-        "text_2",
-        "text_3",
-        "text_4",
-    ]
-    file_obj.writerow(fields + extras)
+    file_obj.writerow(fields + block_fields())
     format_types = set()
     print(f"Requesting agents")
     agents = get_agents(aspace)
@@ -239,6 +187,7 @@ def accession_report(file_obj, repo, aspace, subject=None, years=None):
         print(f"subject {subject} not found")
         exit()
     print(f"Requesting accessions")
+    file_obj.writerow(["title","identifier","accession_date","agent"] + block_fields())
     for acc in repo.accessions:
         for uri in acc.subjects:
             if search_uri == uri.ref:
@@ -250,7 +199,10 @@ def accession_report(file_obj, repo, aspace, subject=None, years=None):
                     idv = acc.id_0 + "-" + acc.id_1
                 except AttributeError:
                     idv = acc.id_0
-                file_obj.writerow([acc.title, idv, acc.accession_date, agent])
+                row = [acc.title, idv, acc.accession_date, agent]
+                json = acc.json()
+                row = row + add_blocks(json, agents)
+                file_obj.writerow(row)
 
 
 def agent_report(file_name, repo, aspace):
