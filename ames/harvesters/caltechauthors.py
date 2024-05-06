@@ -75,7 +75,7 @@ def get_publisher(token, record, test=False, draft=True):
     if draft:
         url = url + "/draft"
     response = requests.get(url, headers=headers)
-    return response.json()["metadata"]["publisher"]
+    return response.json()["metadata"].get("publisher")
 
 
 def get_author_records(token, author_identifier, year=None, test=False):
