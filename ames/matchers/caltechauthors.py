@@ -210,3 +210,47 @@ def add_doi(record, token, test=False):
             publish=True,
             authors=True,
         )
+
+
+def move_doi(record, token, test=False):
+    # Move DOI from alternative identifier to DOI field
+
+    if test:
+        rurl = "https://authors.caltechlibrary.dev/api/records/" + record
+    else:
+        rurl = "https://authors.library.caltech.edu/api/records/" + record
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    data = requests.get(rurl, headers=headers).json()
+
+    doi = None
+    identifiers = []
+
+    if "identifiers" in data["metadata"]:
+        for idv in data["metadata"]["identifiers"]:
+            if idv["scheme"] == "doi":
+                doi = idv["identifier"]
+            else:
+                identifiers.append(idv)
+
+    if doi == None:
+        print(f"No DOI found for {record}")
+        exit()
+    else:
+        data["pids"]["doi"] = {
+            "provider": "external",
+            "identifier": doi,
+        }
+        data["metadata"]["identifiers"] = identifiers
+        caltechdata_edit(
+            record,
+            metadata=data,
+            token=token,
+            production=not test,
+            publish=True,
+            authors=True,
+        )

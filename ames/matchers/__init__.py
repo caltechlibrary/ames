@@ -18,3 +18,4 @@ from .caltechauthors import edit_author_identifier
 from .caltechauthors import add_group
 from .caltechauthors import check_doi
 from .caltechauthors import add_doi
+from .caltechauthors import move_doi
