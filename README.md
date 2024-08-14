@@ -1,6 +1,6 @@
 # ames
 
-[![DOI](https://data.caltech.edu/badge/110025475.svg)](https://data.caltech.edu/badge/latestdoi/110025475)
+[![DOI](https://data.caltech.edu/badge/DOI/10.22002/5nghh-75k34.svg)](https://doi.org/10.22002/5nghh-75k34)
 
 Automated Metadata Service
 
@@ -9,27 +9,20 @@ specific to Caltech repositories, but could be generalized.  This package
 is currently in development and will have additional sources and matchers
 added over time.
 
-## Basic Install
+## Install
 
-You need to have Python 3.7 on your machine
-([Miniconda](https://docs.conda.io/en/latest/miniconda.html) is a great
-installation option).
+You need to have Python 3.7 or later on your machine.
 
 If you just need the python functions to write your own code
 (like codemeta_to_datacite) open a terminal and type `pip install ames`
 
 ## Full Install
 
-You need to have Python 3.7 on your machine
-([Miniconda](https://docs.conda.io/en/latest/miniconda.html) is a great
-installation option).  Test whether you have python installed by opening a terminal or
-anaconda prompt window and typing `python -V`, which should print version 3.7
-or greater.
+The full install will include all the example scripts. You need to have Python 3.7 or later on your machine and git.
 
 ### Clone ames
 
-It's best to download this software using git.  To install git, type
-`conda install git` in your terminal or anaconda prompt window.  Then find where you
+A full install starts by downloading this software using git.  Find where you
 want the ames folder to live on your computer in File Explorer or Finder
 (This could be the Desktop or Documents folder, for example).  Type `cd `
 in anaconda prompt or terminal and drag the location from the file browser into
@@ -37,7 +30,7 @@ the terminal window.  The path to the location
 will show up, so your terminal will show a command like
 `cd /Users/tmorrell/Desktop`.  Hit enter.  Then type
 `git clone https://github.com/caltechlibrary/ames.git`. Once you
-hit enter you'll see an epxml_to_datacite folder.  Type `cd ames`
+hit enter you'll see an ames folder.  Type `cd ames`
 
 ### Install
 
