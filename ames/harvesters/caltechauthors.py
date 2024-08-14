@@ -40,7 +40,7 @@ def get_request_id_title(token, request):
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        print(f"Error getting comments for request {p}")
+        print(f"Error getting comments for request {request}")
     response = response.json()
     date = response["updated"].split("T")[0]
     return response["topic"]["record"], response["title"], date
@@ -54,7 +54,7 @@ def get_request_comments(token, request):
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        print(f"Error getting comments for request {p}")
+        print(f"Error getting comments for request {request}")
     comments = response.json()["hits"]["hits"]
     cleaned = []
     for c in comments:
