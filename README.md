@@ -1,6 +1,6 @@
 # ames
 
-[![DOI](https://data.caltech.edu/badge/DOI/10.22002/5nghh-75k34.svg)](https://doi.org/10.22002/5nghh-75k34)
+[![DOI](https://img.shields.io/badge/dynamic/json.svg?label=DOI&query=$.pids.doi.identifier&uri=https://data.caltech.edu/api/records/5nghh-75k34/versions/latest)](https://data.caltech.edu/records/5nghh-75k34/latest)
 
 Automated Metadata Service
 
