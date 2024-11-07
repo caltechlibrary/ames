@@ -1,9 +1,9 @@
 name: CodeMeta2CFF
+run-name: Run CodeMeta2CFF after ${{github.event_name}} by ${{github.actor}}
 
 on:
   push:
-    tags:
-      - v*    
+    paths: ['codemeta.json']
   workflow_dispatch:
     inputs:
       reason:
@@ -13,15 +13,14 @@ on:
 
 jobs:
   CodeMeta2CFF:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Convert CFF
         uses: caltechlibrary/codemeta2cff@main
-      - name: Commit and Push Changes
-        id: commit-and-push
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Commit CFF
+        uses: EndBug/add-and-commit@v9
         with:
-          commit_message: 'Add CITATION.cff for release'
-          file_pattern: 'CITATION.cff'
+          message: 'Add updated CITATION.cff from codemeta.json file'
+          add: 'CITATION.cff'
