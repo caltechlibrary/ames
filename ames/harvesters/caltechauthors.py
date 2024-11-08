@@ -1,4 +1,109 @@
 import requests, math
+import os
+import csv
+import re
+
+# base URLs
+base_url = "https://authors.library.caltech.edu/api/records?q=metadata.additional_descriptions.type.id%3A%22data-availability%22&size=25&sort=bestmatch"
+base_file_url_template = "https://authors.library.caltech.edu/api/records/{record_id}/files"
+
+# authorization token
+token = os.environ.get("RDMTOK")
+
+# output for data-availability and code-availability
+publisher_output_file = "publisher_links.csv"
+rest_output_file = "non_publisher_links.csv"
+code_publisher_output_file = "code_publisher_links.csv"
+code_rest_output_file = "code_non_publisher_links.csv"
+
+# output for checking file presence
+file_present_output_file = "files_present.csv"
+file_absent_output_file = "files_absent.csv"
+
+# URL patterns for classifying "supplemental_publisher" links
+supplemental_patterns = [
+    r"https://journals.aps.org/.*/supplemental/",
+    r"https://pubs.acs.org/doi/suppl/",
+    r"https://www.science.org/doi/suppl/.*/suppl_file/",
+    r"https://static-content.springer.com/esm/.*"  
+]
+
+# publisher domains dictionary for classifying "publisher" links
+publisher_domains = {
+    "https://agupubs.onlinelibrary.wiley.com": "publisher",
+    "https://www.nature.com": "publisher",
+    "https://www.science.org": "publisher",
+    "https://pubs.acs.org": "publisher",
+    "https://journals.aps.org": "publisher",
+    "https://www.sciencedirect.com": "publisher",  
+    "https://journals.plos.org": "publisher",      
+    "https://www.pnas.org/doi/": "publisher",     
+    "https://iopscience.iop.org/article/": "publisher",  
+    "https://febs.onlinelibrary.wiley.com/": "publisher", 
+    "https://www.mdpi.com/": "publisher"          
+}
+
+# classifying links
+def classify_link(link):
+    for pattern in supplemental_patterns:
+        if re.match(pattern, link):
+            return "supplemental_publisher"
+    
+    for domain in publisher_domains:
+        if link.startswith(domain):
+            return publisher_domains[domain]
+    
+    if "doi" in link:
+        return "DOI"
+    
+    return "other"
+
+# extracting all https links from a string
+def extract_https_links(description):
+    return re.findall(r'https://[^\s"]+', description)
+
+# cleaning up the link
+def clean_link(link):
+    link = link.split('<')[0].rstrip('/')
+    return link
+
+# function to extract the filename from the link
+def extract_filename_from_link(link):
+    return link.split('/')[-1]
+
+# function to check if the file exists in the record file list
+def is_file_present(record_id, filename):
+    file_url = base_file_url_template.format(record_id=record_id)
+    headers = {}
+    if token:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-type": "application/json",
+        }
+
+    response = requests.get(file_url, headers=headers)
+    
+    if response.status_code != 200:
+        print(f"Error: Status code {response.status_code} received when checking files for record {record_id}.")
+        return False
+
+    try:
+        data = response.json()
+    except ValueError:
+        print(f"Error: Unable to parse JSON response for record {record_id}.")
+        return False
+
+    files = data.get("entries", data.get("files", []))
+
+    if not isinstance(files, list):
+        print(f"Error: Unexpected structure for files in record {record_id}. Expected a list, got {type(files)}.")
+        return False
+
+    for file in files:
+        if isinstance(file, dict) and file.get("key") == filename:
+            return True
+    
+    return False
 
 
 def get_pending_requests(token, community=None, return_ids=False, test=False):
