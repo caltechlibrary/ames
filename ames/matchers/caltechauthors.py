@@ -2,6 +2,64 @@ import csv, json
 import requests
 from caltechdata_api import caltechdata_edit
 
+# function to get metadata for a record
+def get_record_metadata(record_id):
+    metadata_url = f"https://authors.library.caltech.edu/api/records/{record_id}"
+    headers = {}
+    if token:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-type": "application/json",
+        }
+
+    response = requests.get(metadata_url, headers=headers)
+    
+    if response.status_code != 200:
+        print(f"Error: Failed to fetch metadata for record {record_id}. Status code: {response.status_code}")
+        return None
+    
+    try:
+        metadata = response.json()
+        return metadata
+    except ValueError:
+        print(f"Error: Unable to parse JSON response for record {record_id}.")
+        return None
+
+# function to check and update related identifiers
+def update_related_identifiers(metadata, links, source_type):
+    related_identifiers = metadata.get("metadata", {}).get("related_identifiers", [])
+    updated = False
+
+    for link, classification in links:
+        if classification not in ["Other", "DOI"]:
+            continue
+
+        if not any(identifier.get("identifier") == link for identifier in related_identifiers):
+            relation_type = {"id": "issupplementedby"}
+            resource_type = {"id": "dataset" if source_type == "data" else "software"}
+            scheme = "url" if classification == "Other" else "doi"
+            
+            new_identifier = {
+                "relation_type": relation_type,
+                "identifier": link,
+                "scheme": scheme,
+                "resource_type": resource_type
+            }
+            related_identifiers.append(new_identifier)
+            updated = True
+
+    if updated:
+        metadata["metadata"]["related_identifiers"] = related_identifiers
+
+    return metadata, updated
+
+# save updated metadata to a file
+def save_metadata_to_file(metadata, record_id):
+    file_name = f"{record_id}_updated_metadata.json"
+    with open(file_name, "w") as f:
+        json.dump(metadata, f, indent=4)
+    print(f"Metadata saved to {file_name}")
+    
 
 def check_doi(doi, production=True):
     # Returns whether or not a DOI has already been added to CaltechAUTHORS
