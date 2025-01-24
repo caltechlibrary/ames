@@ -146,7 +146,7 @@ def edit_author_identifier(
 
 
 def add_group(record, token, group_identifier, test=False):
-    # For a given record, change the person identifers from the old to the new
+    # For a given record, add a Caltech group identifier
 
     if test:
         rurl = "https://authors.caltechlibrary.dev/api/records/" + record
