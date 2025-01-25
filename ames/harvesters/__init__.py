@@ -17,3 +17,4 @@ from .caltechauthors import get_records_from_date
 from .caltechauthors import get_request_comments
 from .caltechauthors import get_request_id_title
 from .caltechauthors import get_publisher
+from .caltechauthors import get_series_records
