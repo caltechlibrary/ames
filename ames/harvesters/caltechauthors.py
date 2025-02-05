@@ -119,7 +119,7 @@ def get_group_records(group_identifier, test=False):
     else:
         url = "https://authors.library.caltech.edu/api/records"
 
-    query = f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"'
+    query = f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"&sort=newest'
 
     url = url + query
     response = requests.get(url)
