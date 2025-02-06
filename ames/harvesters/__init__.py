@@ -22,3 +22,4 @@ from .caltechauthors import extract_https_links
 from .caltechauthors import clean_link
 from .caltechauthors import extract_filename_from_link
 from .caltechauthors import is_file_present
+from .caltechauthors import get_series_records
