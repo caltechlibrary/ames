@@ -17,4 +17,9 @@ from .caltechauthors import get_records_from_date
 from .caltechauthors import get_request_comments
 from .caltechauthors import get_request_id_title
 from .caltechauthors import get_publisher
+from .caltechauthors import classify_link
+from .caltechauthors import extract_https_links
+from .caltechauthors import clean_link
+from .caltechauthors import extract_filename_from_link
+from .caltechauthors import is_file_present
 from .caltechauthors import get_series_records

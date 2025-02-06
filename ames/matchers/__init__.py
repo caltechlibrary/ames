@@ -19,3 +19,6 @@ from .caltechauthors import add_group
 from .caltechauthors import check_doi
 from .caltechauthors import add_doi
 from .caltechauthors import move_doi
+from .caltechauthors import get_record_metadata
+from .caltechauthors import update_related_identifiers
+from .caltechauthors import save_metadata_to_file
