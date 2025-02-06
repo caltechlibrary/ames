@@ -39,7 +39,7 @@
         "name": "Caltech"
       },
       "@id": "https://orcid.org/0009-0002-2450-6471"
-    },
+    }
   ],
   "developmentStatus": "active",
   "downloadUrl": "https://github.com/caltechlibrary/ames/archive/v1.1.4.zip",
