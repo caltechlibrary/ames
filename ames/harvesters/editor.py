@@ -72,10 +72,10 @@ def add_related_identifier(record_id, doi, caltech_author_id):
     # Add the DOI if it doesn't exist
     if not doi_exists:
         new_doi_identifier = {
-            "relation_type": {"id": "issupplementedby"},
+            "relation_type": {"id": "issupplementto"},
             "identifier": doi,
             "scheme": "doi",
-            "resource_type": {"id": "publication"}
+            "resource_type": {"id": "publication-article"}
         }
         related_identifiers.append(new_doi_identifier)
         print(f"Adding DOI related identifier: {doi}")
@@ -85,10 +85,10 @@ def add_related_identifier(record_id, doi, caltech_author_id):
     # Add the CaltechAUTHORS_ID URL if it doesn't exist
     if not author_url_exists:
         new_author_identifier = {
-            "relation_type": {"id": "isreferencedby"},
+            "relation_type": {"id": "issupplementto"},
             "identifier": author_url,
             "scheme": "url",
-            "resource_type": {"id": "publication"}
+            "resource_type": {"id": "publication-article"}
         }
         related_identifiers.append(new_author_identifier)
         print(f"Adding CaltechAUTHORS_ID related identifier: {author_url}")
