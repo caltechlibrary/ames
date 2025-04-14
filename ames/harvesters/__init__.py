@@ -24,4 +24,3 @@ from .caltechauthors import extract_filename_from_link
 from .caltechauthors import is_file_present
 from .caltechauthors import get_series_records
 from .caltechauthors import generate_data_citation_csv
-from .caltechauthors import add_related_identifiers_from_csv
