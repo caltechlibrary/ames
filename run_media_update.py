@@ -12,7 +12,7 @@ token = os.environ["RDMTOK"]
 os.chdir("data")
 
 with open("mediaupdate", "r") as infile:
-    last_date = infile.readline()
+    last_date = infile.readline().strip()
 
 collection = "caltechdata_formedia.ds"
 collection_files = "caltechdatafiles.ds"
