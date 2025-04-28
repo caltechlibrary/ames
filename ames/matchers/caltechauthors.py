@@ -1,6 +1,8 @@
 import csv, json
 import requests
+import dimcli
 from caltechdata_api import caltechdata_edit
+
 
 # function to get metadata for a record
 def get_record_metadata(record_id):
@@ -13,17 +15,40 @@ def get_record_metadata(record_id):
         }
 
     response = requests.get(metadata_url, headers=headers)
-    
+
     if response.status_code != 200:
-        print(f"Error: Failed to fetch metadata for record {record_id}. Status code: {response.status_code}")
+        print(
+            f"Error: Failed to fetch metadata for record {record_id}. Status code: {response.status_code}"
+        )
         return None
-    
+
     try:
         metadata = response.json()
         return metadata
     except ValueError:
         print(f"Error: Unable to parse JSON response for record {record_id}.")
         return None
+
+
+def grid_to_ror(grid):
+    if grid == "grid.451078.f":
+        ror = "00hm6j694"
+    elif grid == "grid.5805.8":
+        ror = "02en5vm52"
+    elif grid == "grid.465477.3":
+        ror = "00em52312"
+    elif grid == "grid.412584.e":
+        ror = "0431j1t39"
+    else:
+        url = f"https://api.ror.org/organizations?query.advanced=external_ids.GRID.all:{grid}"
+        results = requests.get(url).json()
+        if len(results["items"]) == 0:
+            ror = None
+        else:
+            ror = results["items"][0]["id"]
+            ror = ror.split("ror.org/")[1]
+    return ror
+
 
 # function to check and update related identifiers
 def update_related_identifiers(metadata, links, source_type):
@@ -34,16 +59,18 @@ def update_related_identifiers(metadata, links, source_type):
         if classification not in ["Other", "DOI"]:
             continue
 
-        if not any(identifier.get("identifier") == link for identifier in related_identifiers):
+        if not any(
+            identifier.get("identifier") == link for identifier in related_identifiers
+        ):
             relation_type = {"id": "issupplementedby"}
             resource_type = {"id": "dataset" if source_type == "data" else "software"}
             scheme = "url" if classification == "Other" else "doi"
-            
+
             new_identifier = {
                 "relation_type": relation_type,
                 "identifier": link,
                 "scheme": scheme,
-                "resource_type": resource_type
+                "resource_type": resource_type,
             }
             related_identifiers.append(new_identifier)
             updated = True
@@ -53,13 +80,14 @@ def update_related_identifiers(metadata, links, source_type):
 
     return metadata, updated
 
+
 # save updated metadata to a file
 def save_metadata_to_file(metadata, record_id):
     file_name = f"{record_id}_updated_metadata.json"
     with open(file_name, "w") as f:
         json.dump(metadata, f, indent=4)
     print(f"Metadata saved to {file_name}")
-    
+
 
 def check_doi(doi, production=True):
     # Returns whether or not a DOI has already been added to CaltechAUTHORS
@@ -317,65 +345,87 @@ def move_doi(record, token, test=False):
 def add_related_identifiers_from_csv(csv_path, test=False):
     """Reads a CSV file and adds related identifiers to each record using the CaltechDATA API."""
 
-    base_url = "https://data.caltechlibrary.dev" if test else "https://data.caltechlibrary.caltech.edu"
+    base_url = (
+        "https://data.caltechlibrary.dev"
+        if test
+        else "https://data.caltechlibrary.caltech.edu"
+    )
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-type": "application/json",
     }
 
-    with open(csv_path, 'r') as csvfile:
+    with open(csv_path, "r") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            record_id = row['Test_ID']
-            doi = row['CaltechAUTHORS_DOI']
-            caltech_author_id = row['CaltechAUTHORS_ID']
-            resource_type = row['resource_type']
+            record_id = row["Test_ID"]
+            doi = row["CaltechAUTHORS_DOI"]
+            caltech_author_id = row["CaltechAUTHORS_ID"]
+            resource_type = row["resource_type"]
 
-            print(f"\nProcessing Test_ID: {record_id} with DOI: {doi} and CaltechAUTHORS_ID: {caltech_author_id}")
+            print(
+                f"\nProcessing Test_ID: {record_id} with DOI: {doi} and CaltechAUTHORS_ID: {caltech_author_id}"
+            )
             print(f"Using resource_type: {resource_type}")
 
             # Fetch the current record
-            response = requests.get(f"{base_url}/api/records/{record_id}", headers=headers)
+            response = requests.get(
+                f"{base_url}/api/records/{record_id}", headers=headers
+            )
             if response.status_code != 200:
                 print(f"Error fetching record {record_id}: {response.status_code}")
                 continue
             record_data = response.json()
 
             # Draft check or create
-            draft_response = requests.get(f"{base_url}/api/records/{record_id}/draft", headers=headers)
+            draft_response = requests.get(
+                f"{base_url}/api/records/{record_id}/draft", headers=headers
+            )
             if draft_response.status_code == 200:
                 record_data = draft_response.json()
             else:
-                draft_create_response = requests.post(f"{base_url}/api/records/{record_id}/draft", headers=headers)
+                draft_create_response = requests.post(
+                    f"{base_url}/api/records/{record_id}/draft", headers=headers
+                )
                 if draft_create_response.status_code != 201:
                     print(f"Error creating draft: {draft_create_response.status_code}")
                     continue
                 record_data = draft_create_response.json()
 
-            related_identifiers = record_data.get("metadata", {}).get("related_identifiers", []) or []
+            related_identifiers = (
+                record_data.get("metadata", {}).get("related_identifiers", []) or []
+            )
 
             doi_exists = any(ri.get("identifier") == doi for ri in related_identifiers)
-            author_url = f"https://authors.library.caltech.edu/records/{caltech_author_id}"
-            author_url_exists = any(ri.get("identifier") == author_url for ri in related_identifiers)
+            author_url = (
+                f"https://authors.library.caltech.edu/records/{caltech_author_id}"
+            )
+            author_url_exists = any(
+                ri.get("identifier") == author_url for ri in related_identifiers
+            )
 
             if not doi_exists:
-                related_identifiers.append({
-                    "relation_type": {"id": "issupplementedby"},
-                    "identifier": doi,
-                    "scheme": "doi",
-                    "resource_type": {"id": resource_type}
-                })
+                related_identifiers.append(
+                    {
+                        "relation_type": {"id": "issupplementedby"},
+                        "identifier": doi,
+                        "scheme": "doi",
+                        "resource_type": {"id": resource_type},
+                    }
+                )
                 print(f"Adding DOI: {doi}")
             else:
                 print(f"DOI already exists")
 
             if not author_url_exists:
-                related_identifiers.append({
-                    "relation_type": {"id": "isreferencedby"},
-                    "identifier": author_url,
-                    "scheme": "url",
-                    "resource_type": {"id": resource_type}
-                })
+                related_identifiers.append(
+                    {
+                        "relation_type": {"id": "isreferencedby"},
+                        "identifier": author_url,
+                        "scheme": "url",
+                        "resource_type": {"id": resource_type},
+                    }
+                )
                 print(f"Adding CaltechAUTHORS link: {author_url}")
             else:
                 print(f"CaltechAUTHORS link already exists")
@@ -383,19 +433,110 @@ def add_related_identifiers_from_csv(csv_path, test=False):
             record_data["metadata"]["related_identifiers"] = related_identifiers
 
             update_response = requests.put(
-                f"{base_url}/api/records/{record_id}/draft", headers=headers, json=record_data
+                f"{base_url}/api/records/{record_id}/draft",
+                headers=headers,
+                json=record_data,
             )
             if update_response.status_code != 200:
                 print(f"Error updating draft: {update_response.status_code}")
                 continue
 
             publish_response = requests.post(
-                f"{base_url}/api/records/{record_id}/draft/actions/publish", headers=headers
+                f"{base_url}/api/records/{record_id}/draft/actions/publish",
+                headers=headers,
             )
             if publish_response.status_code != 202:
-                print(f"Error publishing record {record_id}: {publish_response.status_code}")
+                print(
+                    f"Error publishing record {record_id}: {publish_response.status_code}"
+                )
                 continue
 
             print(f"Successfully updated and published {record_id}")
 
     print("All records processed.")
+
+
+def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=None):
+    # Add dimensions affiliations to a record
+
+    record_id = record["id"]
+    if "doi" in record["pids"]:
+        doi = record["pids"]["doi"]["identifier"]
+    else:
+        doi = None
+        if "identifiers" in record["metadata"]:
+            for idv in record["metadata"]["identifiers"]:
+                if idv["scheme"] == "doi":
+                    doi = idv["identifier"]
+    if doi:
+        endpoint = "https://cris-api.dimensions.ai/v3"
+        dimcli.login(key=dimensions_key, endpoint=endpoint, verbose=False)
+        dsl = dimcli.Dsl()
+        res = dsl.query_iterative(
+            f"""
+        search publications
+        where doi = "{doi}"
+        return publications[basics+extras+abstract] """,
+            verbose=False,
+        )
+        publication = res.json["publications"]
+        update = False
+        if len(publication) == 1:
+            publication = publication[0]
+            dimensions_authors = publication.get("authors", [])
+            existing_authors = record["metadata"]["creators"]
+            if len(dimensions_authors) == len(existing_authors):
+                for position in range(len(dimensions_authors)):
+                    author = existing_authors[position]
+                    dimensions_author = dimensions_authors[position]
+                    if "affiliations" not in author:
+                        affiliations = []
+                        affiliation_ids = []
+                        if dimensions_author["affiliations"] not in [[], None]:
+                            for affiliation in dimensions_author["affiliations"]:
+                                affil = {}
+                                if "id" in affiliation:
+                                    if affiliation["id"] is not None:
+                                        ror = grid_to_ror(affiliation["id"])
+                                        if ror is not None:
+                                            if allowed_identifiers is not None:
+                                                if ror in allowed_identifiers:
+                                                    affil["id"] = ror
+                                                else:
+                                                    print(
+                                                        "ROR %s not in allowed identifiers list"
+                                                        % ror
+                                                    )
+                                        else:
+                                            print(
+                                                "Missing ROR for affiliation %s"
+                                                % affiliation["id"]
+                                            )
+                                # We have to manually handle incorrectly mapped JPL
+                                # affiliations
+                                if "raw_affiliation" in affiliation:
+                                    raw = affiliation["raw_affiliation"]
+                                    affil["name"] = raw
+                                    if "91109" in raw:
+                                        affil["id"] = "027k65916"
+                                    if "Jet Propulsion Laboratory" in raw:
+                                        affil["id"] = "027k65916"
+                                    if "JPL" in raw:
+                                        affil["id"] = "027k65916"
+                                # Some dimensions records don't include id values.
+                                # We ignore those for now
+                                if "id" in affil:
+                                    if affil["id"] not in affiliation_ids:
+                                        update = True
+                                        affiliation_ids.append(affil["id"])
+                                        affiliations.append(affil)
+                            existing_authors[position]["affiliations"] = affiliations
+        if update:
+            caltechdata_edit(
+                record_id,
+                metadata=record,
+                token=token,
+                production=True,
+                publish=True,
+                authors=True,
+            )

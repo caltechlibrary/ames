@@ -5,7 +5,9 @@ import re
 
 # base URLs
 base_url = "https://authors.library.caltech.edu/api/records?q=metadata.additional_descriptions.type.id%3A%22data-availability%22&size=25&sort=bestmatch"
-base_file_url_template = "https://authors.library.caltech.edu/api/records/{record_id}/files"
+base_file_url_template = (
+    "https://authors.library.caltech.edu/api/records/{record_id}/files"
+)
 
 # authorization token
 token = os.environ.get("RDMTOK")
@@ -25,7 +27,7 @@ supplemental_patterns = [
     r"https://journals.aps.org/.*/supplemental/",
     r"https://pubs.acs.org/doi/suppl/",
     r"https://www.science.org/doi/suppl/.*/suppl_file/",
-    r"https://static-content.springer.com/esm/.*"  
+    r"https://static-content.springer.com/esm/.*",
 ]
 
 # publisher domains dictionary for classifying "publisher" links
@@ -35,41 +37,46 @@ publisher_domains = {
     "https://www.science.org": "publisher",
     "https://pubs.acs.org": "publisher",
     "https://journals.aps.org": "publisher",
-    "https://www.sciencedirect.com": "publisher",  
-    "https://journals.plos.org": "publisher",      
-    "https://www.pnas.org/doi/": "publisher",     
-    "https://iopscience.iop.org/article/": "publisher",  
-    "https://febs.onlinelibrary.wiley.com/": "publisher", 
-    "https://www.mdpi.com/": "publisher"          
+    "https://www.sciencedirect.com": "publisher",
+    "https://journals.plos.org": "publisher",
+    "https://www.pnas.org/doi/": "publisher",
+    "https://iopscience.iop.org/article/": "publisher",
+    "https://febs.onlinelibrary.wiley.com/": "publisher",
+    "https://www.mdpi.com/": "publisher",
 }
+
 
 # classifying links
 def classify_link(link):
     for pattern in supplemental_patterns:
         if re.match(pattern, link):
             return "supplemental_publisher"
-    
+
     for domain in publisher_domains:
         if link.startswith(domain):
             return publisher_domains[domain]
-    
+
     if "doi" in link:
         return "DOI"
-    
+
     return "other"
+
 
 # extracting all https links from a string
 def extract_https_links(description):
     return re.findall(r'https://[^\s"]+', description)
 
+
 # cleaning up the link
 def clean_link(link):
-    link = link.split('<')[0].rstrip('/')
+    link = link.split("<")[0].rstrip("/")
     return link
+
 
 # function to extract the filename from the link
 def extract_filename_from_link(link):
-    return link.split('/')[-1]
+    return link.split("/")[-1]
+
 
 # function to check if the file exists in the record file list
 def is_file_present(record_id, filename):
@@ -82,9 +89,11 @@ def is_file_present(record_id, filename):
         }
 
     response = requests.get(file_url, headers=headers)
-    
+
     if response.status_code != 200:
-        print(f"Error: Status code {response.status_code} received when checking files for record {record_id}.")
+        print(
+            f"Error: Status code {response.status_code} received when checking files for record {record_id}."
+        )
         return False
 
     try:
@@ -96,13 +105,15 @@ def is_file_present(record_id, filename):
     files = data.get("entries", data.get("files", []))
 
     if not isinstance(files, list):
-        print(f"Error: Unexpected structure for files in record {record_id}. Expected a list, got {type(files)}.")
+        print(
+            f"Error: Unexpected structure for files in record {record_id}. Expected a list, got {type(files)}."
+        )
         return False
 
     for file in files:
         if isinstance(file, dict) and file.get("key") == filename:
             return True
-    
+
     return False
 
 
@@ -183,7 +194,9 @@ def get_publisher(token, record, test=False, draft=True):
     return response.json()["metadata"].get("publisher")
 
 
-def get_author_records(token, author_identifier, year=None, test=False):
+def get_author_records(
+    token, author_identifier, year=None, test=False, all_metadata=False
+):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
     else:
@@ -212,10 +225,13 @@ def get_author_records(token, author_identifier, year=None, test=False):
         response = requests.get(chunkurl, headers=headers).json()
         hits += response["hits"]["hits"]
 
-    req = []
-    for item in hits:
-        req.append(item["id"])
-    return req
+    if all_metadata:
+        return hits
+    else:
+        req = []
+        for item in hits:
+            req.append(item["id"])
+        return req
 
 
 def get_group_records(group_identifier, test=False):
@@ -224,7 +240,9 @@ def get_group_records(group_identifier, test=False):
     else:
         url = "https://authors.library.caltech.edu/api/records"
 
-    query = f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"&sort=newest'
+    query = (
+        f'?q=custom_fields.caltech%5C%3Agroups.id%3D"{group_identifier}"&sort=newest'
+    )
 
     url = url + query
     response = requests.get(url)
@@ -313,6 +331,7 @@ def get_records_from_date(date="2023-08-25", test=False):
 
     return hits
 
+
 def doi2url(doi):
     if not doi.startswith("10."):
         return doi
@@ -330,6 +349,7 @@ def doi2url(doi):
                 return resolved_url
     return doi
 
+
 def fetch_metadata(record_id):
     url = f"https://authors.library.caltech.edu/api/records/{record_id}"
     try:
@@ -339,11 +359,12 @@ def fetch_metadata(record_id):
     except:
         return None
 
+
 def search_resource_type(obj):
     if isinstance(obj, dict):
         for k, v in obj.items():
-            if k == 'resource_type' and isinstance(v, dict) and 'id' in v:
-                return v['id']
+            if k == "resource_type" and isinstance(v, dict) and "id" in v:
+                return v["id"]
             result = search_resource_type(v)
             if result:
                 return result
@@ -354,8 +375,10 @@ def search_resource_type(obj):
                 return result
     return None
 
+
 def fetch_resource_type(data):
-    return search_resource_type(data) or 'N/A'
+    return search_resource_type(data) or "N/A"
+
 
 def search_records(prefix):
     base_url = "https://authors.library.caltech.edu/api/records"
@@ -366,6 +389,7 @@ def search_records(prefix):
         return response.json()
     return None
 
+
 def extract_data_citations(hits):
     citations = []
     for hit in hits:
@@ -374,37 +398,49 @@ def extract_data_citations(hits):
         if not metadata:
             continue
 
-        caltechauthors_doi = metadata.get("pids", {}).get("doi", {}).get("identifier", "")
+        caltechauthors_doi = (
+            metadata.get("pids", {}).get("doi", {}).get("identifier", "")
+        )
         resource_type = fetch_resource_type(metadata)
 
         related_dois = []
         for identifier in metadata.get("metadata", {}).get("related_identifiers", []):
             if identifier.get("scheme") == "doi":
                 doi = identifier["identifier"]
-                if any(doi.startswith(prefix) for prefix in ["10.22002/", "10.14291/", "10.25989/"]):
+                if any(
+                    doi.startswith(prefix)
+                    for prefix in ["10.22002/", "10.14291/", "10.25989/"]
+                ):
                     related_dois.append(doi)
 
         for doi in related_dois:
             caltechdata_url = doi2url(doi)
             if "data.caltech.edu/records/" in caltechdata_url:
                 caltechdata_id = caltechdata_url.split("/records/")[-1]
-                caltechdata_metadata = requests.get(f"https://data.caltech.edu/api/records/{caltechdata_id}").json()
+                caltechdata_metadata = requests.get(
+                    f"https://data.caltech.edu/api/records/{caltechdata_id}"
+                ).json()
 
                 cross_link = "No"
-                for identifier in caltechdata_metadata.get("metadata", {}).get("related_identifiers", []):
+                for identifier in caltechdata_metadata.get("metadata", {}).get(
+                    "related_identifiers", []
+                ):
                     if identifier.get("identifier") == caltechauthors_doi:
                         cross_link = "Yes"
                         break
 
-                citations.append({
-                    "CaltechAUTHORS_ID": record_id,
-                    "CaltechAUTHORS_DOI": caltechauthors_doi,
-                    "Related_DOI": doi,
-                    "CaltechDATA_ID": caltechdata_id,
-                    "Cross_Link": cross_link,
-                    "resource_type": resource_type
-                })
+                citations.append(
+                    {
+                        "CaltechAUTHORS_ID": record_id,
+                        "CaltechAUTHORS_DOI": caltechauthors_doi,
+                        "Related_DOI": doi,
+                        "CaltechDATA_ID": caltechdata_id,
+                        "Cross_Link": cross_link,
+                        "resource_type": resource_type,
+                    }
+                )
     return citations
+
 
 def generate_data_citation_csv():
     prefixes = ["10.22002", "10.14291", "10.25989"]
@@ -418,15 +454,26 @@ def generate_data_citation_csv():
     output_file = "data_citations_with_type.csv"
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["CaltechAUTHORS_ID", "CaltechAUTHORS_DOI", "Related_DOI", "CaltechDATA_ID", "Cross_Link", "resource_type"])
+        writer.writerow(
+            [
+                "CaltechAUTHORS_ID",
+                "CaltechAUTHORS_DOI",
+                "Related_DOI",
+                "CaltechDATA_ID",
+                "Cross_Link",
+                "resource_type",
+            ]
+        )
         for citation in all_citations:
-            writer.writerow([
-                citation["CaltechAUTHORS_ID"],
-                citation["CaltechAUTHORS_DOI"],
-                citation["Related_DOI"],
-                citation["CaltechDATA_ID"],
-                citation["Cross_Link"],
-                citation["resource_type"]
-            ])
+            writer.writerow(
+                [
+                    citation["CaltechAUTHORS_ID"],
+                    citation["CaltechAUTHORS_DOI"],
+                    citation["Related_DOI"],
+                    citation["CaltechDATA_ID"],
+                    citation["Cross_Link"],
+                    citation["resource_type"],
+                ]
+            )
 
     print(f"Saved {len(all_citations)} citations to {output_file}")
