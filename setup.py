@@ -51,15 +51,16 @@ author_email = ""
 for obj in meta["author"]:
     given = obj["givenName"]
     family = obj["familyName"]
-    email = obj["email"]
+    email = obj.get("email")
     if len(author) == 0:
         author = given + " " + family
     else:
         author = author + ", " + given + " " + family
-    if len(author_email) == 0:
-        author_email = email
-    else:
-        author_email = author_email + ", " + email
+    if email:
+        if len(author_email) == 0:
+            author_email = email
+        else:
+            author_email = author_email + ", " + email
 description = meta["description"]
 url = meta["codeRepository"]
 download = meta["downloadUrl"]
