@@ -5,3 +5,4 @@ caltechdata_api>=1.0.0
 py_dataset==1.0.1
 pandas
 ArchivesSnake
+dimcli
