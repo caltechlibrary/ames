@@ -91,6 +91,7 @@ REQUIRED = [
     "py_dataset==1.0.1",
     "pandas",
     "ArchivesSnake",
+    "dimcli",
 ]
 
 # What packages are optional?
