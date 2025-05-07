@@ -195,7 +195,7 @@ def get_publisher(token, record, test=False, draft=True):
 
 
 def get_author_records(
-    author_identifier, token=None, year=None, test=False, all_metadata=False
+    author_identifier, token=None, date=None, test=False, all_metadata=False
 ):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
@@ -204,9 +204,9 @@ def get_author_records(
 
     query = f'?q=metadata.creators.person_or_org.identifiers.identifier%3A"{author_identifier}"'
 
-    if year:
+    if date:
         query += (
-            f"%20AND%20metadata.publication_date%3A%5B{year}-01-01%20TO%20%2A%20%5D"
+            f"%20AND%20metadata.publication_date%3A%5B{date}%20TO%20%2A%20%5D"
         )
 
     if token:
