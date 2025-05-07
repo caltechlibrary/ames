@@ -14,6 +14,6 @@ input_file.close()
 
 for name in names:
     print(name)
-    to_update = get_author_records(token, name, year)
+    to_update = get_author_records(name, token, year)
     for record in to_update:
         add_group(record, token, group_identifier)
