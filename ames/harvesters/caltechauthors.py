@@ -334,7 +334,6 @@ def get_records_from_date(date="2023-08-25", test=False):
 
     return hits
 
-
 def doi2url(doi):
     if not doi.startswith("10."):
         return doi
@@ -352,7 +351,6 @@ def doi2url(doi):
                 return resolved_url
     return doi
 
-
 def fetch_metadata(record_id):
     url = f"https://authors.library.caltech.edu/api/records/{record_id}"
     try:
@@ -362,12 +360,11 @@ def fetch_metadata(record_id):
     except:
         return None
 
-
 def search_resource_type(obj):
     if isinstance(obj, dict):
         for k, v in obj.items():
-            if k == "resource_type" and isinstance(v, dict) and "id" in v:
-                return v["id"]
+            if k == 'resource_type' and isinstance(v, dict) and 'id' in v:
+                return v['id']
             result = search_resource_type(v)
             if result:
                 return result
@@ -378,10 +375,8 @@ def search_resource_type(obj):
                 return result
     return None
 
-
 def fetch_resource_type(data):
-    return search_resource_type(data) or "N/A"
-
+    return search_resource_type(data) or 'N/A'
 
 def search_records(prefix):
     base_url = "https://authors.library.caltech.edu/api/records"
@@ -392,7 +387,6 @@ def search_records(prefix):
         return response.json()
     return None
 
-
 def extract_data_citations(hits):
     citations = []
     for hit in hits:
@@ -401,49 +395,37 @@ def extract_data_citations(hits):
         if not metadata:
             continue
 
-        caltechauthors_doi = (
-            metadata.get("pids", {}).get("doi", {}).get("identifier", "")
-        )
+        caltechauthors_doi = metadata.get("pids", {}).get("doi", {}).get("identifier", "")
         resource_type = fetch_resource_type(metadata)
 
         related_dois = []
         for identifier in metadata.get("metadata", {}).get("related_identifiers", []):
             if identifier.get("scheme") == "doi":
                 doi = identifier["identifier"]
-                if any(
-                    doi.startswith(prefix)
-                    for prefix in ["10.22002/", "10.14291/", "10.25989/"]
-                ):
+                if any(doi.startswith(prefix) for prefix in ["10.22002/", "10.14291/", "10.25989/"]):
                     related_dois.append(doi)
 
         for doi in related_dois:
             caltechdata_url = doi2url(doi)
             if "data.caltech.edu/records/" in caltechdata_url:
                 caltechdata_id = caltechdata_url.split("/records/")[-1]
-                caltechdata_metadata = requests.get(
-                    f"https://data.caltech.edu/api/records/{caltechdata_id}"
-                ).json()
+                caltechdata_metadata = requests.get(f"https://data.caltech.edu/api/records/{caltechdata_id}").json()
 
                 cross_link = "No"
-                for identifier in caltechdata_metadata.get("metadata", {}).get(
-                    "related_identifiers", []
-                ):
+                for identifier in caltechdata_metadata.get("metadata", {}).get("related_identifiers", []):
                     if identifier.get("identifier") == caltechauthors_doi:
                         cross_link = "Yes"
                         break
 
-                citations.append(
-                    {
-                        "CaltechAUTHORS_ID": record_id,
-                        "CaltechAUTHORS_DOI": caltechauthors_doi,
-                        "Related_DOI": doi,
-                        "CaltechDATA_ID": caltechdata_id,
-                        "Cross_Link": cross_link,
-                        "resource_type": resource_type,
-                    }
-                )
+                citations.append({
+                    "CaltechAUTHORS_ID": record_id,
+                    "CaltechAUTHORS_DOI": caltechauthors_doi,
+                    "Related_DOI": doi,
+                    "CaltechDATA_ID": caltechdata_id,
+                    "Cross_Link": cross_link,
+                    "resource_type": resource_type
+                })
     return citations
-
 
 def generate_data_citation_csv():
     prefixes = ["10.22002", "10.14291", "10.25989"]
@@ -457,26 +439,66 @@ def generate_data_citation_csv():
     output_file = "data_citations_with_type.csv"
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(
-            [
-                "CaltechAUTHORS_ID",
-                "CaltechAUTHORS_DOI",
-                "Related_DOI",
-                "CaltechDATA_ID",
-                "Cross_Link",
-                "resource_type",
-            ]
-        )
+        writer.writerow(["CaltechAUTHORS_ID", "CaltechAUTHORS_DOI", "Related_DOI", "CaltechDATA_ID", "Cross_Link", "resource_type"])
         for citation in all_citations:
-            writer.writerow(
-                [
-                    citation["CaltechAUTHORS_ID"],
-                    citation["CaltechAUTHORS_DOI"],
-                    citation["Related_DOI"],
-                    citation["CaltechDATA_ID"],
-                    citation["Cross_Link"],
-                    citation["resource_type"],
-                ]
-            )
+            writer.writerow([
+                citation["CaltechAUTHORS_ID"],
+                citation["CaltechAUTHORS_DOI"],
+                citation["Related_DOI"],
+                citation["CaltechDATA_ID"],
+                citation["Cross_Link"],
+                citation["resource_type"]
+            ])
 
     print(f"Saved {len(all_citations)} citations to {output_file}")
+
+def get_data_availability_links(token=None, size=25):
+    base_url = "https://authors.library.caltech.edu/api/records?q=metadata.additional_descriptions.type.id%3A%22data-availability%22&size=25&sort=bestmatch"
+    base_file_url_template = "https://authors.library.caltech.edu/api/records/{record_id}/files"
+    
+    token = os.environ.get("RDMTOK")
+    
+    output_file = "test_results_harvesters.csv"
+    
+    headers = {}
+    if token:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-type": "application/json",
+        }
+    
+    response = requests.get(base_url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error: Unable to fetch records from the API. Status code: {response.status_code}")
+        exit()
+    
+    records = response.json().get("hits", {}).get("hits", [])
+    
+    if not records:
+        print("No records found.")
+        exit()
+    
+    results = []
+    for record in records:
+        record_id = record.get("id")
+        links = record.get("metadata", {}).get("additional_descriptions", [])
+    
+        for link_data in links:
+            description = link_data.get("description", "")
+            links_in_description = extract_https_links(description)
+            for link in links_in_description:
+                classification = classify_link(link)
+                cleaned = clean_link(link)
+                filename = extract_filename_from_link(link)
+                file_present = is_file_present(record_id, filename)
+    
+                results.append({
+                    "record_id": record_id,
+                    "original_link": link,
+                    "classification": classification,
+                    "cleaned_link": cleaned,
+                    "filename": filename,
+                    "file_present": file_present
+                })
+                
+    return results
