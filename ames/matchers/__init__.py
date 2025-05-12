@@ -2,6 +2,7 @@ from .caltechdata import match_cd_refs
 from .caltechdata import match_codemeta
 from .caltechdata import add_thesis_doi
 from .caltechdata import add_usage
+from .caltechdata import edit_subject
 from .datacite import update_datacite_metadata
 from .datacite import update_datacite_media
 from .datacite import submit_report
@@ -24,3 +25,6 @@ from .caltechauthors import update_related_identifiers
 from .caltechauthors import save_metadata_to_file
 from .caltechauthors import add_related_identifiers_from_csv
 from .caltechauthors import add_authors_affiliations
+
+
+
