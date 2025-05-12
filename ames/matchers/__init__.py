@@ -25,6 +25,3 @@ from .caltechauthors import update_related_identifiers
 from .caltechauthors import save_metadata_to_file
 from .caltechauthors import add_related_identifiers_from_csv
 from .caltechauthors import add_authors_affiliations
-
-
-
