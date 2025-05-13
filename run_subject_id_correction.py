@@ -3,9 +3,9 @@ from ames.matchers import edit_subject
 import os
 
 
-def all_corrected():
+def all_corrected(record):
 
-    record = "2d2wf-j0256"
+    # record = "2d2wf-j0256"
     subjects_to_correct = {
         "Biological sciences": "http://www.oecd.org/science/inno/38235147.pdf?1.6",
         "Chemical sciences": "http://www.oecd.org/science/inno/38235147.pdf?1.4",
@@ -13,7 +13,7 @@ def all_corrected():
     }
 
     metadata = edit_subject(
-        "2d2wf-j0256", os.environ.get("CALTECH_DATA_API"), subjects_to_correct
+        record, os.environ.get("CALTECH_DATA_API"), subjects_to_correct
     )
 
     for i in metadata["subjects"]:
@@ -25,8 +25,9 @@ def all_corrected():
                 ):
                     print(i["subject"], "'s id wasn't added.")
                     return False
+    print("Final subjects:", metadata["subjects"])
     print("All subject ids were added")
     return True
 
 
-all_corrected()
+# all_corrected()
