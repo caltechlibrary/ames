@@ -41,7 +41,7 @@ def edit_subject(record, token, correction_subjects, test=True):
     if metadata["subjects"]:
         for i in metadata["subjects"]:
             for each_correct_subject in correction_subjects.keys():
-                if i["subject"] == each_correct_subject and "id" not in i:
+                if i["subject"].lower() == each_correct_subject.lower() and "id" not in i:
                     i["id"] = correction_subjects[each_correct_subject]
                     i["subject"] = each_correct_subject
 

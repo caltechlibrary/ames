@@ -1,9 +1,14 @@
 import unittest
-import random, os
+import random, os, copy, time, requests
 from run_subject_id_correction import all_corrected 
-from caltechdata_api import caltechdata_write
+from caltechdata_api import caltechdata_write, get_metadata
 
 os.environ["RDMTOK"] = "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs"
+
+headers = {
+    "Authorization": "Bearer %s" % "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs",
+    "Content-type": "application/json",
+}
 
 
 titles = [
@@ -92,6 +97,23 @@ metadata = {
 }
 
 
+# Creating a record with malformed subjects and check correction
+malformed_metadata = copy.deepcopy(metadata)
+malformed_metadata['subjects'] = [
+    {"subject": "  Biological sciences  "}, # Extra spaces
+    {"subject": "CHEMICAL SCIENCES"}, # All caps
+    {"subject": "computer and information sciences"}, # Incorrect capitalization
+]
+
+# Creating a test record
+response = caltechdata_write(
+    metadata=malformed_metadata,
+    production=False,
+    publish=True
+)
+record_ids.append("" + response)
+
+
 for title_idx in range(len(titles)):
     metadata["titles"][0]["title"] = titles[title_idx]
 
@@ -107,7 +129,6 @@ for title_idx in range(len(titles)):
 
     response = caltechdata_write(
     metadata = metadata,
-    # files=files,
     production=False,
     publish= True
 )
@@ -118,15 +139,84 @@ for title_idx in range(len(titles)):
 
 
 
-
-
 class TestSubjects(unittest.TestCase):
     
-    def test_subject_changes(self):
-        for i in range(len(record_ids)):
-            self.assertEqual(all_corrected(record_ids[i]), True)
-
+    def setUp(self):
+        # Initialize test data
+        self.record_ids = record_ids
+        
+    def test_asubject_changes(self):
+        for i in range(len(self.record_ids)):
+            self.assertEqual(all_corrected(self.record_ids[i]), True)
+        
     
+    def test_bsubject_case_normalization(self):
+        # Test that subjects with different case get normalized
+        for record_id in self.record_ids:
+            record_metadata = get_metadata(
+                                    record_id,
+                                    production=False,
+                                    validate=True,
+                                    emails=False,
+                                    schema="43",
+                                    token=False,
+                                    authors=False,
+    )
+            for subject_idx in range(len(record_metadata["subjects"])):
+                if "subject" in record_metadata["subjects"][subject_idx] and isinstance(record_metadata["subjects"][subject_idx]["subject"], str):
+                    # Check that subjects are properly cased (first letter capitalized)
+                    self.assertTrue(record_metadata["subjects"][subject_idx]["subject"][0].isupper(), 
+                                   f"Subject '{record_metadata["subjects"][subject_idx]["subject"]}' in record' {record_id} 'should start with uppercase")
+    
+    def test_csubject_id_present(self):
+        time.sleep(5)
+        # Test that subjects have proper IDs where applicable
+        for record_id in self.record_ids:
+            rurl = "https://data.caltechlibrary.dev/api/records/" + record_id
+            data = requests.get(rurl, headers=headers).json()
+            record_metadata = data["metadata"]
+            for subject_idx in range(len(record_metadata["subjects"])):
+                if record_metadata["subjects"][subject_idx]["subject"] in ["Biological sciences", "Chemical sciences", 
+                                             "Computer and information sciences"]:
+                    self.assertIn("id", record_metadata["subjects"][subject_idx], f"Subject '{record_metadata["subjects"][subject_idx]["subject"]}' in record' {record_id} 'should have an ID")
+    
+    def test_dsubject_scheme_consistent(self):
+        # Test that subjects with IDs have consistent schemes
+        for record_id in self.record_ids:
+            record_metadata = get_metadata(
+                                    record_id,
+                                    production=False,
+                                    validate=True,
+                                    emails=False,
+                                    schema="43",
+                                    token=False,
+                                    authors=False,
+    )
+            for subject_idx in range(len(record_metadata["subjects"])):
+                if 'id' in record_metadata["subjects"][subject_idx]:
+                    self.assertIn('scheme', record_metadata["subjects"][subject_idx], 
+                                 f"Subject with ID '{record_metadata["subjects"][subject_idx]["id"]}' should have a scheme")
+                    self.assertEqual(record_metadata["subjects"][subject_idx]["scheme"], 'FOS', 
+                                   f"Subject scheme for' {record_metadata["subjects"][subject_idx]["subject"]}'in record' {record_id}' should be 'FOS' but was '{record_metadata["subjects"][subject_idx]["scheme"]}'")
+    
+    def test_eduplicate_subjects_removed(self):
+        # Test that duplicate subjects are removed
+        for record_id in self.record_ids:
+            record_metadata = get_metadata(
+                                    record_id,
+                                    production=False,
+                                    validate=True,
+                                    emails=False,
+                                    schema="43",
+                                    token=False,
+                                    authors=False,
+    )
+            subjects_list = [record_metadata["subjects"][subject_idx]["subject"].lower() for subject_idx in range(len(record_metadata["subjects"]))]
+            self.assertEqual(len(subjects_list), len(set(subjects_list)), 
+                            f"Found duplicate subjects in record {record_id}")
+    
+    
+
 
 if __name__ == '__main__':
     unittest.main()
