@@ -53,7 +53,7 @@ def edit_subject(record, token, correction_subjects, test=True):
         publish=True,
     )
 
-    metadata = get_metadata(
+    record_metadata = get_metadata(
         record,
         production=False,
         validate=True,
@@ -62,6 +62,36 @@ def edit_subject(record, token, correction_subjects, test=True):
         token=False,
         authors=False,
     )
+
+
+    for subject_idx in range(len(record_metadata["subjects"])):
+                if "subject" in record_metadata["subjects"][subject_idx] and isinstance(record_metadata["subjects"][subject_idx]["subject"], str):
+                    # Check that subjects are properly cased (first letter capitalized)
+                    assert record_metadata["subjects"][subject_idx]["subject"][0].isupper(), \
+                                f"Subject '{record_metadata["subjects"][subject_idx]["subject"]}' in record' {record} 'should start with uppercase"
+    
+    #check that each subject that should have an id has it
+    rurl = "https://data.caltechlibrary.dev/api/records/" + record
+    data = requests.get(rurl, headers=headers).json()
+    record_metadata = data["metadata"]
+    for subject_idx in range(len(record_metadata["subjects"])):
+        if record_metadata["subjects"][subject_idx]["subject"] in ["Biological sciences", "Chemical sciences", 
+                                        "Computer and information sciences"]:
+            assert "id" in record_metadata["subjects"][subject_idx], \
+                f"Subject '{record_metadata["subjects"][subject_idx]["subject"]}' in record' {record} 'should have an ID"
+    
+    #check that the schema is FOS
+    for subject_idx in range(len(record_metadata["subjects"])):
+                if 'id' in record_metadata["subjects"][subject_idx]:
+                    assert 'scheme' in record_metadata["subjects"][subject_idx], \
+                                 f"Subject with ID '{record_metadata["subjects"][subject_idx]["id"]}' should have a scheme"
+                    assert record_metadata["subjects"][subject_idx]["scheme"] == 'FOS', \
+                                f"Subject scheme for' {record_metadata["subjects"][subject_idx]["subject"]}'in record' {record}' should be 'FOS' but was '{record_metadata["subjects"][subject_idx]["scheme"]}'"
+    
+    #check that there are no duplicate records.
+    subjects_list = [record_metadata["subjects"][subject_idx]["subject"].lower() for subject_idx in range(len(record_metadata["subjects"]))]
+    assert len(subjects_list) == len(set(subjects_list)), \
+                            f"Found duplicate subjects in record {record}"
 
     return metadata
 
