@@ -342,7 +342,7 @@ def move_doi(record, token, test=False):
         )
 
 
-def add_related_identifiers_from_csv(csv_path, test=False):
+def add_related_identifiers_from_csv(data_rows, token, test=False):
     """Reads a CSV file and adds related identifiers to each record using the CaltechDATA API."""
 
     base_url = (
@@ -354,108 +354,173 @@ def add_related_identifiers_from_csv(csv_path, test=False):
         "Authorization": f"Bearer {token}",
         "Content-type": "application/json",
     }
+    results = []
+    for row in data_rows:
+        record_id = row["Test_ID"]
+        doi = row["CaltechAUTHORS_DOI"]
+        caltech_author_id = row["CaltechAUTHORS_ID"]
+        resource_type = row["resource_type"]
 
-    with open(csv_path, "r") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            record_id = row["Test_ID"]
-            doi = row["CaltechAUTHORS_DOI"]
-            caltech_author_id = row["CaltechAUTHORS_ID"]
-            resource_type = row["resource_type"]
+        print(
+            f"\nProcessing Test_ID: {record_id} with DOI: {doi} and CaltechAUTHORS_ID: {caltech_author_id}"
+        )
+        print(f"Using resource_type: {resource_type}")
 
-            print(
-                f"\nProcessing Test_ID: {record_id} with DOI: {doi} and CaltechAUTHORS_ID: {caltech_author_id}"
-            )
-            print(f"Using resource_type: {resource_type}")
+        # Fetch the current record
+        response = requests.get(f"{base_url}/api/records/{record_id}", headers=headers)
+        if response.status_code != 200:
+            print(f"Error fetching record {record_id}: {response.status_code}")
+            continue
+        record_data = response.json()
 
-            # Fetch the current record
-            response = requests.get(
-                f"{base_url}/api/records/{record_id}", headers=headers
-            )
-            if response.status_code != 200:
-                print(f"Error fetching record {record_id}: {response.status_code}")
-                continue
-            record_data = response.json()
-
-            # Draft check or create
-            draft_response = requests.get(
+        # Draft check or create
+        draft_response = requests.get(
+            f"{base_url}/api/records/{record_id}/draft", headers=headers
+        )
+        if draft_response.status_code == 200:
+            record_data = draft_response.json()
+        else:
+            draft_create_response = requests.post(
                 f"{base_url}/api/records/{record_id}/draft", headers=headers
             )
-            if draft_response.status_code == 200:
-                record_data = draft_response.json()
-            else:
-                draft_create_response = requests.post(
-                    f"{base_url}/api/records/{record_id}/draft", headers=headers
-                )
-                if draft_create_response.status_code != 201:
-                    print(f"Error creating draft: {draft_create_response.status_code}")
-                    continue
-                record_data = draft_create_response.json()
-
-            related_identifiers = (
-                record_data.get("metadata", {}).get("related_identifiers", []) or []
-            )
-
-            doi_exists = any(ri.get("identifier") == doi for ri in related_identifiers)
-            author_url = (
-                f"https://authors.library.caltech.edu/records/{caltech_author_id}"
-            )
-            author_url_exists = any(
-                ri.get("identifier") == author_url for ri in related_identifiers
-            )
-
-            if not doi_exists:
-                related_identifiers.append(
-                    {
-                        "relation_type": {"id": "issupplementedby"},
-                        "identifier": doi,
-                        "scheme": "doi",
-                        "resource_type": {"id": resource_type},
-                    }
-                )
-                print(f"Adding DOI: {doi}")
-            else:
-                print(f"DOI already exists")
-
-            if not author_url_exists:
-                related_identifiers.append(
-                    {
-                        "relation_type": {"id": "isreferencedby"},
-                        "identifier": author_url,
-                        "scheme": "url",
-                        "resource_type": {"id": resource_type},
-                    }
-                )
-                print(f"Adding CaltechAUTHORS link: {author_url}")
-            else:
-                print(f"CaltechAUTHORS link already exists")
-
-            record_data["metadata"]["related_identifiers"] = related_identifiers
-
-            update_response = requests.put(
-                f"{base_url}/api/records/{record_id}/draft",
-                headers=headers,
-                json=record_data,
-            )
-            if update_response.status_code != 200:
-                print(f"Error updating draft: {update_response.status_code}")
+            if draft_create_response.status_code != 201:
+                print(f"Error creating draft: {draft_create_response.status_code}")
                 continue
+            record_data = draft_create_response.json()
 
-            publish_response = requests.post(
-                f"{base_url}/api/records/{record_id}/draft/actions/publish",
-                headers=headers,
+        related_identifiers = (
+            record_data.get("metadata", {}).get("related_identifiers", []) or []
+        )
+
+        doi_exists = any(ri.get("identifier") == doi for ri in related_identifiers)
+        author_url = f"https://authors.library.caltech.edu/records/{caltech_author_id}"
+        author_url_exists = any(
+            ri.get("identifier") == author_url for ri in related_identifiers
+        )
+
+        if not doi_exists:
+            related_identifiers.append(
+                {
+                    "relation_type": {"id": "issupplementedby"},
+                    "identifier": doi,
+                    "scheme": "doi",
+                    "resource_type": {"id": resource_type},
+                }
             )
-            if publish_response.status_code != 202:
-                print(
-                    f"Error publishing record {record_id}: {publish_response.status_code}"
-                )
-                continue
+            print(f"Adding DOI: {doi}")
+        else:
+            print(f"DOI already exists")
 
-            print(f"Successfully updated and published {record_id}")
+        if not author_url_exists:
+            related_identifiers.append(
+                {
+                    "relation_type": {"id": "isreferencedby"},
+                    "identifier": author_url,
+                    "scheme": "url",
+                    "resource_type": {"id": resource_type},
+                }
+            )
+            print(f"Adding CaltechAUTHORS link: {author_url}")
+        else:
+            print(f"CaltechAUTHORS link already exists")
 
-    print("All records processed.")
+        record_data["metadata"]["related_identifiers"] = related_identifiers
+
+        update_response = requests.put(
+            f"{base_url}/api/records/{record_id}/draft",
+            headers=headers,
+            json=record_data,
+        )
+        if update_response.status_code != 200:
+            print(f"Error updating draft: {update_response.status_code}")
+            continue
+
+        publish_response = requests.post(
+            f"{base_url}/api/records/{record_id}/draft/actions/publish", headers=headers
+        )
+        if publish_response.status_code != 202:
+            print(
+                f"Error publishing record {record_id}: {publish_response.status_code}"
+            )
+            results.append((record_id, False))
+            continue
+
+        print(f"Successfully updated and published {record_id}")
+        results.append((record_id, True))
+    return results
 
 
+def process_link_updates(input_csv):
+    # read the CSV file and build a dictionary: record_id -> {"links": [(link, classification), ...]}
+    records_data = {}
+    with open(input_file, newline="") as f:
+        reader = csv.DictReader(f, delimiter=",")
+        for row in reader:
+            record_id = row["record_id"].strip()
+            link = row["link"].strip()
+            classification = row["classification"].strip()
+
+            if record_id not in records_data:
+                records_data[record_id] = {"links": []}
+            records_data[record_id]["links"].append((link, classification))
+
+    results = []
+
+    for record_id, record_info in records_data.items():
+        print(f"Processing record {record_id}")
+
+        # get metadata for the record
+        metadata = get_record_metadata(record_id)
+        if not metadata:
+            # if we failed to get metadata, record the error and continue
+            first_link = record_info["links"][0][0] if record_info["links"] else ""
+            results.append(
+                {
+                    "record_id": record_id,
+                    "link": first_link,
+                    "doi_check": None,
+                    "metadata_updated": False,
+                    "notes": "Failed to retrieve metadata",
+                }
+            )
+            continue
+
+        # check existing related identifiers in the record
+        related_identifiers = metadata.get("metadata", {}).get(
+            "related_identifiers", []
+        )
+
+        # run check_doi if a "doi" is present among the links
+        doi_check = None
+        for lk, ctype in record_info["links"]:
+            if ctype.lower() == "doi":
+                try:
+                    doi_check = check_doi(lk, production=True)
+                except Exception as e:
+                    doi_check = f"Error: {str(e)}"
+
+        # update related identifiers
+        updated_metadata, updated_flag = update_related_identifiers(
+            metadata, record_info["links"], source_type="data"
+        )
+        if updated_flag:
+            # saving to local JSON file for reference
+            save_metadata_to_file(updated_metadata, record_id)
+            pass
+
+        # preparing the final row for the results CSV
+        first_link = record_info["links"][0][0] if record_info["links"] else ""
+        results.append(
+            {
+                "record_id": record_id,
+                "link": first_link,
+                "doi_check": doi_check,
+                "metadata_updated": updated_flag,
+                "notes": "",
+            }
+        )
+    return results
+    
 def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=None):
     # Add dimensions affiliations to a record
 

@@ -20,7 +20,7 @@ args = parser.parse_args()
 old_identifier = args.old_identifier
 new_identifier = args.new_identifier
 
-to_update = get_author_records(old_identifier,token)
+to_update = get_author_records(old_identifier, token)
 for record in to_update:
     if args.add:
         edit_author_identifier(
