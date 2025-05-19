@@ -15,10 +15,10 @@ abstract: Automated Metadata Service: Manage metadata from different sources.
 repository-code: "https://github.com/caltechlibrary/ames"
 type: software
 doi: 10.22002/qc63a-hvq14
-version: 1.2.0
+version: 1.2.1
 license-url: "https://data.caltech.edu/license"
 keywords:
   - GitHub
   - metadata
   - software
-date-released: 2025-05-07
+date-released: 2025-05-19
