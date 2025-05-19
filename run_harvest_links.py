@@ -25,9 +25,7 @@ def main():
             classification = row["classification"].strip()
 
             if record_id not in records_data:
-                records_data[record_id] = {
-                    "links": []
-                }
+                records_data[record_id] = {"links": []}
             records_data[record_id]["links"].append((link, classification))
 
     results = []
@@ -52,11 +50,13 @@ def main():
             continue
 
         # check existing related identifiers in the record
-        related_identifiers = metadata.get("metadata", {}).get("related_identifiers", [])
+        related_identifiers = metadata.get("metadata", {}).get(
+            "related_identifiers", []
+        )
 
         # run check_doi if a "doi" is present among the links
         doi_check = None
-        for (lk, ctype) in record_info["links"]:
+        for lk, ctype in record_info["links"]:
             if ctype.lower() == "doi":
                 try:
                     doi_check = check_doi(lk, production=True)
@@ -65,7 +65,7 @@ def main():
 
         # update related identifiers
         updated_metadata, updated_flag = update_related_identifiers(
-            metadata, record_info["links"], source_type="data"  
+            metadata, record_info["links"], source_type="data"
         )
         if updated_flag:
             # saving to local JSON file for reference
@@ -83,6 +83,7 @@ def main():
                 "notes": "",
             }
         )
+
 
 if __name__ == "__main__":
     main()

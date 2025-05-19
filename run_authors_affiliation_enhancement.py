@@ -23,13 +23,13 @@ with open("ror.txt") as infile:
 
 args = parser.parse_args()
 author_identifier = args.author_identifier
-#to_update = [get_metadata('6dmax-vx632',authors=True)]
+# to_update = [get_metadata('6dmax-vx632',authors=True)]
 to_update = get_author_records(author_identifier, token, all_metadata=True)
 
 for record in to_update:
     add_authors_affiliations(
-            record,
-            token,
-            dimensions_key,
-            allowed_identifiers=ror,
-        )
+        record,
+        token,
+        dimensions_key,
+        allowed_identifiers=ror,
+    )
