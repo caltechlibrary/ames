@@ -33,7 +33,7 @@ def load_test_data(from_csv=True):
         ]
 
 
-def verify_related_identifiers_on_site(data_rows, test=False):
+def verify_related_identifiers_on_site(data_rows, test=True):
     base_url = (
         "https://data.caltechlibrary.dev"
         if test
