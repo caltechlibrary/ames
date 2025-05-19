@@ -520,3 +520,88 @@ def process_link_updates(input_csv):
             }
         )
     return results
+    
+def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=None):
+    # Add dimensions affiliations to a record
+
+    record_id = record["id"]
+    if "doi" in record["pids"]:
+        doi = record["pids"]["doi"]["identifier"]
+    else:
+        doi = None
+        if "identifiers" in record["metadata"]:
+            for idv in record["metadata"]["identifiers"]:
+                if idv["scheme"] == "doi":
+                    doi = idv["identifier"]
+    if doi:
+        endpoint = "https://cris-api.dimensions.ai/v3"
+        dimcli.login(key=dimensions_key, endpoint=endpoint, verbose=False)
+        dsl = dimcli.Dsl()
+        res = dsl.query_iterative(
+            f"""
+        search publications
+        where doi = "{doi}"
+        return publications[basics+extras+abstract] """,
+            verbose=False,
+        )
+        publication = res.json["publications"]
+        update = False
+        if len(publication) == 1:
+            publication = publication[0]
+            dimensions_authors = publication.get("authors", [])
+            existing_authors = record["metadata"]["creators"]
+            if len(dimensions_authors) == len(existing_authors):
+                for position in range(len(dimensions_authors)):
+                    author = existing_authors[position]
+                    dimensions_author = dimensions_authors[position]
+                    if "affiliations" not in author:
+                        affiliations = []
+                        affiliation_ids = []
+                        if dimensions_author["affiliations"] not in [[], None]:
+                            for affiliation in dimensions_author["affiliations"]:
+                                affil = {}
+                                if "id" in affiliation:
+                                    if affiliation["id"] is not None:
+                                        ror = grid_to_ror(affiliation["id"])
+                                        if ror is not None:
+                                            if allowed_identifiers is not None:
+                                                if ror in allowed_identifiers:
+                                                    affil["id"] = ror
+                                                else:
+                                                    print(
+                                                        "ROR %s not in allowed identifiers list"
+                                                        % ror
+                                                    )
+                                        else:
+                                            print(
+                                                "Missing ROR for affiliation %s"
+                                                % affiliation["id"]
+                                            )
+                                # We have to manually handle incorrectly mapped JPL
+                                # affiliations
+                                if "raw_affiliation" in affiliation:
+                                    raw = affiliation["raw_affiliation"]
+                                    affil["name"] = raw
+                                    if "91109" in raw:
+                                        affil["id"] = "027k65916"
+                                    if "Jet Propulsion Laboratory" in raw:
+                                        affil["id"] = "027k65916"
+                                    if "JPL" in raw:
+                                        affil["id"] = "027k65916"
+                                # Some dimensions records don't include id values.
+                                # We ignore those for now
+                                if "id" in affil:
+                                    if affil["id"] not in affiliation_ids:
+                                        update = True
+                                        affiliation_ids.append(affil["id"])
+                                        affiliations.append(affil)
+                            existing_authors[position]["affiliations"] = affiliations
+        if update:
+            caltechdata_edit(
+                record_id,
+                metadata=record,
+                token=token,
+                production=True,
+                publish=True,
+                authors=True,
+            )
