@@ -10,7 +10,6 @@ headers = {
     "Content-type": "application/json",
 }
 
-# Base metadata
 metadata = {
     "titles": [{"title": "enter title"}],
     "creators": [
@@ -42,8 +41,8 @@ malformed_metadata["subjects"] = [
 
 class TestSubjects(unittest.TestCase):
 
-    def test_asubject_changes(self):
-        # Create a test record with malformed subjects
+    def test_subject_changes(self):
+        # Creates a test record with malformed subjects
         test_data = copy.deepcopy(malformed_metadata)
         record_id = caltechdata_write(
             metadata=test_data,
@@ -52,9 +51,10 @@ class TestSubjects(unittest.TestCase):
         )
         # Verify correction
         self.assertEqual(all_corrected(record_id), True, f"Subjects in record {record_id} were not corrected properly")
+        print("Passed test_subject_changes")
 
-    def test_bsubject_case_normalization(self):
-        # Create a record whose subjects need case normalization
+    def test_subject_case_normalization(self):
+        # Creates a record whose subjects need case normalization
         test_data = copy.deepcopy(malformed_metadata)
         record_id = caltechdata_write(
             metadata=test_data,
@@ -70,9 +70,10 @@ class TestSubjects(unittest.TestCase):
                     subject_obj["subject"][0].isupper(),
                     f"Subject '{subject_obj['subject']}' in record {record_id} should start with uppercase"
                 )
+        print("Passed test_subject_case_normalization")
 
-    def test_csubject_id_present(self):
-        # Create a record with known subjects that should map to IDs
+    def test_subject_id_present(self):
+        # Creates a record with known subjects that should map to IDs
         test_data = copy.deepcopy(malformed_metadata)
         test_data["subjects"] = [
             {"subject": "Biological sciences"},
@@ -91,15 +92,41 @@ class TestSubjects(unittest.TestCase):
         for subject_obj in record_metadata.get("subjects", []):
             if subject_obj["subject"] in ["Biological sciences", "Chemical sciences", "Computer and information sciences"]:
                 self.assertIn("id", subject_obj, f"Subject '{subject_obj['subject']}' in record {record_id} should have an ID")
+        print("Passed test_subject_id_present")
 
-    def test_dsubject_scheme_consistent(self):
-        # Create a record with IDs that should link to scheme FOS
+    def test_subject_scheme_consistent(self):
+        # Creates a record with IDs that should link to scheme FOS
         test_data = copy.deepcopy(metadata)
         test_data["subjects"] = [
             {
                 "id": "http://www.oecd.org/science/inno/38235147.pdf?1.2",
                 "subject": "Computer and information sciences",
-                "scheme": "FOS"
+                "scheme": "fos"
+            }
+        ]
+        record_id = caltechdata_write(
+            metadata=test_data,
+            production=False,
+            publish=True
+        )
+        record_metadata = get_metadata(
+            record_id, production=False, validate=True, emails=False, schema="43", token=False, authors=False
+        )
+        for subject_obj in record_metadata.get("subjects", []):
+            if "id" in subject_obj:
+                self.assertEqual(
+                    subject_obj["scheme"], "FOS",
+                    f"Subject scheme for '{subject_obj['subject']}' in record {record_id} should be 'FOS'"
+                )
+        print("Passed test_subject_scheme_consistent")
+    
+    def test_subject_has_scheme(self):
+        # Creates a record with IDs doesn't have a scheme
+        test_data = copy.deepcopy(metadata)
+        test_data["subjects"] = [
+            {
+                "id": "http://www.oecd.org/science/inno/38235147.pdf?1.2",
+                "subject": "Computer and information sciences",
             }
         ]
         record_id = caltechdata_write(
@@ -116,12 +143,9 @@ class TestSubjects(unittest.TestCase):
                     "scheme", subject_obj,
                     f"Subject with ID '{subject_obj['id']}' should have a scheme"
                 )
-                self.assertEqual(
-                    subject_obj["scheme"], "FOS",
-                    f"Subject scheme for '{subject_obj['subject']}' in record {record_id} should be 'FOS'"
-                )
+        print("Passed test_subject_has_scheme")
 
-    def test_eduplicate_subjects_removed(self):
+    def test_duplicate_subjects_removed(self):
         # Create a record with duplicate subjects
         test_data = copy.deepcopy(metadata)
         test_data["subjects"] = [
@@ -142,6 +166,8 @@ class TestSubjects(unittest.TestCase):
             len(set(subjects_list)),
             f"Found duplicate subjects in record {record_id}"
         )
+        print("Passed test_duplicate_subjects_removed")
+
 
 
 if __name__ == '__main__':
