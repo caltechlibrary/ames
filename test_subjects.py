@@ -169,6 +169,52 @@ class TestSubjects(unittest.TestCase):
         print("Passed test_duplicate_subjects_removed")
 
 
+    def test_subjects_with_id_no_text(self):
+        # Create a record with subject id but no subject text
+        
+        #This test would raise a validation error because caltechdata_write expects each subject 
+        # to have a subject text.
+        test_data = copy.deepcopy(metadata)
+        test_data["subjects"] = [
+            {
+                "id": "http://www.oecd.org/science/inno/38235147.pdf?1.2",
+            }
+        ]
+
+        try: 
+            record_id = caltechdata_write(
+                metadata=test_data,
+                production=False,
+                publish=True
+            )
+
+            print("Passed test_subjects_with_id_no_text")
+
+        except Exception as e:
+            self.fail(f"Each subject with an id shold have a subject text: {e}")
+
+    def test_subjects_with_malformed_ids(self):
+        # Create a record with malformed url
+        
+        test_data = copy.deepcopy(metadata)
+        test_data["subjects"] = [
+            {
+                "id": "http://www.oecd.org/science/inno/382351479.pdf?1.2",
+                "subject": "Computer and information sciences",
+            }
+        ]
+
+        try:
+            record_id = caltechdata_write(
+                metadata=test_data,
+                production=False,
+                publish=True
+            )
+            print("Passed test_subjects_with_malformed_ids")
+        except Exception as e:
+            self.fail(f"Subject id: {e} is not correct")
+            
+
 
 if __name__ == '__main__':
     unittest.main()
