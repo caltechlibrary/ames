@@ -20,7 +20,8 @@ from ames.matchers.caltechauthors import add_related_identifiers_from_csv
 token = os.environ.get("RDMTOK")
 CSV_FILE = "test.csv"
 
-print(f"[{datetime.now().isoformat()}] RDMTOK present? {'YES' if token else 'NO'}")
+print(f"[debug] RDMTOK present? {'YES' if token else 'NO'} "
+      f"(len={len(token) if token else 0})")
 
 # ---------------------------------------------------------------------------
 # Helpers
