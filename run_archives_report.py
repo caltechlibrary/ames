@@ -139,6 +139,7 @@ def block_fields():
         "text_4",
     ]
 
+
 def accession_format_report(file_obj, repo, aspace, subject=None, years=None):
     fields = [
         "title",
@@ -187,7 +188,9 @@ def accession_report(file_obj, repo, aspace, subject=None, years=None):
         print(f"subject {subject} not found")
         exit()
     print(f"Requesting accessions")
-    file_obj.writerow(["title","identifier","accession_date","agent"] + block_fields())
+    file_obj.writerow(
+        ["title", "identifier", "accession_date", "agent"] + block_fields()
+    )
     for acc in repo.accessions:
         for uri in acc.subjects:
             if search_uri == uri.ref:

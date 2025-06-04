@@ -205,9 +205,7 @@ def get_author_records(
     query = f'?q=metadata.creators.person_or_org.identifiers.identifier%3A"{author_identifier}"'
 
     if date:
-        query += (
-            f"%20AND%20metadata.publication_date%3A%5B{date}%20TO%20%2A%20%5D"
-        )
+        query += f"%20AND%20metadata.publication_date%3A%5B{date}%20TO%20%2A%20%5D"
 
     if token:
         headers = {
@@ -482,3 +480,61 @@ def generate_data_citation_csv():
             )
 
     print(f"Saved {len(all_citations)} citations to {output_file}")
+
+
+def get_data_availability_links(token=None, size=25):
+    base_url = "https://authors.library.caltech.edu/api/records?q=metadata.additional_descriptions.type.id%3A%22data-availability%22&size=25&sort=bestmatch"
+    base_file_url_template = (
+        "https://authors.library.caltech.edu/api/records/{record_id}/files"
+    )
+
+    token = os.environ.get("RDMTOK")
+
+    output_file = "test_results_harvesters.csv"
+
+    headers = {}
+    if token:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-type": "application/json",
+        }
+
+    response = requests.get(base_url, headers=headers)
+    if response.status_code != 200:
+        print(
+            f"Error: Unable to fetch records from the API. Status code: {response.status_code}"
+        )
+        exit()
+
+    records = response.json().get("hits", {}).get("hits", [])
+
+    if not records:
+        print("No records found.")
+        exit()
+
+    results = []
+    for record in records:
+        record_id = record.get("id")
+        links = record.get("metadata", {}).get("additional_descriptions", [])
+
+        for link_data in links:
+            description = link_data.get("description", "")
+            links_in_description = extract_https_links(description)
+            for link in links_in_description:
+                classification = classify_link(link)
+                cleaned = clean_link(link)
+                filename = extract_filename_from_link(link)
+                file_present = is_file_present(record_id, filename)
+
+                results.append(
+                    {
+                        "record_id": record_id,
+                        "original_link": link,
+                        "classification": classification,
+                        "cleaned_link": cleaned,
+                        "filename": filename,
+                        "file_present": file_present,
+                    }
+                )
+
+    return results

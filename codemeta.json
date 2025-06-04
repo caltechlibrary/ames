@@ -32,6 +32,17 @@
         },
         {
             "@type": "Person",
+            "givenName": "Rohan",
+            "familyName": "Bhattarai",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Caltech"
+            },
+            "email": "rbhattar@caltech.edu",
+            "@id": "https://orcid.org/0009-0007-0323-4733"
+        },
+        {
+            "@type": "Person",
             "givenName": "Elizabeth",
             "familyName": "Won",
             "affiliation": {
