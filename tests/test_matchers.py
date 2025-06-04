@@ -112,4 +112,4 @@ class TestCaltechDataUploader(unittest.TestCase):
             self.assertTrue(success, f"❌ Upload failed for record {record_id}")
 
         print("[test] verifying on server ...")
-        verify_results = verify_related_identifier_
+        verify_results = verify_related_identifiers_on_site(test_data, test=True)
