@@ -30,5 +30,7 @@ jobs:
         pip install -r requirements.txt || true  
 
     - name: Run tests for caltechauthors
+      env:
+          RDMTOK: ${{ secrets.RDMTOK }} 
       run: |
         PYTHONPATH=${{ github.workspace }} python -m unittest discover -s tests -p 'test_matchers.py'
