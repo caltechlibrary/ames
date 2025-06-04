@@ -213,7 +213,9 @@ def get_author_records(
             "Content-type": "application/json",
         }
     else:
-        headers = {}
+        headers = {
+            "Content-type": "application/json",
+        }
 
     url = url + query
     response = requests.get(url, headers=headers)
