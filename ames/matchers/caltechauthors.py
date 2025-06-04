@@ -4,7 +4,7 @@ import dimcli
 from caltechdata_api import caltechdata_edit
 
 
-# function to get metadata for a record
+# function to get metadata for a records
 def get_record_metadata(record_id):
     metadata_url = f"https://authors.library.caltech.edu/api/records/{record_id}"
     headers = {}
