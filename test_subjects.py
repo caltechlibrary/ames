@@ -3,6 +3,8 @@ import os, copy, time, requests
 from run_subject_id_correction import all_corrected 
 from caltechdata_api import caltechdata_write, get_metadata
 
+os.environ["RDMTOK"] = "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs"
+
 headers = {
     "Authorization": "Bearer %s" % "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs",
     "Content-type": "application/json",

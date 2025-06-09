@@ -22,10 +22,6 @@ def edit_subject(record, token, correction_subjects, test=True):
         "Content-type": "application/json",
     }
 
-    data = requests.get(rurl, headers=headers).json()
-
-    json_string = json.dumps(data["metadata"], indent=4)
-
     metadata = get_metadata(
         record,
         production=not test,
