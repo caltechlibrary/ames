@@ -36,27 +36,18 @@ def edit_subject(record, token, correction_subjects, test=True):
         authors=False,
     )
 
-    seen_subjects = set()
     new_subjects = []
 
-    for subject_entry in metadata["subjects"]:
-        subject_name = subject_entry["subject"].strip().lower()
-        
-        if subject_name in seen_subjects:
-            continue  
-        seen_subjects.add(subject_name)
-        
+    for subject_entry in metadata["subjects"]:   
         
         for correct_subject in correction_subjects.keys():
-            if subject_name == correct_subject.lower() and "id" not in subject_entry:
+            if subject_entry["subject"] == correct_subject and "id" not in subject_entry:
                 subject_entry["id"] = correction_subjects[correct_subject]
                 subject_entry["subject"] = correct_subject
         
         new_subjects.append(subject_entry)
 
     metadata["subjects"] = new_subjects
-
-
     
     print(metadata["subjects"])
 

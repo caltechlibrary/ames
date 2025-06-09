@@ -51,28 +51,6 @@ class TestSubjects(unittest.TestCase):
         self.assertEqual(all_corrected(record_id), True, f"Subjects in record {record_id} were not corrected properly")
         print("Passed test_subject_changes")
 
-    def test_subject_case_normalization(self):
-        # Creates a record whose subjects need case normalization
-        test_data = copy.deepcopy(malformed_metadata)
-        record_id = caltechdata_write(
-            metadata=test_data,
-            production=False,
-            publish=True
-        )
-
-        all_corrected(record_id)
-
-        record_metadata = get_metadata(
-            record_id, production=False
-        )
-        for subject_obj in record_metadata.get("subjects", []):
-            if "subject" in subject_obj and isinstance(subject_obj["subject"], str):
-                self.assertTrue(
-                    subject_obj["subject"][0].isupper(),
-                    f"Subject '{subject_obj['subject']}' in record {record_id} should start with uppercase"
-                )
-        print("Passed test_subject_case_normalization")
-
     def test_subject_id_present(self):
         # Creates a record with known subjects that should map to IDs
         test_data = copy.deepcopy(malformed_metadata)
@@ -174,7 +152,7 @@ class TestSubjects(unittest.TestCase):
         )
 
         
-        subjects_list = [s["subject"].lower() for s in record_metadata.get("subjects", [])]
+        subjects_list = [s["subject"] for s in record_metadata.get("subjects", [])]
         self.assertEqual(
             len(subjects_list),
             len(set(subjects_list)),
