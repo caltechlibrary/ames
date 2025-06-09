@@ -3,8 +3,6 @@ import os, copy, time, requests
 from run_subject_id_correction import all_corrected 
 from caltechdata_api import caltechdata_write, get_metadata
 
-os.environ["RDMTOK"] = "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs"
-
 headers = {
     "Authorization": "Bearer %s" % "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs",
     "Content-type": "application/json",
@@ -65,7 +63,7 @@ class TestSubjects(unittest.TestCase):
         all_corrected(record_id)
 
         record_metadata = get_metadata(
-            record_id, production=False, validate=True, emails=False, schema="43", token=False, authors=False
+            record_id, production=False
         )
         for subject_obj in record_metadata.get("subjects", []):
             if "subject" in subject_obj and isinstance(subject_obj["subject"], str):
@@ -118,7 +116,7 @@ class TestSubjects(unittest.TestCase):
         all_corrected(record_id)
 
         record_metadata = get_metadata(
-            record_id, production=False, validate=True, emails=False, schema="43", token=False, authors=False
+            record_id, production=False
         )
         for subject_obj in record_metadata.get("subjects", []):
             if "id" in subject_obj:
@@ -146,7 +144,7 @@ class TestSubjects(unittest.TestCase):
         all_corrected(record_id)
 
         record_metadata = get_metadata(
-            record_id, production=False, validate=True, emails=False, schema="43", token=False, authors=False
+            record_id, production=False
         )
         for subject_obj in record_metadata.get("subjects", []):
             if "id" in subject_obj:
@@ -172,7 +170,7 @@ class TestSubjects(unittest.TestCase):
         all_corrected(record_id)
 
         record_metadata = get_metadata(
-            record_id, production=False, validate=True, emails=False, schema="43", token=False, authors=False
+            record_id, production=False
         )
 
         
