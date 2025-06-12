@@ -1,32 +1,21 @@
 from caltechdata_api import get_metadata
 from ames.matchers import edit_subject
 import os
+import pandas as pd
 
+df = pd.read_csv("subjects_to_correct.csv")
 
-def all_corrected(record):
+subjects_to_correct = dict(zip(df['subject'], df['subject url']))
 
-    subjects_to_correct = {
-        "Biological sciences": "http://www.oecd.org/science/inno/38235147.pdf?1.6",
-        "Chemical sciences": "http://www.oecd.org/science/inno/38235147.pdf?1.4",
-        "Computer and information sciences": "http://www.oecd.org/science/inno/38235147.pdf?1.2",
-    }
+def all_corrected(record, subjects_to_correct = subjects_to_correct):
 
     metadata = edit_subject(
         record, os.environ.get("CALTECH_DATA_API"), subjects_to_correct
     )
 
-    for i in metadata["subjects"]:
-        for each_correct_subject in subjects_to_correct.keys():
-            if "id" in i.keys():
-                if (
-                    i["subject"] == each_correct_subject
-                    and i["id"] != subjects_to_correct[each_correct_subject]
-                ):
-                    print(i["subject"], "'s id wasn't added.")
-                    return False
-    print("Final subjects:", metadata["subjects"])
-    print("All subject ids were added")
-    return True
+    if metadata:
+        return True
+    else:
+        return False
 
 
-# all_corrected()

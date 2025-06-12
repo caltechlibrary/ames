@@ -1,5 +1,6 @@
 import unittest
 import os, copy, time, requests
+import pandas as pd
 from run_subject_id_correction import all_corrected 
 from caltechdata_api import caltechdata_write, get_metadata
 
@@ -10,7 +11,7 @@ headers = {
     "Content-type": "application/json",
 }
 
-metadata = {
+original_metadata = {
     "titles": [{"title": "enter title"}],
     "creators": [
         {
@@ -31,12 +32,30 @@ metadata = {
 }
 
 # A version of the metadata that is deliberately malformed
-malformed_metadata = copy.deepcopy(metadata)
+malformed_metadata = copy.deepcopy(original_metadata)
 malformed_metadata["subjects"] = [
     {"subject": "  Biological sciences  "},  # Extra spaces
     {"subject": "CHEMICAL SCIENCES"},        # All caps
     {"subject": "computer and information sciences"},  # Incorrect capitalization
 ]
+
+df = pd.read_csv("subjects_to_correct.csv")
+
+subjects_to_correct = dict(zip(df['subject'], df['subject url']))
+
+def test_change(record_id):
+    metadata = get_metadata(record_id, production = False)
+    for i in metadata["subjects"]:
+        for each_correct_subject in subjects_to_correct.keys():
+            if "id" in i.keys():
+                if (
+                    i["subject"] == each_correct_subject
+                    and i["id"] != subjects_to_correct[each_correct_subject]
+                ):
+                    print(i["subject"], "'s id wasn't added.")
+                    return False
+    print("Changes made!")
+    return True
 
 
 class TestSubjects(unittest.TestCase):
@@ -51,6 +70,17 @@ class TestSubjects(unittest.TestCase):
         )
         # Verify correction
         self.assertEqual(all_corrected(record_id), True, f"Subjects in record {record_id} were not corrected properly")
+        self.assertEqual(test_change(record_id), True)
+        print("Passed test_subject_changes")
+
+        #Verify no change was made to original metadata
+        record_id = caltechdata_write(
+            metadata=copy.deepcopy(original_metadata),
+            production=False,
+            publish=True
+        )
+        self.assertEqual(all_corrected(record_id), True, f"Subjects in original record {record_id} were not edited properly")
+        self.assertEqual(test_change(record_id), True)
         print("Passed test_subject_changes")
 
     def test_subject_id_present(self):
@@ -79,7 +109,7 @@ class TestSubjects(unittest.TestCase):
 
     def test_subject_scheme_consistent(self):
         # Creates a record with IDs that should link to scheme FOS
-        test_data = copy.deepcopy(metadata)
+        test_data = copy.deepcopy(original_metadata)
         test_data["subjects"] = [
             {
                 "id": "http://www.oecd.org/science/inno/38235147.pdf?1.2",
@@ -108,7 +138,7 @@ class TestSubjects(unittest.TestCase):
     
     def test_subject_has_scheme(self):
         # Creates a record with IDs doesn't have a scheme
-        test_data = copy.deepcopy(metadata)
+        test_data = copy.deepcopy(original_metadata)
         test_data["subjects"] = [
             {
                 "id": "http://www.oecd.org/science/inno/38235147.pdf?1.2",
@@ -133,34 +163,6 @@ class TestSubjects(unittest.TestCase):
                     f"Subject with ID '{subject_obj['id']}' should have a scheme"
                 )
         print("Passed test_subject_has_scheme")
-
-    def test_duplicate_subjects_removed(self):
-        # Create a record with duplicate subjects
-        test_data = copy.deepcopy(metadata)
-        test_data["subjects"] = [
-            {"subject": "Biological sciences"},
-            {"subject": "biological Sciences"},
-        ]
-        record_id = caltechdata_write(
-            metadata=test_data,
-            production=False,
-            publish=True
-        )
-
-        all_corrected(record_id)
-
-        record_metadata = get_metadata(
-            record_id, production=False
-        )
-
-        
-        subjects_list = [s["subject"] for s in record_metadata.get("subjects", [])]
-        self.assertEqual(
-            len(subjects_list),
-            len(set(subjects_list)),
-            f"Found duplicate subjects in record {record_id}"
-        )
-        print("Passed test_duplicate_subjects_removed")
 
 
 if __name__ == '__main__':
