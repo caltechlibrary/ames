@@ -50,6 +50,16 @@
                 "name": "Caltech"
             },
             "@id": "https://orcid.org/0009-0002-2450-6471"
+        },
+        {
+            "@type": "Person",
+            "givenName": "Alexander",
+            "familyName": "Abakah",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Caltech"
+            },
+            "@id": "https://orcid.org/0009-0003-5640-6691"
         }
     ],
     "developmentStatus": "active",

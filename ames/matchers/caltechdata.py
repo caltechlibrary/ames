@@ -1,5 +1,5 @@
 import os, json
-from caltechdata_api import caltechdata_edit
+from caltechdata_api import caltechdata_edit, get_metadata
 from ames import codemeta_to_datacite
 from ames.harvesters import get_records
 from progressbar import progressbar
@@ -9,6 +9,58 @@ from py_dataset import dataset
 import pandas as pd
 import numpy as np
 import requests
+
+
+def edit_subject(record, token, correction_subjects, test=True):
+    if test:
+        rurl = "https://data.caltechlibrary.dev/api/records/" + record
+    else:
+        rurl = "https://data.caltechlibrary.dev/api/records/" + record
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    metadata = get_metadata(
+        record,
+        production=not test,
+    )
+
+    new_subjects = []
+
+    for subject_entry in metadata["subjects"]:   
+        
+        for correct_subject in correction_subjects.keys():
+            if subject_entry["subject"] == correct_subject and "id" not in subject_entry:
+                subject_entry["id"] = correction_subjects[correct_subject]
+                subject_entry["subject"] = correct_subject
+        
+        new_subjects.append(subject_entry)
+
+    metadata["subjects"] = new_subjects
+    
+    print(metadata["subjects"])
+
+    caltechdata_edit(
+        record,
+        metadata=metadata,
+        token=token,
+        production=not test,
+        publish=True,
+    )
+
+    record_metadata = get_metadata(
+        record,
+        production=False,
+        validate=True,
+        emails=False,
+        schema="43",
+        token=False,
+        authors=False,
+    )
+
+    return record_metadata
 
 
 def match_cd_refs():
