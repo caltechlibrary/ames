@@ -4,10 +4,10 @@ import pandas as pd
 from run_subject_id_correction import all_corrected 
 from caltechdata_api import caltechdata_write, get_metadata
 
-os.environ["RDMTOK"] = "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs"
+token = os.environ["TOKEN"]
 
 headers = {
-    "Authorization": "Bearer %s" % "FVyjwsxBvfNXm5NmmfL8fKGI8hhA6puT9pNJO8PAyrLlNYdeMjfjhBVvuhbs",
+    "Authorization": "Bearer %s" % token,
     "Content-type": "application/json",
 }
 
