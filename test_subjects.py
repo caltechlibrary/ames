@@ -4,12 +4,6 @@ import pandas as pd
 from run_subject_id_correction import all_corrected 
 from caltechdata_api import caltechdata_write, get_metadata
 
-token = os.environ["TOKEN"]
-
-headers = {
-    "Authorization": "Bearer %s" % token,
-    "Content-type": "application/json",
-}
 
 original_metadata = {
     "titles": [{"title": "enter title"}],

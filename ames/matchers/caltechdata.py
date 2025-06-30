@@ -25,11 +25,6 @@ def edit_subject(record, token, correction_subjects, test=True):
     metadata = get_metadata(
         record,
         production=not test,
-        validate=True,
-        emails=False,
-        schema="43",
-        token=False,
-        authors=False,
     )
 
     new_subjects = []
