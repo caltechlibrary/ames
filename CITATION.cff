@@ -14,6 +14,9 @@ authors:
   - family-names: Won
     given-names: Elizabeth
     orcid: https://orcid.org/0009-0002-2450-6471
+  - family-names: Abakah
+    given-names: Alexander
+    orcid: https://orcid.org/0009-0003-5640-6691
 abstract: Automated Metadata Service: Manage metadata from different sources.
 repository-code: "https://github.com/caltechlibrary/ames"
 type: software
@@ -24,4 +27,4 @@ keywords:
   - GitHub
   - metadata
   - software
-date-released: 2025-06-04
+date-released: 2025-06-30
