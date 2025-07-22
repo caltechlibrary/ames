@@ -156,7 +156,8 @@ def get_request_id_title(token, request):
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        print(f"Error getting comments for request {request}")
+        print(f"Error getting data for request {request}")
+        exit()
     response = response.json()
     date = response["updated"].split("T")[0]
     return response["topic"]["record"], response["title"], date
@@ -192,6 +193,22 @@ def get_publisher(token, record, test=False, draft=True):
         url = url + "/draft"
     response = requests.get(url, headers=headers)
     return response.json()["metadata"].get("publisher")
+
+
+def get_authors(token, record, test=False, draft=True):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/records"
+    else:
+        url = "https://authors.library.caltech.edu/api/records"
+    url = url + "/" + record
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    if draft:
+        url = url + "/draft"
+    response = requests.get(url, headers=headers)
+    return response.json()["metadata"].get("creators")
 
 
 def get_author_records(
