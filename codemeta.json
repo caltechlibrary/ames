@@ -82,5 +82,15 @@
             "givenName": "Thomas E."
         }
     ],
-    "identifier": "10.22002/qc63a-hvq14"
+  "identifier": "10.22002/qc63a-hvq14",
+  "funding": {
+        "@type": "Grant",
+        "identifier": "2322420",
+        "name": "CC* Data Storage: Closing Caltech's data storage gap: from ad-hoc to well-managed stewardship of large-scale datasets",
+        "funder": {
+            "@id": "https://doi.org/10.13039/100000001",
+            "@type": "Organization",
+            "name": "National Science Foundation"
+        }
+    }
 }
