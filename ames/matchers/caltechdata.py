@@ -29,17 +29,20 @@ def edit_subject(record, token, correction_subjects, test=True):
 
     new_subjects = []
 
-    for subject_entry in metadata["subjects"]:   
-        
+    for subject_entry in metadata["subjects"]:
+
         for correct_subject in correction_subjects.keys():
-            if subject_entry["subject"] == correct_subject and "id" not in subject_entry:
+            if (
+                subject_entry["subject"] == correct_subject
+                and "id" not in subject_entry
+            ):
                 subject_entry["id"] = correction_subjects[correct_subject]
                 subject_entry["subject"] = correct_subject
-        
+
         new_subjects.append(subject_entry)
 
     metadata["subjects"] = new_subjects
-    
+
     print(metadata["subjects"])
 
     caltechdata_edit(

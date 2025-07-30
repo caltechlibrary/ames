@@ -520,7 +520,8 @@ def process_link_updates(input_csv):
             }
         )
     return results
-    
+
+
 def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=None):
     # Add dimensions affiliations to a record
 
