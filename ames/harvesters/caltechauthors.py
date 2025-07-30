@@ -179,7 +179,7 @@ def get_request_comments(token, request):
     return cleaned
 
 
-def get_publisher(token, record, test=False, draft=True):
+def get_publisher(token, record, test=False, draft=True, groups=False):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
     else:
@@ -192,7 +192,39 @@ def get_publisher(token, record, test=False, draft=True):
     if draft:
         url = url + "/draft"
     response = requests.get(url, headers=headers)
-    return response.json()["metadata"].get("publisher")
+    data = response.json()
+    publisher = data["metadata"].get("publisher")
+    if groups:
+        group_string = ""
+        groups = data["custom_fields"].get("caltech:groups", [])
+        for group in groups:
+            if group_string == "":
+                group_string = group["title"]["en"]
+            else:
+                group_string += ", " + group["title"]["en"]
+        return publisher, group_string
+    else:
+        return publisher
+
+
+def get_doi(token, record, test=False, draft=True):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/records"
+    else:
+        url = "https://authors.library.caltech.edu/api/records"
+    url = url + "/" + record
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    if draft:
+        url = url + "/draft"
+    response = requests.get(url, headers=headers)
+    doi = response.json()["pids"].get("doi")
+    if doi:
+        return doi["identifier"]
+    else:
+        return None
 
 
 def get_authors(token, record, test=False, draft=True):
