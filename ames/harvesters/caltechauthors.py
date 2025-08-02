@@ -384,6 +384,28 @@ def get_records_from_date(date="2023-08-25", test=False):
     return hits
 
 
+def get_records_pub_date(start_date="2021-01-01", end_date="2021-12-31", test=False):
+    if test:
+        url = "https://authors.caltechlibrary.dev/api/records"
+    else:
+        url = "https://authors.library.caltech.edu/api/records"
+
+    query = f"?q=metadata.publication_date:[{start_date} TO {end_date}]"
+
+    url = url + query
+    response = requests.get(url)
+    total = response.json()["hits"]["total"]
+    print(f"Found {total} Records")
+    pages = math.ceil(int(total) / 1000)
+    hits = []
+    for c in range(1, pages + 1):
+        chunkurl = f"{url}&size=1000&page={c}"
+        response = requests.get(chunkurl).json()
+        hits += response["hits"]["hits"]
+
+    return hits
+
+
 def doi2url(doi):
     if not doi.startswith("10."):
         return doi
