@@ -6,122 +6,91 @@ from datetime import date, datetime
 from caltechdata_api import get_metadata
 
 
-def get_caltechdata(collection, production=True, full=False, token=False, date=None):
-    """Harvest all records from CaltechDATA .
-    Always creates collection from scratch"""
-    # Delete existing collection
-    if os.path.isdir(collection):
-        shutil.rmtree(collection)
-    if not dataset.init(collection):
-        print("Dataset failed to init collection")
-        exit()
+def get_caltechdata(
+    query=None, production=True, full=False, token=False, date=None, datacite=True
+):
+    """Harvest all records from CaltechDATA"""
 
     if production == True:
         url = "https://data.caltech.edu/api/records"
     else:
         url = "https://data.caltechlibrary.dev/api/records"
 
-    if full == True:
-        query = "?&sort=newest"
-    elif date:
-        # Exclude HTE and tomograms for efficiency
-        query = f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+    if query:
+        if date:
+            query_string = f"?q={query}+AND+updated:[{date}+TO+*]"
+        else:
+            query_string = f"?q={query}"
     else:
-        # Exclude HTE and tomograms for efficiency
-        query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+        if full:
+            query_string += "?&sort=newest"
+        elif date:
+            # Exclude HTE and tomograms for efficiency
+            query_string += f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+        else:
+            # Exclude HTE and tomograms for efficiency
+            query_string += 'q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
 
-    response = requests.get(f"{url}{query}")
+    response = requests.get(f"{url}{query_string}")
+    print(f"{url}{query_string}")
     total = response.json()["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []
+    records = []
     print("Total records: " + str(total))
     for c in progressbar(range(1, pages + 1)):
-        chunkurl = f"{url}{query}&size=1000&page={c}"
+        chunkurl = f"{url}{query_string}&size=1000&page={c}"
         response = requests.get(chunkurl).json()
         hits += response["hits"]["hits"]
 
-    for h in progressbar(hits):
-        rid = h["id"]
-        if "doi" not in h["links"]:
-            print("DOI is missing for " + rid)
-            exit()
-        doi = h["links"]["doi"].split("doi.org/")[1].lower()
-        # Need lower because of dataset key limitations
-        metadata = get_metadata(rid, production, validate=False, token=token)
-        if not dataset.create(collection, doi, metadata):
-            err = dataset.error_message()
-            print(err)
+    if datacite:
+        for h in progressbar(hits):
+            rid = h["id"]
+            metadata = get_metadata(rid, production, validate=False, token=token)
+            metadata["id"] = rid
+            records.append(metadata)
+
+        return records
+    else:
+        return hits
 
 
-def get_caltechdata_files(
-    collection, production=True, full=False, token=False, date=None
-):
-    """Harvest all files from CaltechDATA .
-    Always creates collection from scratch"""
-    # Delete existing collection
-    if os.path.isdir(collection):
-        shutil.rmtree(collection)
-    if not dataset.init(collection):
-        print("Dataset failed to init collection")
-        exit()
+def get_caltechdata_files(record, production=True, token=False):
+    """Get files from CaltechDATA."""
 
     if production == True:
         url = "https://data.caltech.edu/api/records"
     else:
         url = "https://data.caltechlibrary.dev/api/records"
 
-    if full == True:
-        query = "?&sort=newest"
-    elif date:
-        # Exclude HTE and tomograms for efficiency
-        query = f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+    rid = str(record["id"])
+    files = {"files": []}
+    # Capture external files:
+    metadata = record["metadata"]
+    if "additional_descriptions" in metadata:
+        for desc in metadata["additional_descriptions"]:
+            if "type" in desc and desc["type"]["id"] == "files":
+                description = desc["description"]
+                chunks = description.split('href="')[1:]
+                for c in chunks:
+                    files["files"].append({"url": c.split('"')[0]})
+
+    if token:
+        headers = {
+            "Authorization": "Bearer %s" % token,
+            "Content-type": "application/json",
+        }
     else:
-        # Exclude HTE and tomograms for efficiency
-        query = '?q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+        headers = {
+            "Content-type": "application/json",
+        }
 
-    response = requests.get(f"{url}{query}")
-    total = response.json()["hits"]["total"]
-    pages = math.ceil(int(total) / 1000)
-    hits = []
-    for c in progressbar(range(1, pages + 1)):
-        chunkurl = f"{url}{query}&size=1000&page={c}"
-        response = requests.get(chunkurl).json()
-        hits += response["hits"]["hits"]
+    response = requests.get(f"{url}/{rid}/files", headers=headers)
+    if response.status_code == 200:
+        if "entries" in response.json():
+            files["files"] += response.json()["entries"]
 
-    for h in progressbar(hits):
-        rid = str(h["id"])
-        files = {"files": []}
-        # Capture external files:
-        metadata = h["metadata"]
-        doi = h["links"]["doi"].split("doi.org/")[1].lower()
-        # Need lower because of dataset key limitations
-        if "additional_descriptions" in metadata:
-            for desc in metadata["additional_descriptions"]:
-                if "type" in desc and desc["type"]["id"] == "files":
-                    description = desc["description"]
-                    chunks = description.split('href="')[1:]
-                    for c in chunks:
-                        files["files"].append({"url": c.split('"')[0]})
-
-        if token:
-            headers = {
-                "Authorization": "Bearer %s" % token,
-                "Content-type": "application/json",
-            }
-        else:
-            headers = {
-                "Content-type": "application/json",
-            }
-
-        response = requests.get(f"{url}/{rid}/files", headers=headers)
-        if response.status_code == 200:
-            if "entries" in response.json():
-                files["files"] += response.json()["entries"]
-
-        if len(files["files"]) > 0:
-            if not dataset.create(collection, doi, files):
-                err = dataset.error_message()
-                print(err)
+    return files
 
 
 def get_cd_github(new=True):

@@ -384,15 +384,20 @@ def get_records_from_date(date="2023-08-25", test=False):
     return hits
 
 
-def get_records_pub_date(start_date="2021-01-01", end_date="2021-12-31", test=False):
+def get_records_pub_date(
+    start_date="2021-01-01", end_date="2021-12-31", test=False, query=None
+):
     if test:
         url = "https://authors.caltechlibrary.dev/api/records"
     else:
         url = "https://authors.library.caltech.edu/api/records"
 
-    query = f"?q=metadata.publication_date:[{start_date} TO {end_date}]"
+    query_string = f"?q=metadata.publication_date:[{start_date} TO {end_date}]"
 
-    url = url + query
+    if query:
+        query_string += f"%20AND%20{query}"
+
+    url = url + query_string
     response = requests.get(url)
     total = response.json()["hits"]["total"]
     print(f"Found {total} Records")

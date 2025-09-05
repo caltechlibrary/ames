@@ -14,12 +14,13 @@ os.chdir("data")
 with open("mediaupdate", "r") as infile:
     last_date = infile.readline().strip()
 
-collection = "caltechdata_formedia.ds"
-collection_files = "caltechdatafiles.ds"
+query = 'metadata.subjects.subject:"TCCON"'
 
-get_caltechdata(collection, token=token, date=last_date)
-get_caltechdata_files(collection_files, token=token, date=last_date)
-update_datacite_media(user, password, collection, collection_files, prefix)
+records = get_caltechdata(query, token=token, date=last_date, datacite=False)
+for record in records:
+    files = get_caltechdata_files(record, token=token)
+    update_datacite_media(user, password, record, files, prefix)
+    exit()
 
 password = os.environ["CALTECHDATA_DATACITE"]
 prefix = "10.22002"
