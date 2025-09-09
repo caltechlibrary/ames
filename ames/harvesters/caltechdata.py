@@ -23,13 +23,13 @@ def get_caltechdata(
             query_string = f"?q={query}"
     else:
         if full:
-            query_string += "?&sort=newest"
+            query_string = "?&sort=newest"
         elif date:
             # Exclude HTE and tomograms for efficiency
-            query_string += f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+            query_string = f'?q=updated:[{date} TO *]-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
         else:
             # Exclude HTE and tomograms for efficiency
-            query_string += 'q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
+            query_string = 'q=-metadata.related_identifiers.identifier%3A"10.25989%2Fes8t-kswe"-metadata.identifiers.scheme%3Atiltid&sort=newest'
 
     response = requests.get(f"{url}{query_string}")
     print(f"{url}{query_string}")

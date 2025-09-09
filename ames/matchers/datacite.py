@@ -33,15 +33,12 @@ def update_datacite_media(username, password, record, files, prefix):
                 atlas = True
             if subject["subject"].strip() == "TCCON":
                 tccon = True
-                print("YAY")
     doi = record["pids"]["doi"]["identifier"]
     record_prefix = doi.split("/")[0]
     if record_prefix == prefix:
         delete_datacite_media(username, password, doi)
-        break
         for file_met in files["files"]:
             url = "https://mds.datacite.org/media/" + doi
-            # url = "https://mds.datacite.org/media/" + doi
             headers = {
                 "accept": "text/plain",
                 "Content-Type": "text/plain",
@@ -59,7 +56,7 @@ def update_datacite_media(username, password, record, files, prefix):
                 file_url = base_link.replace("/api", "")
             if extension == "nc":
                 data = "application/x-netcdf=" + file_url
-            if extension == "txt":
+            elif extension == "txt":
                 data = "text/plain=" + file_url
             elif extension == "mp4":
                 if atlas:
@@ -83,23 +80,13 @@ def update_datacite_media(username, password, record, files, prefix):
             elif extension == "h5ad":
                 data = "application/octet-stream=" + file_url
             if data != {}:
-                print(doi)
-                print(data)
-                d = DataCiteMDSClient(
-                    username=username,
-                    password=password,
-                    prefix=prefix,
-                    url="https://mds.datacite.org",
+                r = requests.post(
+                    url,
+                    data=data.encode("utf-8"),
+                    auth=(username, password),
+                    headers=headers,
                 )
-                d.media_post(doi, {"text/plain": file_url})
-                # r = requests.post(
-                #    url,
-                #    data=data.encode("utf-8"),
-                #    auth=(username, password),
-                #    headers=headers,
-                # )
-                exit()
-                # print(r)
+                print(r)
 
 
 def submit_report(
