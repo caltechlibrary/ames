@@ -7,7 +7,7 @@ from ames.matchers import update_datacite_media
 password = os.environ["DATACITE"]
 prefix = "10.14291"
 user = "CALTECH.LIBRARY"
-token = os.environ["RDMTOK"]
+token = os.environ["INVENIO_TOKEN"]
 
 with open("mediaupdate", "r") as infile:
     last_date = infile.readline().strip()
