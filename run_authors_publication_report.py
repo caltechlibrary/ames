@@ -1,7 +1,7 @@
 import csv
 from ames.harvesters import get_records_pub_date
 
-query = 'metadata.publisher:"American Chemical Society"'
+query = 'metadata.publisher:"American Chemical Society"&allversions=true'
 
 records = get_records_pub_date(f"2022-01-01", f"2025-12-31", query=query)
 
