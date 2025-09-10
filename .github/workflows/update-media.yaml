@@ -22,10 +22,10 @@ jobs:
       - name: Update DataCite Media
         shell: bash
         env:
-            DATACITE: ${{ secrets.DATACITE }}
-            CALTECHDATA_DATACITE: ${{ secrets.CALTECHDATA_DATACITE }}
+            DATACITE: "${{ secrets.DATACITE }}"
+            CALTECHDATA_DATACITE: "${{ secrets.CALTECHDATA_DATACITE }}"
             INVENIO_TOKEN: ${{ secrets.INVENIO_TOKEN }}
-        run: python run_media_update.py >> $GITHUB_OUTPUT
+        run: python run_media_update.py
       - name: Commit and Push Changes
         id: commit-and-push
         uses: stefanzweifel/git-auto-commit-action@v5
