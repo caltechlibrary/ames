@@ -37,7 +37,7 @@ def get_caltechdata(
     pages = math.ceil(int(total) / 1000)
     hits = []
     records = []
-    print("Total records: " + str(total))
+    print("Total records " + str(total))
     for c in progressbar(range(1, pages + 1)):
         chunkurl = f"{url}{query_string}&size=1000&page={c}"
         response = requests.get(chunkurl).json()
