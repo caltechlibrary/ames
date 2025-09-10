@@ -1,0 +1,34 @@
+name: Update DataCite Media from CaltechDATA
+
+on:
+  schedule:
+    - cron: '10 15 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  update-media:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python Deps
+        shell: bash
+        run: pip install -r requirements.txt --break-system-packages
+      - name: Update DataCite Media
+        shell: bash
+        env:
+            DATACITE: ${{ secrets.DATACITE }}
+            CALTECHDATA_DATACITE: ${{ secrets.CALTECHDATA_DATACITE }}
+            INVENIO_TOKEN: ${{ secrets.INVENIO_TOKEN }}
+        run: python run_media_update.py >> $GITHUB_OUTPUT
+      - name: Commit and Push Changes
+        id: commit-and-push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'Update mediaupdate date'
+          file_pattern: 'mediaupdate'
