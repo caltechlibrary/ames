@@ -28,6 +28,7 @@ records = get_caltechdata(token=token, date=last_date, datacite=False)
 for record in records:
     print(f"Processing {record['id']}")
     collection_files = get_caltechdata_files(record, token=token)
+    print("Running media update")
     update_datacite_media(user, password, record, collection_files, prefix)
 
 # Save date in file
