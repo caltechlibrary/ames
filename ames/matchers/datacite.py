@@ -80,6 +80,8 @@ def update_datacite_media(username, password, record, files, prefix):
             elif extension == "h5ad":
                 data = "application/octet-stream=" + file_url
             if data != {}:
+                print(url)
+                print(data)
                 r = requests.post(
                     url,
                     data=data.encode("utf-8"),
