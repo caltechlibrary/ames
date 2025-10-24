@@ -40,7 +40,9 @@ def grid_to_ror(grid):
     elif grid == "grid.412584.e":
         ror = "0431j1t39"
     else:
-        url = f"https://api.ror.org/organizations?query.advanced=external_ids.GRID.all:{grid}"
+        url = (
+            f"https://api.ror.org/organizations?query.advanced=external_ids.all:{grid}"
+        )
         results = requests.get(url).json()
         if len(results["items"]) == 0:
             ror = None
@@ -573,6 +575,8 @@ def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=
                                                         "ROR %s not in allowed identifiers list"
                                                         % ror
                                                     )
+                                            else:
+                                                affil["id"] = ror
                                         else:
                                             print(
                                                 "Missing ROR for affiliation %s"

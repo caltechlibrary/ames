@@ -15,12 +15,6 @@ parser.add_argument(
     "author_identifier", type=str, help="The author identifier of records to enhance"
 )
 
-# Read in supported identitifiers - this will go away once we upgrade
-# authors
-with open("ror.txt") as infile:
-    lines = infile.readlines()
-    ror = [e.strip() for e in lines]
-
 args = parser.parse_args()
 author_identifier = args.author_identifier
 # to_update = [get_metadata('6dmax-vx632',authors=True)]
@@ -31,5 +25,4 @@ for record in to_update:
         record,
         token,
         dimensions_key,
-        allowed_identifiers=ror,
     )
