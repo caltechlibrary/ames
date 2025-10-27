@@ -233,6 +233,45 @@ def edit_author_identifier(
         )
 
 
+def delete_author_identifier(record, token, identifier_to_delete, test=False):
+    # For a given record, delete a person identifier
+
+    if test:
+        rurl = "https://authors.caltechlibrary.dev/api/records/" + record
+    else:
+        rurl = "https://authors.library.caltech.edu/api/records/" + record
+
+    headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+
+    data = requests.get(rurl, headers=headers).json()
+
+    update = False
+    for creator in data["metadata"]["creators"]:
+        block = creator["person_or_org"]
+        if "identifiers" in block:
+            new_identifiers = []
+            for idv in block["identifiers"]:
+                if idv["identifier"] != identifier_to_delete:
+                    new_identifiers.append(idv)
+                else:
+                    update = True
+            block["identifiers"] = new_identifiers
+
+    if update == True:
+        print(record)
+        caltechdata_edit(
+            record,
+            metadata=data,
+            token=token,
+            production=True,
+            publish=True,
+            authors=True,
+        )
+
+
 def add_group(record, token, group_identifier, test=False):
     # For a given record, add a Caltech group identifier
 

@@ -15,6 +15,7 @@ from .eprints import publisher
 from .eprints import update_pub_data
 from .caltechauthors import add_journal_metadata
 from .caltechauthors import edit_author_identifier
+from .caltechauthors import delete_author_identifier
 from .caltechauthors import add_group
 from .caltechauthors import check_doi
 from .caltechauthors import add_doi
