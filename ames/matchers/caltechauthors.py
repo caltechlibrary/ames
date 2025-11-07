@@ -563,7 +563,9 @@ def process_link_updates(input_csv):
     return results
 
 
-def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=None):
+def add_authors_affiliations(
+    record, token, dimensions_key, allowed_identifiers=None, ignore_mismatch=False
+):
     # Add dimensions affiliations to a record
 
     record_id = record["id"]
@@ -592,7 +594,7 @@ def add_authors_affiliations(record, token, dimensions_key, allowed_identifiers=
             publication = publication[0]
             dimensions_authors = publication.get("authors", [])
             existing_authors = record["metadata"]["creators"]
-            if len(dimensions_authors) == len(existing_authors):
+            if len(dimensions_authors) == len(existing_authors) or ignore_mismatch:
                 for position in range(len(dimensions_authors)):
                     author = existing_authors[position]
                     dimensions_author = dimensions_authors[position]
