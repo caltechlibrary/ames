@@ -563,9 +563,7 @@ def process_link_updates(input_csv):
     return results
 
 
-def add_authors_affiliations(
-    record, token, dimensions_key, allowed_identifiers=None, ignore_mismatch=False
-):
+def add_authors_affiliations(record, token, dimensions_key, ignore_mismatch=False):
     # Add dimensions affiliations to a record
 
     record_id = record["id"]
@@ -598,6 +596,14 @@ def add_authors_affiliations(
                 for position in range(len(dimensions_authors)):
                     author = existing_authors[position]
                     dimensions_author = dimensions_authors[position]
+                    if "identifiers" not in author:
+                        if dimensions_author["orcid"] not in [[], None]:
+                            author["identifiers"] = [
+                                {
+                                    "scheme": "orcid",
+                                    "identifier": dimensions_author["orcid"][0],
+                                }
+                            ]
                     if "affiliations" not in author:
                         affiliations = []
                         affiliation_ids = []
@@ -608,16 +614,7 @@ def add_authors_affiliations(
                                     if affiliation["id"] is not None:
                                         ror = grid_to_ror(affiliation["id"])
                                         if ror is not None:
-                                            if allowed_identifiers is not None:
-                                                if ror in allowed_identifiers:
-                                                    affil["id"] = ror
-                                                else:
-                                                    print(
-                                                        "ROR %s not in allowed identifiers list"
-                                                        % ror
-                                                    )
-                                            else:
-                                                affil["id"] = ror
+                                            affil["id"] = ror
                                         else:
                                             print(
                                                 "Missing ROR for affiliation %s"
