@@ -20,7 +20,7 @@ jobs:
       - name: Convert CFF
         uses: caltechlibrary/codemeta2cff@main
       - name: Commit CFF
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           message: 'Add updated CITATION.cff from codemeta.json file'
           add: 'CITATION.cff'
