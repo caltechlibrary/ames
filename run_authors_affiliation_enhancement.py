@@ -28,12 +28,13 @@ completed_writer = csv.writer(open(infile, "a"))
 args = parser.parse_args()
 author_identifier = args.author_identifier
 # to_update = [get_metadata('6dmax-vx632',authors=True)]
-to_update = get_author_records(author_identifier, token, all_metadata=True)
-# to_update = get_records_pub_date(start_date='2022-01-01',end_date='2022-12-31')
+#to_update = get_author_records(author_identifier, token, all_metadata=True)
+to_update = get_records_pub_date(start_date='2019-01-01',end_date='2019-12-31')
 
 for record in to_update:
     rdm_id = record["id"]
     if rdm_id not in completed:
+        print(f'Working on record {rdm_id}')
         add_authors_affiliations(
             record,
             token,
