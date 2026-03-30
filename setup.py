@@ -30,13 +30,6 @@ def read_requirements():
 codemeta_json = "codemeta.json"
 
 
-def package_files(package, directory):
-    os.chdir(package)
-    paths = glob.glob(directory + "/**", recursive=True)
-    os.chdir("..")
-    return paths
-
-
 # Let's pickup as much metadata as we need from codemeta.json
 with open(codemeta_json, mode="r", encoding="utf-8") as f:
     src = f.read()
@@ -66,19 +59,6 @@ url = meta["codeRepository"]
 download = meta["downloadUrl"]
 lic = meta["license"]
 name = meta["name"]
-
-# Setup for our Go based executable as a "data_file".
-platform = sys.platform
-exec_path = ["exec/Linux/eputil", "exec/Linux/epfmt"]
-OS_Classifier = "Operating System :: POSIX :: Linux"
-if platform.startswith("darwin"):
-    exec_path = ["exec/MacOS/eputil", "exec/MacOS/epfmt"]
-    platform = "Mac OS X"
-    OS_Classifier = "Operating System :: MacOS :: MacOS X"
-elif platform.startswith("win"):
-    exec_path = ["exec/Win/eputil.exe", "exec/Win/epfmt.exe"]
-    platform = "Windows"
-    OS_Classifier = "Operating System :: Microsoft :: Windows :: Windows 10"
 
 REQUIRES_PYTHON = ">=3.7.0"
 
@@ -119,8 +99,6 @@ if not version:
         exec(f.read(), about)
 else:
     about["__version__"] = version
-
-files = package_files("ames", "exec")
 
 
 class UploadCommand(Command):
@@ -175,7 +153,6 @@ setup(
     # },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    package_data={name: files},
     license=lic,
     classifiers=[
         # Trove classifiers

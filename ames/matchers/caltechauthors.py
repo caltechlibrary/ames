@@ -1,4 +1,4 @@
-import csv, json
+import csv, json, time
 import requests
 import dimcli
 from caltechdata_api import caltechdata_edit
@@ -191,7 +191,15 @@ def edit_author_identifier(
         "Content-type": "application/json",
     }
 
-    data = requests.get(rurl, headers=headers).json()
+    response = requests.get(rurl, headers=headers)
+    if response.status_code != 200:
+        time.sleep(3)
+        response = requests.get(rurl, headers=headers)
+        if response.status_code != 200:
+            print(f"record {record} not found")
+            print(response.text)
+            exit()
+    data = response.json()
 
     update = False
     for creator in data["metadata"]["creators"]:
@@ -285,9 +293,24 @@ def add_group(record, token, group_identifier, test=False):
         "Content-type": "application/json",
     }
 
-    data = requests.get(rurl, headers=headers).json()
+    response = requests.get(rurl, headers=headers)
+    if response.status_code != 200:
+        time.sleep(3)
+        response = requests.get(rurl, headers=headers)
+        if response.status_code != 200:
+            print(f"record {record} not found")
+            print(response.text)
+            exit()
+        else:
+            data = response.json()
+    else:
+        data = response.json()
 
     if "custom_fields" in data and "caltech:groups" in data["custom_fields"]:
+        for group in data["custom_fields"]["caltech:groups"]:
+            if group["id"] == group_identifier:
+                print(f"Group {group_identifier} already added to record {record}")
+                return
         data["custom_fields"]["caltech:groups"].append({"id": group_identifier})
     elif "custom_fields" in data:
         data["custom_fields"]["caltech:groups"] = [{"id": group_identifier}]
@@ -576,6 +599,7 @@ def add_authors_affiliations(record, token, dimensions_key, ignore_mismatch=Fals
                 if idv["scheme"] == "doi":
                     doi = idv["identifier"]
     if doi:
+        print("Getting dimensions data")
         endpoint = "https://cris-api.dimensions.ai/v3"
         dimcli.login(key=dimensions_key, endpoint=endpoint, verbose=False)
         dsl = dimcli.Dsl()
@@ -593,11 +617,13 @@ def add_authors_affiliations(record, token, dimensions_key, ignore_mismatch=Fals
             dimensions_authors = publication.get("authors", [])
             existing_authors = record["metadata"]["creators"]
             if len(dimensions_authors) == len(existing_authors) or ignore_mismatch:
+                print("Processing authors")
                 for position in range(len(dimensions_authors)):
                     author = existing_authors[position]
                     dimensions_author = dimensions_authors[position]
                     if "identifiers" not in author:
                         if dimensions_author["orcid"] not in [[], None]:
+                            update = True
                             author["identifiers"] = [
                                 {
                                     "scheme": "orcid",
@@ -640,6 +666,7 @@ def add_authors_affiliations(record, token, dimensions_key, ignore_mismatch=Fals
                                         affiliations.append(affil)
                             existing_authors[position]["affiliations"] = affiliations
         if update:
+            print("Updating record")
             caltechdata_edit(
                 record_id,
                 metadata=record,

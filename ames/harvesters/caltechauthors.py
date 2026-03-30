@@ -1,4 +1,4 @@
-import requests, math
+import requests, math, time
 import os
 import csv
 import re
@@ -131,13 +131,25 @@ def get_pending_requests(token, community=None, return_ids=False, test=False):
     if community:
         url += "%20AND%20receiver.community:" + community
     response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        time.sleep(3)
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Error fetching requests for community {community}")
+            exit()
     total = response.json()["hits"]["total"]
     pages = math.ceil(int(total) / 1000)
     hits = []
     for c in range(1, pages + 1):
         chunkurl = f"{url}&size=1000&page={c}"
-        response = requests.get(chunkurl, headers=headers).json()
-        hits += response["hits"]["hits"]
+        response = requests.get(chunkurl, headers=headers)
+        if response.status_code != 200:
+            time.sleep(3)
+            response = requests.get(chunkurl, headers=headers)
+            if response.status_code != 200:
+                print(f"Error fetching requests for community {community}")
+                exit()
+        hits += response.json()["hits"]["hits"]
 
     req = []
     for item in hits:
@@ -156,8 +168,11 @@ def get_request_id_title(token, request):
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        print(f"Error getting data for request {request}")
-        exit()
+        time.sleep(3)
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Error getting data for request {request}")
+            exit()
     response = response.json()
     date = response["updated"].split("T")[0]
     return response["topic"]["record"], response["title"], date
@@ -240,6 +255,12 @@ def get_authors(token, record, test=False, draft=True):
     if draft:
         url = url + "/draft"
     response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        time.sleep(3)
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Error fetching authors for record {record}")
+            exit()
     return response.json()["metadata"].get("creators")
 
 
@@ -268,14 +289,27 @@ def get_author_records(
 
     url = url + query
     response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        time.sleep(3)
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Error fetching records for author {author_identifier}")
+            exit()
     total = response.json()["hits"]["total"]
     print(total)
-    pages = math.ceil(int(total) / 1000)
+    pages = math.ceil(int(total) / 100)
     hits = []
     for c in range(1, pages + 1):
-        chunkurl = f"{url}&size=1000&page={c}"
-        response = requests.get(chunkurl, headers=headers).json()
-        hits += response["hits"]["hits"]
+        chunkurl = f"{url}&size=100&page={c}"
+        print(chunkurl)
+        response = requests.get(chunkurl, headers=headers)
+        if response.status_code != 200:
+            time.sleep(3)
+            response = requests.get(chunkurl, headers=headers)
+            if response.status_code != 200:
+                print(f"Error fetching records for author {author_identifier}")
+                exit()
+        hits += response.json()["hits"]["hits"]
 
     if all_metadata:
         return hits
@@ -399,14 +433,30 @@ def get_records_pub_date(
 
     url = url + query_string
     response = requests.get(url)
+    if response.status_code != 200:
+        time.sleep(3)
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(
+                f"Error fetching records for publication date range {start_date} to {end_date}"
+            )
+            exit()
     total = response.json()["hits"]["total"]
     print(f"Found {total} Records")
     pages = math.ceil(int(total) / 1000)
     hits = []
     for c in range(1, pages + 1):
         chunkurl = f"{url}&size=1000&page={c}"
-        response = requests.get(chunkurl).json()
-        hits += response["hits"]["hits"]
+        response = requests.get(chunkurl)
+        if response.status_code != 200:
+            time.sleep(3)
+            response = requests.get(chunkurl)
+            if response.status_code != 200:
+                print(
+                    f"Error fetching records for publication date range {start_date} to {end_date}"
+                )
+                exit()
+        hits += response.json()["hits"]["hits"]
 
     return hits
 
